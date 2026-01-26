@@ -14,6 +14,7 @@
 #include "photos.h"
 #include "family.h"
 #include "control.h"
+#include "settings.h"
 #include "token.h"
 
 extern const char* get_disk_root(void);
@@ -484,18 +485,27 @@ void login_post(const char *path, const char *body) {
         return;
     }
 
-    int success = (strcmp(username, VALID_USERNAME) == 0 &&
-                   strcmp(password, VALID_PASSWORD) == 0);
+    // ✅ 从文件加载真实凭据
+    char stored_user[128] = {0};
+    char stored_pass[128] = {0};
+
+    int auth_success = 0;
+    if (load_stored_credentials(stored_user, sizeof(stored_user),
+                                stored_pass, sizeof(stored_pass)) == 0) {
+        // 比对用户名和密码（明文）
+        if (strcmp(username, stored_user) == 0 &&
+            strcmp(password, stored_pass) == 0) {
+            auth_success = 1;
+        }
+    }
 
     json_object *resp = json_object_new_object();
 
-    if (success) {
+    if (auth_success) {
         char token[33];
         generate_token(token, sizeof(token));
 
-        // ✅ 关键修复：检查 add_token 是否成功！
         if (!add_token(token)) {
-            // 🚨 无法创建 session 文件（如 /tmp/sessions 不可写）
             json_object_object_add(resp, "success", json_object_new_boolean(0));
             json_object_object_add(resp, "message", json_object_new_string("服务器内部错误"));
             
@@ -504,12 +514,10 @@ void login_post(const char *path, const char *body) {
             
             json_object_put(input);
             json_object_put(resp);
-            return; // ⛔️ 提前返回，不设置 Cookie！
+            return;
         }
 
-        // ✅ 只有 add_token 成功才设置 Cookie
         printf("Set-Cookie: token=%s; Path=/; HttpOnly; SameSite=Strict\r\n", token);
-
         json_object_object_add(resp, "success", json_object_new_boolean(1));
         json_object_object_add(resp, "message", json_object_new_string("登录成功"));
     } else {
@@ -1452,4 +1460,161 @@ void control_door_get(const char *path, const char *body) {
 
     printf("Content-Type: application/json\r\n\r\n");
     printf("{\"state\": %d}", state);
+}
+
+
+
+
+
+
+void settings_change_password_get(const char *path, const char *body) {
+    (void)path; (void)body;
+
+    char username[128] = {0};
+    read_username(username, sizeof(username));
+
+    struct json_object *resp = json_object_new_object();
+    json_object_object_add(resp, "username", json_object_new_string(username));
+
+    printf("Content-Type: application/json\r\n");
+    printf("\r\n");
+    printf("%s\n", json_object_to_json_string_ext(resp, JSON_C_TO_STRING_PLAIN));
+    fflush(stdout);
+
+    json_object_put(resp);
+}
+
+// --- POST /home/settings/change-password ---
+void settings_change_password_post(const char *path, const char *body) {
+    (void)path;
+
+    if (!body || body[0] == '\0') {
+        printf("Content-Type: application/json\r\n\r\n{\"error\":\"Empty request body\"}\n");
+        fflush(stdout);
+        return;
+    }
+
+    struct json_object *jobj = json_tokener_parse(body);
+    if (!jobj) {
+        printf("Content-Type: application/json\r\n\r\n{\"error\":\"Invalid JSON\"}\n");
+        fflush(stdout);
+        return;
+    }
+
+    char username[128] = {0};
+    char password[128] = {0};
+
+    int ok = (extract_json_string(jobj, "username", username, sizeof(username)) == 0);
+    extract_json_string(jobj, "password", password, sizeof(password)); // 允许为空
+
+    json_object_put(jobj);
+
+    if (!ok || username[0] == '\0') {
+        printf("Content-Type: application/json\r\n\r\n{\"error\":\"Username required\"}\n");
+        fflush(stdout);
+        return;
+    }
+
+    if (write_login_file(username, password) != 0) {
+        printf("Content-Type: application/json\r\n\r\n{\"error\":\"Failed to save\"}\n");
+        fflush(stdout);
+        return;
+    }
+
+    printf("Content-Type: application/json\r\n\r\n{\"status\":\"ok\"}\n");
+    fflush(stdout);
+}
+
+// --- GET /home/settings/public ---
+void settings_public_get(const char *path, const char *body) {
+    (void)path; (void)body;
+
+    int enabled = is_ngrok_running();
+
+    struct json_object *resp = json_object_new_object();
+    json_object_object_add(resp, "enabled", json_object_new_boolean(enabled));
+
+    printf("Content-Type: application/json\r\n");
+    printf("\r\n");
+    printf("%s\n", json_object_to_json_string_ext(resp, JSON_C_TO_STRING_PLAIN));
+    fflush(stdout);
+
+    json_object_put(resp);
+}
+
+// --- PUT /home/settings/public ---
+void settings_public_put(const char *path, const char *body) {
+    (void)path;
+
+    if (!body || body[0] == '\0') {
+        printf("Content-Type: application/json\r\n\r\n{\"error\":\"Empty request body\"}\n");
+        fflush(stdout);
+        return;
+    }
+
+    struct json_object *jobj = json_tokener_parse(body);
+    if (!jobj) {
+        printf("Content-Type: application/json\r\n\r\n{\"error\":\"Invalid JSON\"}\n");
+        fflush(stdout);
+        return;
+    }
+
+    int enabled = 0;
+    struct json_object *val;
+    if (json_object_object_get_ex(jobj, "enabled", &val)) {
+        if (json_object_is_type(val, json_type_boolean)) {
+            enabled = json_object_get_boolean(val);
+        }
+        // 如果不是 boolean，默认 enabled = 0（安全）
+    }
+
+    json_object_put(jobj);
+
+    const char *script_path = "/development/web_tunnel/web_tunnel.sh";
+    char cmd[256];
+    snprintf(cmd, sizeof(cmd), "%s %s", script_path, enabled ? "start" : "stop");
+
+    int ret = system(cmd);
+    if (ret == -1 || WEXITSTATUS(ret) != 0) {
+        printf("Content-Type: application/json\r\n\r\n{\"error\":\"Tunnel control failed\"}\n");
+        fflush(stdout);
+        return;
+    }
+
+    // 尝试读取公网 URL
+    char public_url[256] = "";
+    if (enabled) {
+        FILE *log = fopen("/development/web_tunnel/ngrok.log", "r");
+        if (log) {
+            char line[512];
+            while (fgets(line, sizeof(line), log)) {
+                char *p = strstr(line, "https://");
+                if (p) {
+                    char *end = strstr(p, ".ngrok-free.app");
+                    if (end) {
+                        size_t len = end + 16 - p;
+                        if (len < sizeof(public_url)) {
+                            strncpy(public_url, p, len);
+                            public_url[len] = '\0';
+                            break;
+                        }
+                    }
+                }
+            }
+            fclose(log);
+        }
+    }
+
+    struct json_object *resp = json_object_new_object();
+    json_object_object_add(resp, "status", json_object_new_string("ok"));
+    if (enabled && public_url[0]) {
+        json_object_object_add(resp, "public_url", json_object_new_string(public_url));
+    }
+
+    printf("Content-Type: application/json\r\n");
+    printf("\r\n");
+    printf("%s\n", json_object_to_json_string_ext(resp, JSON_C_TO_STRING_PLAIN));
+    fflush(stdout);
+
+    json_object_put(resp);
 }

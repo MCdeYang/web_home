@@ -107,5 +107,15 @@ struct route routes[] = {
         .get = control_door_get,
         .put = control_door_put,
     },
+    {
+        .path = "/settings/change-password",
+        .get = settings_change_password_get,
+        .post = settings_change_password_post,
+    },
+    {
+        .path = "/settings/public",
+        .get = settings_public_get,
+        .put = settings_public_put
+    },
     { NULL, NULL, NULL, NULL, NULL, NULL }
 };

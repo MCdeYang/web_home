@@ -1,18 +1,18 @@
 #!/bin/bash
 
 # ====== 配置区（按需修改）======
-NGROK_TOKEN="你的_ngrok_authtoken"        # 必填！去 https://dashboard.ngrok.com/get-started/your-authtoken 获取
-LOCAL_PORT=8000                          # 你的 Web 服务监听的端口（如 80, 3000, 8080 等）
+NGROK_TOKEN="38m9o3R3LRYpDL0bnKaxiu3sFEA_53aaPXvh7UxvKp2iJRHBW"        # 必填！去 https://dashboard.ngrok.com/get-started/your-authtoken 获取
+LOCAL_PORT=80                          # 你的 Web 服务监听的端口（如 80, 3000, 8080 等）
 NGROK_BIN="./ngrok"
 LOG_FILE="ngrok.log"
 PID_FILE="ngrok.pid"
 # =============================
 
-if [ "$NGROK_TOKEN" = "你的_ngrok_authtoken" ]; then
-    echo "❌ 请先编辑脚本，填入你的 NGROK_TOKEN！"
-    echo "👉 注册地址: https://ngrok.com"
-    exit 1
-fi
+#if [ "$NGROK_TOKEN" = "38m9o3R3LRYpDL0bnKaxiu3sFEA_53aaPXvh7UxvKp2iJRHBW" ]; then
+#   echo "❌ 请先编辑脚本，填入你的 NGROK_TOKEN！"
+#    echo "👉 注册地址: https://ngrok.com"
+#   exit 1
+#fi
 
 # 检查是否已安装 ngrok，若无则自动下载 aarch64 版本
 if [ ! -f "$NGROK_BIN" ]; then
@@ -37,26 +37,26 @@ start() {
     fi
 
     echo "🚀 启动内网穿透: 本地端口  $LOCAL_PORT → 公网 URL"
-    nohup ./ngrok http " $LOCAL_PORT" > " $LOG_FILE" 2>&1 &
-    echo $! > " $PID_FILE"
+    nohup ./ngrok http "$LOCAL_PORT" > "$LOG_FILE" 2>&1 &
+    echo $! > "$PID_FILE"
     sleep 3
 
     # 尝试从日志中提取公网 URL
-    PUBLIC_URL= $(grep -o 'https://[a-zA-Z0-9\-]*\.ngrok-free\.app' "$LOG_FILE" | head -1)
+    PUBLIC_URL=$(grep -o 'https://[a-zA-Z0-9\-]*\.ngrok-free\.app' "$LOG_FILE" | head -1)
     if [ -n "$PUBLIC_URL" ]; then
         echo "🌐 你的公网访问地址是:"
-        echo "   $PUBLIC_URL"
+        echo "$PUBLIC_URL"
         echo ""
-        echo "📌 提示: 地址会随每次重启变化，演示时直接分享此链接即可！"
+        echo "提示: 地址会随每次重启变化，演示时直接分享此链接即可！"
     else
         echo "⏳ 正在启动... 请稍等几秒后查看日志:"
-        echo "   tail -f $LOG_FILE"
+        echo "tail -f $LOG_FILE"
     fi
 }
 
 stop() {
     if [ -f "$PID_FILE" ]; then
-        PID= $(cat "$PID_FILE")
+        PID=$(cat "$PID_FILE")
         kill "$PID" 2>/dev/null
         rm -f "$PID_FILE"
         echo "⏹️  ngrok 已停止 (PID: $PID)"

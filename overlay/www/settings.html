@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>系统设置</title>
+  <link rel="stylesheet" href="/assets/settings.css" />
+</head>
+<body style="background-image: url('/assets/settings.png'); background-size: cover; background-attachment: fixed;">
+  <div class="container">
+    <h2>系统设置</h2>
+
+    <form id="passwordForm">
+      <label for="username">用户名:</label>
+      <input type="text" id="username" name="username" placeholder="请输入新用户名（支持中文）" />
+
+      <label for="newPassword">新密码:</label>
+      <input type="password" id="newPassword" name="newPassword" placeholder="新密码" />
+
+      <label for="confirmPassword">确认新密码:</label>
+      <input type="password" id="confirmPassword" name="confirmPassword" />
+
+      <button type="submit">保存设置</button>
+    </form>
+
+    <form id="publicForm" style="margin-top: 30px;">
+      <label>
+        <input type="checkbox" id="publicToggle" />
+        开启公网访问（内网穿透）
+      </label>
+      <div id="warning" class="warning hidden">
+        ⚠️ 警告：开启后您的设备将暴露在公网上，可能被攻击！仅在必要时开启，并尽快关闭。
+      </div>
+      <button type="submit" style="margin-top: 10px;">保存公网设置</button>
+    </form>
+
+    <a href="/index.html" class="home-button">返回主页</a>
+  </div>
+
+  <script>
+    const API_BASE = '/home';
+
+    // 获取当前设置
+    Promise.all([
+      fetch(API_BASE + '/settings/change-password').then(r => r.json()),
+      fetch(API_BASE + '/settings/public').then(r => r.json())
+    ]).then(([userRes, publicRes]) => {
+      const usernameEl = document.getElementById('username');
+      usernameEl.value = userRes.username || 'admin';
+      // 保存原始用户名，用于后续判断是否被修改
+      usernameEl.dataset.original = userRes.username || 'admin';
+
+      const toggle = document.getElementById('publicToggle');
+      toggle.checked = publicRes.enabled;
+      if (publicRes.enabled) {
+        document.getElementById('warning').classList.remove('hidden');
+      }
+    }).catch(err => {
+      console.error('加载失败:', err);
+      alert('无法加载设置，请确保服务运行正常。');
+    });
+
+    // 公网开关警告
+    document.getElementById('publicToggle').addEventListener('change', function() {
+      const w = document.getElementById('warning');
+      if (this.checked) {
+        w.classList.remove('hidden');
+        alert('⚠️ 安全警告\n\n您即将开启公网访问。这意味着任何人都可能访问您的设备！\n\n请确保：\n1. 已设置强密码\n');
+      } else {
+        w.classList.add('hidden');
+      }
+    });
+
+    // 提交用户名和密码（带安全提示）
+    document.getElementById('passwordForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const usernameEl = document.getElementById('username');
+      const originalUsername = usernameEl.dataset.original || 'admin';
+      let username = usernameEl.value.trim();
+      const np = document.getElementById('newPassword').value;
+      const cp = document.getElementById('confirmPassword').value;
+
+      // 校验用户名
+      if (!username) {
+        return alert('用户名不能为空！');
+      }
+      if (username.length < 2 || username.length > 32) {
+        return alert('用户名长度需为 2～32 个字符（支持中文）！');
+      }
+
+      // 检查：是否修改了用户名但未提供新密码？
+      const isUsernameChanged = username !== originalUsername;
+      const isPasswordEmpty = !np;
+
+      if (isUsernameChanged && isPasswordEmpty) {
+        const confirmed = confirm(
+          '⚠️ 您正在修改用户名，但未设置新密码。\n' +
+          '为安全起见，建议同时更新密码。\n\n' +
+          '请同时修改密码，或点击“取消”返回。'
+        );
+        if (!confirmed) {
+          return; // 用户取消提交
+        }
+      }
+
+      // 校验密码（如果提供了）
+      if (np) {
+        if (np !== cp) return alert('密码不一致！');
+        if (np.length < 4) return alert('密码至少4位！');
+      }
+
+      try {
+        const res = await fetch(API_BASE + '/settings/change-password', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json; charset=utf-8' },
+          body: JSON.stringify({
+            username: username,
+            password: np || ""  // 空字符串表示不改密码
+          })
+        });
+
+        if (res.ok) {
+          alert('设置已更新！');
+          // 更新原始值，避免重复提示
+          usernameEl.dataset.original = username;
+          // 清空密码输入框
+          document.getElementById('newPassword').value = '';
+          document.getElementById('confirmPassword').value = '';
+        } else {
+          const text = await res.text();
+          alert('更新失败：' + (text || '未知错误'));
+        }
+      } catch (err) {
+        alert('请求失败：' + err.message);
+      }
+    });
+
+    // 提交公网设置
+    document.getElementById('publicForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const enabled = document.getElementById('publicToggle').checked;
+      try {
+        const res = await fetch(API_BASE + '/settings/public', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ enabled })
+        });
+        if (res.ok) {
+          alert(`公网访问已${enabled ? '开启' : '关闭'}。`);
+        } else {
+          const text = await res.text();
+          alert('设置失败：' + (text || '未知错误'));
+        }
+      } catch (err) {
+        alert('请求失败：' + err.message);
+      }
+    });
+  </script>
+</body>
+</html>

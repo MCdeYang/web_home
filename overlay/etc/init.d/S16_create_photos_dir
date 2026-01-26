@@ -24,6 +24,8 @@ do_start() {
     chown nobody:nogroup /media/sdcard/photos
     chmod 755 /media/sdcard/photos
 	chmod 777 /development/tmp
+	chmod 777 /development/login_info
+	chmod 777 /development/web_tunnel
 }
 
 case "$1" in

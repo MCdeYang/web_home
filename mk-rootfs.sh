@@ -17,7 +17,7 @@ if [ -d "$chroot_dir" ]; then
     echo "Deleted old binary directory."
 fi
 
-# === 2. 解压基础系统镜像 ===
+# === 解压基础系统镜像 ===
 echo -e "\033[36m Extracting base image...\033[0m"
 case $VERSION in
     "ubuntu20")
@@ -40,25 +40,25 @@ case $VERSION in
         ;;
 esac
 
-# === 3. 应用 overlay（仅覆盖配置文件，不碰 /dev）===
+# === 应用 overlay ===
 if [ -d overlay ]; then
     echo "Applying overlay..."
     sudo cp -rfp overlay/* "${chroot_dir}/" || true
 fi
 
-# === 4. 挂载虚拟文件系统（必须！）===
+# === 挂载虚拟文件系统 ===
 echo "Mounting virtual filesystems..."
 sudo mount -t proc /proc "${chroot_dir}/proc"
 sudo mount -t sysfs /sys "${chroot_dir}/sys"
 sudo mount -o bind /dev "${chroot_dir}/dev"
 sudo mount -o bind /dev/pts "${chroot_dir}/dev/pts"
 
-# === 5. 修复 /dev/null（防御性措施）===
+# === 修复 /dev/null ===
 echo "Fixing /dev/null in chroot..."
 sudo rm -f "${chroot_dir}/dev/null"
 sudo mknod -m 666 "${chroot_dir}/dev/null" c 1 3
 
-# === 6. 在 chroot 中执行 APT 操作 ===
+# === 在 chroot 中执行 APT 操作 ===
 echo "Running apt inside chroot..."
 sudo chroot "${chroot_dir}" /bin/bash -c "
     set -e
@@ -81,14 +81,24 @@ sudo chroot "${chroot_dir}" /bin/bash -c "
 	#apt install -y --no-install-recommends fcgi
 	#apt install -y --no-install-recommends openssl
 	#apt install -y --no-install-recommends iproute2
-    # 可选：如果你确实需要其他工具，可加：
     # apt install -y --no-install-recommends curl wget net-tools
 
-    # 清理缓存（减小镜像体积）
+    # 清理缓存
     apt clean
     rm -rf /var/lib/apt/lists/*
 "
-# <<< 新增：调用 make 编译 CGI >>>
+# === 下载 ngrok 到 overlay/development/web_tunnel/ ===
+NGROK_DIR="overlay/development/web_tunnel"
+mkdir -p " $ NGROK_DIR"
+if [ ! -f " $ NGROK_DIR/ngrok" ]; then
+    echo "downloading ngrok for aarch64 into overlay..."
+    wget -q https://bin.equinox.io/c/bNyj1mQVY4c/ngrok-v3-stable-linux-arm64.tgz -O /tmp/ngrok.tgz
+    tar -xzf /tmp/ngrok.tgz -C " $ NGROK_DIR" ngrok
+    chmod +x " $ NGROK_DIR/ngrok"
+    rm -f /tmp/ngrok.tgz
+    echo "ngrok puted overlay/development/web_tunnel/"
+fi
+# === 编译 CGI ===
 echo "Building CGI programs using Makefile..."
 if [ -f overlay/www/cgi-bin/src/Makefile ]; then
     sudo mkdir -p "${chroot_dir}/tmp/build-cgi"
@@ -147,7 +157,7 @@ if [ -f "$SRC_INIT" ]; then
 else
     echo "Warning: $SRC_INIT not found, skipping."
 fi
-# === 7. 安全卸载所有挂载点 ===
+# === 安全卸载所有挂载点 ===
 echo "Unmounting virtual filesystems..."
 sudo umount -l "${chroot_dir}/dev/pts" 2>/dev/null || true
 sudo umount -l "${chroot_dir}/dev"      2>/dev/null || true
