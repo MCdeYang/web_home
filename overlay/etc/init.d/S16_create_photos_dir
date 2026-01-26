@@ -1,0 +1,39 @@
+#!/bin/sh
+### BEGIN INIT INFO
+# Provides:          create_photos_dir
+# Required-Start:    $local_fs
+# Required-Stop:
+# Default-Start:     2 3 4 5
+# Default-Stop:
+# Short-Description: Create and set permissions for /media/sdcard/photos
+# Description:       This script creates the /media/sdcard/photos directory if it does not exist and sets the correct permissions.
+### END INIT INFO
+
+PATH=/sbin:/usr/sbin:/bin:/usr/bin
+
+do_start() {
+    # 等待SD卡挂载完成
+    sleep 3
+    
+    # 检查并创建 /media/sdcard/photos 目录
+    if [ ! -d "/media/sdcard/photos" ]; then
+        mkdir -p /media/sdcard/photos
+    fi
+    
+    # 设置正确的权限
+    chown nobody:nogroup /media/sdcard/photos
+    chmod 755 /media/sdcard/photos
+	chmod 777 /development/tmp
+}
+
+case "$1" in
+    start)
+        do_start
+        ;;
+    *)
+        echo "Usage: $0 {start}"
+        exit 1
+        ;;
+esac
+
+exit 0

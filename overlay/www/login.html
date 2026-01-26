@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>家庭智能终端 - 登录</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html, body {
+      height: 100%;
+      overflow: auto;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      min-height: 100%;
+      background-color: #eaeef5; /* fallback */
+      background: url('/assets/login.png') no-repeat center center fixed;
+      background-size: cover;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      color: #333;
+    }
+
+    .login-container {
+      position: relative;
+      z-index: 2;
+      width: 90%;
+      max-width: 400px;
+      padding: 2.5rem;
+      background: rgba(255, 255, 255, 0.95);
+      border-radius: 16px;
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.25);
+      animation: floatIn 0.8s ease-out;
+    }
+
+    @keyframes floatIn {
+      from {
+        opacity: 0;
+        transform: translateY(30px) scale(0.95);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+
+    h2 {
+      text-align: center;
+      margin-bottom: 1.2rem;
+      font-weight: 600;
+      color: #2c3e50;
+      font-size: 1.8rem;
+    }
+
+    .time-display {
+      text-align: center;
+      font-size: 1.1rem;
+      color: #7f8c8d;
+      margin-bottom: 1.5rem;
+      font-family: 'Courier New', monospace;
+      letter-spacing: 1px;
+    }
+
+    .input-group {
+      margin-bottom: 1.2rem;
+      position: relative;
+    }
+
+    .input-group input {
+      width: 100%;
+      padding: 0.85rem 1rem;
+      border: 2px solid #ddd;
+      border-radius: 8px;
+      font-size: 1rem;
+      transition: all 0.3s ease;
+      outline: none;
+    }
+
+    .input-group input:focus {
+      border-color: #3498db;
+      box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
+    }
+
+    button {
+      width: 100%;
+      padding: 0.9rem;
+      background: linear-gradient(135deg, #3498db, #2980b9);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 1.1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 10px rgba(52, 152, 219, 0.3);
+    }
+
+    button:hover {
+      background: linear-gradient(135deg, #2980b9, #1c6ea4);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 15px rgba(52, 152, 219, 0.4);
+    }
+
+    button:active {
+      transform: translateY(0);
+    }
+
+    .error {
+      color: #e74c3c;
+      text-align: center;
+      margin-top: 1rem;
+      min-height: 1.4rem;
+      font-size: 0.95rem;
+    }
+
+    @media (max-width: 480px) {
+      .login-container {
+        padding: 1.8rem;
+        margin: 0 1rem;
+      }
+      h2 {
+        font-size: 1.5rem;
+      }
+      .time-display {
+        font-size: 1rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="login-container">
+    <h2>家庭智能终端</h2>
+    <div class="time-display" id="currentTime">--:--:--</div>
+    <form id="loginForm">
+      <div class="input-group">
+        <input type="text" id="username" name="username" placeholder="用户名" required autocomplete="off" />
+      </div>
+      <div class="input-group">
+        <input type="password" id="password" name="password" placeholder="密码" required />
+      </div>
+      <button type="submit">登录</button>
+      <div id="errorMsg" class="error"></div>
+    </form>
+  </div>
+
+  <script>
+    // === 登录逻辑 ===
+    document.getElementById('loginForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const username = document.getElementById('username').value.trim();
+      const password = document.getElementById('password').value;
+      const errorMsg = document.getElementById('errorMsg');
+      errorMsg.textContent = '';
+
+      if (!username || !password) {
+        errorMsg.textContent = '请输入用户名和密码';
+        return;
+      }
+
+      try {
+        const response = await fetch('/home/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, password })
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+          window.location.href = '/index.html';
+        } else {
+          errorMsg.textContent = data.message || '用户名或密码错误';
+        }
+      } catch (err) {
+        console.error('Login error:', err);
+        errorMsg.textContent = '网络错误，请检查设备连接';
+      }
+    });
+
+    // === 时间更新 ===
+    function updateTime() {
+      const now = new Date();
+      const timeStr = now.getFullYear() + '-' +
+        String(now.getMonth()+1).padStart(2,'0') + '-' +
+        String(now.getDate()).padStart(2,'0') + ' ' +
+        String(now.getHours()).padStart(2,'0') + ':' +
+        String(now.getMinutes()).padStart(2,'0') + ':' +
+        String(now.getSeconds()).padStart(2,'0');
+      document.getElementById('currentTime').textContent = timeStr;
+    }
+
+    updateTime();
+    setInterval(updateTime, 1000);
+  </script>
+</body>
+</html>

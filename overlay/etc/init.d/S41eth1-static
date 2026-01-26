@@ -1,0 +1,30 @@
+#!/bin/sh
+# Set static IP for eth1 after networking is up
+
+INTERFACE="eth1"
+IP="192.168.1.100"
+CIDR="24"
+
+case "$1" in
+  start)
+    echo "Setting static IP $IP/$CIDR on $INTERFACE..."
+    
+    # 等待接口出现（防止 race condition）
+    while ! ip link show "$INTERFACE" >/dev/null 2>&1; do
+      sleep 1
+    done
+
+    # 启用接口并设置 IP
+    ip link set "$INTERFACE" up
+    ip addr add "$IP/$CIDR" dev "$INTERFACE" 2>/dev/null || true
+
+    echo "Static IP configured."
+    ;;
+  stop)
+    ip addr del "$IP/$CIDR" dev "$INTERFACE" 2>/dev/null || true
+    ;;
+  *)
+    echo "Usage: $0 {start|stop}"
+    exit 1
+    ;;
+esac

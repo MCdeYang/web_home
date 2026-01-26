@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>家庭智能终端</title>
+  <link rel="stylesheet" href="/assets/style.css">
+  <!-- 防止未登录用户看到页面内容 -->
+  <style>
+    #auth-guard {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: #0a0a0a;
+      color: #eee;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 99999;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      font-size: 18px;
+    }
+    /* 初始隐藏真实内容 */
+    #app-content { display: none; }
+  </style>
+</head>
+<body>
+  <!-- 🔒 认证遮罩（默认显示） -->
+  <div id="auth-guard">
+    验证登录中，请稍候...
+  </div>
+
+  <!-- 🖼️ 真实页面内容（初始隐藏） -->
+  <div id="app-content">
+    <div class="bg"></div>
+    <div class="overlay"></div>
+    <canvas id="particles"></canvas>
+
+    <div class="container">
+      <div class="time" id="time">--:--</div>
+      <div class="temp" id="temperature">🌡️ 室温：23°C</div>
+      
+      <!-- ✅ 修改：动态天气行 -->
+      <div class="weather" id="weather">
+        <span id="weather-icon" class="weather-icon">🌤️</span>
+        <span id="weather-text">加载中...</span>
+      </div>
+      
+      <!-- 6个功能入口 -->
+      <div class="buttons">
+        <a href="/disk.html" class="btn">📁 私人网盘</a>
+        <a href="/control.html" class="btn">💡 家居控制</a>
+        <a href="/notes.html" class="btn">📅 家庭备忘录</a>
+        <a href="/photos.html" class="btn">📸 家庭相册</a>
+        <a href="/system.html" class="btn">🖥️ 系统数据</a>
+        <a href="/test.html" class="btn">🧪 Test</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- 🔐 登录状态检测（关键：放在内容之后、动画之前） -->
+  <script>
+    (async () => {
+      try {
+        const res = await fetch('/home/check-auth');
+        if (res.status === 401) {
+          window.location.replace('/login.html');
+          return;
+        }
+
+        let data;
+        try {
+          data = await res.json();
+        } catch (e) {
+          data = {};
+        }
+
+        if (data.error && data.error.includes('Unauthorized')) {
+          window.location.replace('/login.html');
+          return;
+        }
+
+        document.getElementById('auth-guard').style.display = 'none';
+        document.getElementById('app-content').style.display = 'block';
+
+        // ✅ 认证成功后，启动天气轮询
+        fetchAndRenderWeather(); // 立即获取
+        setInterval(fetchAndRenderWeather, 5 * 60 * 1000); // 每5分钟
+
+      } catch (err) {
+        window.location.replace('/login.html');
+      }
+    })();
+  </script>
+
+  <!-- ⏱️ 时间 & 🌟 粒子动画（仅在认证后执行） -->
+  <script>
+    // 天气图标映射（根据 QWeather 的 text 字段）
+    const WEATHER_ICONS = {
+      '晴': '☀️',
+      '多云': '⛅',
+      '阴': '☁️',
+      '雾': '🌫️',
+      '小雨': '🌦️',
+      '中雨': '🌧️',
+      '大雨': '⛈️',
+      '暴雨': '⛈️',
+      '小雪': '🌨️',
+      '中雪': '❄️',
+      '大雪': '❄️',
+      '扬沙': '💨',
+      '浮尘': '💨',
+      '沙尘暴': '🌪️',
+      '强沙尘暴': '🌪️',
+      '雷阵雨': '⚡',
+      '雨夹雪': '☔',
+      '阵雨': '🌦️',
+      '阵雪': '❄️'
+    };
+
+    function getWeatherIcon(text) {
+      return WEATHER_ICONS[text] || '🌤️';
+    }
+
+    async function fetchAndRenderWeather() {
+      const weatherTextEl = document.getElementById('weather-text');
+      const weatherIconEl = document.getElementById('weather-icon');
+
+      try {
+        const res = await fetch('/home/weather');
+        if (!res.ok) throw new Error('Network error');
+
+        const data = await res.json();
+
+        if (data.code !== '200') {
+          weatherTextEl.textContent = '天气数据异常';
+          weatherIconEl.textContent = '⚠️';
+          return;
+        }
+
+        const weather = data.weather || '未知';
+        const temp = data.temperature || '--';
+        const humidity = data.humidity || '--';
+        const feelsLike = data.feels_like || '--';
+        const windDir = data.wind_dir || '';
+        const windScale = data.wind_scale ? `${data.wind_scale}级` : '';
+
+        let desc = `${weather} · ${temp}°C`;
+        if (feelsLike !== '--') desc += ` · 体感${feelsLike}°C`;
+        if (humidity !== '--') desc += ` · 湿度${humidity}%`;
+        if (windDir || windScale) desc += ` · ${windDir}${windScale}`;
+
+        weatherTextEl.textContent = desc;
+        weatherIconEl.textContent = getWeatherIcon(weather);
+
+      } catch (err) {
+        console.error('Weather fetch failed:', err);
+        weatherTextEl.textContent = '天气加载失败';
+        weatherIconEl.textContent = '❌';
+      }
+    }
+
+    // 只有认证通过后才初始化动画和时间
+    function initApp() {
+      // === 实时时间 ===
+      function updateTime() {
+        const now = new Date();
+        document.getElementById('time').textContent =
+          now.toLocaleTimeString('zh-CN', { hour12: false });
+      }
+      setInterval(updateTime, 1000);
+      updateTime();
+
+      // === 粒子动画（阳光尘埃）===
+      const canvas = document.getElementById('particles');
+      const ctx = canvas.getContext('2d');
+
+      function resizeCanvas() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+      }
+      resizeCanvas();
+      window.addEventListener('resize', resizeCanvas);
+
+      const particles = [];
+      const particleCount = Math.min(100, Math.floor((canvas.width * canvas.height) / 6000));
+
+      class Dust {
+        constructor() {
+          this.x = Math.random() * canvas.width;
+          this.y = Math.random() * canvas.height;
+          this.size = Math.random() * 2 + 0.5;
+          this.speedY = Math.random() * 0.3 + 0.1;
+          this.opacity = Math.random() * 0.4 + 0.1;
+          this.tilt = (Math.random() - 0.5) * 0.4;
+        }
+        update() {
+          this.y += this.speedY;
+          this.x += this.tilt;
+          if (this.y > canvas.height || this.x < -10 || this.x > canvas.width + 10) {
+            this.reset();
+          }
+        }
+        reset() {
+          this.y = -10;
+          this.x = Math.random() * canvas.width;
+        }
+        draw() {
+          ctx.fillStyle = `rgba(255, 248, 230, ${this.opacity})`;
+          ctx.beginPath();
+          ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+
+      for (let i = 0; i < particleCount; i++) {
+        particles.push(new Dust());
+      }
+
+      function animate() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        particles.forEach(p => {
+          p.update();
+          p.draw();
+        });
+        requestAnimationFrame(animate);
+      }
+      animate();
+    }
+
+    // 等待 DOM 加载完成
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', initApp);
+    } else {
+      initApp();
+    }
+  </script>
+</body>
+</html>

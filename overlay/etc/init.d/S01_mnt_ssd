@@ -1,0 +1,3 @@
+#!/bin/sh
+mkdir -p /mnt/ssd
+chmod 777 /mnt/ssd

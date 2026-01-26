@@ -1,0 +1,258 @@
+/* assets/notes.css */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  height: 100%;
+}
+
+body {
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  background-color: #f8f5f0;
+  background-image: url("notes.png"); 
+  background-repeat: no-repeat;
+  background-position: center center;
+  background-attachment: fixed;
+  background-size: cover;  
+  color: #333;
+  line-height: 1.6;
+  padding: 10px;
+  min-height: 100%;
+  transition: background-color 0.3s ease; /* 平滑背景过渡 */
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+  padding: 10px 0;
+  animation: fadeInDown 0.5s ease-out;
+}
+
+.home-btn {
+  text-decoration: none;
+  font-size: 1.4em;
+  color: #4a90e2;
+  font-weight: bold;
+  transition: color 0.2s ease;
+}
+
+.home-btn:hover {
+  color: #2a6bb9;
+  transform: scale(1.05);
+}
+
+h1 {
+  font-size: 1.6em;
+  color: #2c3e50;
+  opacity: 0;
+  animation: fadeIn 0.8s forwards;
+}
+
+.container {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.card {
+  background: white;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  padding: 16px;
+  margin-bottom: 20px;
+  opacity: 0;
+  transform: translateY(20px);
+  animation: slideUp 0.6s forwards;
+}
+
+.card:nth-child(1) { animation-delay: 0.1s; }
+.card:nth-child(2) { animation-delay: 0.2s; }
+.card:nth-child(3) { animation-delay: 0.3s; }
+
+.card h2 {
+  margin-bottom: 16px;
+  color: #2c3e50;
+  font-size: 1.3em;
+  position: relative;
+}
+
+.card h2::after {
+  content: '';
+  display: block;
+  width: 40px;
+  height: 3px;
+  background: #4a90e2;
+  margin-top: 8px;
+  border-radius: 2px;
+}
+
+/* 成员列表 */
+.member-item {
+  background: #f8f9fa;
+  padding: 12px;
+  margin-bottom: 8px;
+  border-left: 4px solid #4a90e2;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+  opacity: 0;
+  animation: fadeIn 0.4s forwards;
+}
+
+.member-item:hover {
+  background: #edf2ff;
+  transform: translateX(4px);
+  box-shadow: 0 2px 6px rgba(74, 144, 226, 0.2);
+}
+
+/* 任务项 */
+.task-item {
+  background: #fff8e1;
+  padding: 12px;
+  margin-bottom: 8px;
+  border-radius: 4px;
+  border-left: 4px solid #ff9800;
+  transition: all 0.25s ease;
+  opacity: 0;
+  animation: fadeIn 0.4s forwards;
+}
+
+.task-item:hover {
+  background: #fff0c2;
+  transform: translateX(4px);
+  box-shadow: 0 2px 6px rgba(255, 152, 0, 0.2);
+}
+
+/* 暂无任务/成员提示 */
+#my-tasks-list p,
+#members-list p {
+  text-align: center;
+  color: #7f8c8d;
+  font-style: italic;
+  padding: 12px;
+  opacity: 0;
+  animation: fadeIn 0.5s forwards;
+}
+
+#my-tasks-list p {
+  color: #e67e22;
+}
+
+/* 表单 */
+#task-form label {
+  display: block;
+  margin: 12px 0 6px;
+  font-weight: bold;
+  opacity: 0;
+  animation: fadeIn 0.5s forwards;
+}
+
+#task-form input,
+#task-form select {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 1em;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+#task-form input:focus,
+#task-form select:focus {
+  outline: none;
+  border-color: #4a90e2;
+  box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.2);
+}
+
+.btn-primary,
+.btn-success {
+  background: #4a90e2;
+  color: white;
+  border: none;
+  padding: 10px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 1em;
+  margin-top: 10px;
+  transition: all 0.2s ease;
+  opacity: 0;
+  animation: fadeIn 0.6s forwards;
+}
+
+.btn-success {
+  background: #4caf50;
+}
+
+.btn-primary:hover,
+.btn-success:hover {
+  opacity: 1;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+}
+
+.btn-primary:active,
+.btn-success:active {
+  transform: translateY(0);
+}
+
+/* 加载中状态 */
+#my-tasks-list p:contains('加载中') {
+  color: #3498db;
+  font-style: normal;
+}
+
+/* 动画定义 */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes fadeInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 响应式 */
+@media (max-width: 600px) {
+  .header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .home-btn {
+    font-size: 1.2em;
+  }
+
+  h1 {
+    font-size: 1.4em;
+  }
+
+  .card {
+    padding: 14px;
+  }
+
+  .member-item,
+  .task-item {
+    padding: 10px;
+  }
+}

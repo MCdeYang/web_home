@@ -1,0 +1,56 @@
+#!/bin/bash
+### BEGIN INIT INFO
+# Provides:          environment
+# Required-Start:    $local_fs $remote_fs $network $time
+# Required-Stop:     $local_fs $remote_fs $network
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: Weather Environment Daemon
+# Description:       Fetches weather data every 10 minutes
+### END INIT INFO
+
+DAEMON=/usr/local/bin/environment
+NAME=environment
+PIDFILE=/var/run/$NAME.pid
+
+# 启动前等待网络真正就绪（避免 DNS/HTTPS 失败）
+WAIT_FOR_NETWORK=15  # 单位：秒
+
+case "$1" in
+  start)
+    echo "Starting $NAME..."
+    # 使用 sh -c 包装：先 sleep，再启动 daemon
+    start-stop-daemon \
+        --start \
+        --quiet \
+        --pidfile "$PIDFILE" \
+        --exec /bin/sh \
+        --background \
+        --make-pidfile \
+        -- \
+        -c "sleep $WAIT_FOR_NETWORK && exec $DAEMON"
+    ;;
+  stop)
+    echo "Stopping $NAME..."
+    start-stop-daemon --stop --quiet --pidfile "$PIDFILE"
+    rm -f "$PIDFILE"
+    ;;
+  restart)
+    $0 stop
+    sleep 2
+    $0 start
+    ;;
+  status)
+    if [ -f "$PIDFILE" ]; then
+        echo "$NAME is running (PID: $(cat $PIDFILE))"
+    else
+        echo "$NAME is not running"
+    fi
+    ;;
+  *)
+    echo "Usage: $0 {start|stop|restart|status}"
+    exit 1
+    ;;
+esac
+
+exit 0

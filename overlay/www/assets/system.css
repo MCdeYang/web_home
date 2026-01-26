@@ -1,0 +1,104 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: "PingFang SC", "Microsoft YaHei", "Segoe UI", sans-serif;
+  background-image: url("/assets/system.png");
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+  color: #333;
+  margin: 0;
+  padding: 20px;
+  line-height: 1.6;
+  min-height: 100vh;
+}
+
+.container {
+  max-width: 700px;
+  margin: 0 auto;
+  background: rgba(255, 255, 255, 0.88); /* 半透明白色卡片 */
+  padding: 25px;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12);
+  backdrop-filter: blur(4px);
+}
+
+h1 {
+  text-align: center;
+  font-size: 2.2rem;
+  color: #5a4a42;
+  margin-bottom: 25px;
+}
+
+.row {
+  display: flex;
+  justify-content: space-between;
+  background: white;
+  padding: 16px 20px;
+  margin: 12px 0;
+  border-radius: 14px;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.06);
+  border: 1px solid rgba(200, 180, 160, 0.3);
+}
+
+.label {
+  font-weight: bold;
+  color: #8b6f55;
+}
+
+.value {
+  color: #5a4a42;
+  font-weight: 500;
+}
+
+.loading {
+  text-align: center;
+  padding: 40px;
+  color: #a68a70;
+  font-size: 1.1rem;
+}
+
+.error {
+  text-align: center;
+  padding: 40px;
+  color: #d32f2f;
+  font-size: 1.1rem;
+}
+
+.last-update {
+  text-align: center;
+  font-size: 0.9rem;
+  color: #a68a70;
+  margin-top: 15px;
+}
+
+.back {
+  display: block;
+  text-align: center;
+  margin-top: 25px;
+  color: #6b5545;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.back:hover {
+  text-decoration: underline;
+}
+
+/* 响应式优化 */
+@media (max-width: 600px) {
+  .container {
+    padding: 18px;
+  }
+  h1 {
+    font-size: 1.8rem;
+  }
+  .row {
+    flex-direction: column;
+    gap: 8px;
+  }
+}

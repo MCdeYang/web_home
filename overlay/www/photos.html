@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>家庭相册</title>
+  <link rel="stylesheet" href="./assets/photos.css">
+</head>
+<body>
+  <div class="container">
+    <h1>📸 家庭相册</h1>
+
+    <div class="controls">
+      <button class="btn home-btn" onclick="window.location.href='index.html'">🏠 返回主页</button>
+      <button class="btn refresh-btn" onclick="loadPhotos()">🔄 刷新相册</button>
+    </div>
+
+    <div class="upload-area">
+      <input type="file" id="file-input" accept="image/*" multiple />
+      <button class="btn upload-btn" onclick="uploadFiles()">📤 上传照片</button>
+    </div>
+
+    <div class="gallery" id="gallery">
+      <p class="loading">加载中...</p>
+    </div>
+  </div>
+
+  <script>
+    let currentPhotos = [];
+    const photoNotes = {};
+
+    async function loadPhotos() {
+      try {
+        const listRes = await fetch('/home/photos', { method: 'GET' });
+        if (!listRes.ok) throw new Error('加载失败');
+        currentPhotos = await listRes.json();
+
+        const notePromises = currentPhotos.map(name =>
+          fetch(`/home/photo/note?name=${encodeURIComponent(name)}`)
+            .then(r => r.ok ? r.text() : '')
+            .catch(() => '')
+        );
+        const notes = await Promise.all(notePromises);
+        currentPhotos.forEach((name, i) => {
+          photoNotes[name] = notes[i];
+        });
+
+        renderGallery();
+      } catch (err) {
+        console.error(err);
+        document.getElementById('gallery').innerHTML = '<p class="error">❌ 加载失败</p>';
+      }
+    }
+
+    function renderGallery() {
+      const gallery = document.getElementById('gallery');
+      if (currentPhotos.length === 0) {
+        gallery.innerHTML = '<p class="empty">暂无照片，快上传一张吧！</p>';
+        return;
+      }
+
+      gallery.innerHTML = '';
+      currentPhotos.forEach(filename => {
+        const note = photoNotes[filename] || '';
+        const card = document.createElement('div');
+        card.className = 'photo-card';
+        card.innerHTML = `
+          <div class="photo-inner">
+            <div class="photo-front">
+              <img src="/home/photo?name=${encodeURIComponent(filename)}&t=${Date.now()}" 
+                  alt="${filename}" 
+                  loading="lazy"
+                  onerror="this.closest('.photo-card').classList.add('broken')">
+            </div>
+            <div class="photo-back">
+              <div class="filename"> ${filename}</div>
+              ${note ? `<div class="photo-note"> ${note}</div>` : ''}
+              <div class="back-buttons">
+                <button class="edit-btn" onclick="event.stopPropagation(); editNote('${filename.replace(/'/g, "\\\\'")}');">✏️ 编辑</button>
+                <button class="delete-btn" onclick="event.stopPropagation(); deletePhoto('${filename.replace(/'/g, "\\\\'")}');">🗑️ 删除</button>
+              </div>
+            </div>
+          </div>
+        `;
+        gallery.appendChild(card);
+      });
+    }
+
+    function editNote(filename) {
+      const current = photoNotes[filename] || '';
+      const input = prompt('请输入照片注释：', current);
+      if (input !== null) saveNote(filename, input);
+    }
+
+    async function saveNote(filename, note) {
+      try {
+        const res = await fetch('/home/photo/note', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ filename, note })
+        });
+        if (res.ok) {
+          photoNotes[filename] = note;
+          renderGallery();
+        } else {
+          alert('❌ 保存失败');
+        }
+      } catch (err) {
+        alert('网络错误');
+      }
+    }
+
+    async function uploadFiles() {
+      const input = document.getElementById('file-input');
+      const files = Array.from(input.files).filter(file => file.type.startsWith('image/'));
+      if (files.length === 0) {
+        alert('请选择至少一张图片');
+        return;
+      }
+
+      const formData = new FormData();
+      files.forEach(file => formData.append('photo', file, file.name));
+
+      try {
+        const res = await fetch('/home/photos', { method: 'POST', body: formData });
+        if (res.ok) {
+          alert('✅ 上传成功！');
+          input.value = '';
+          loadPhotos();
+        } else {
+          const err = await res.json().catch(() => ({}));
+          alert(`❌ 上传失败: ${err.error || '未知错误'}`);
+        }
+      } catch (err) {
+        alert('网络错误');
+      }
+    }
+
+    async function deletePhoto(filename) {
+      if (!confirm(`确定要删除 "${filename}" 吗？`)) return;
+      try {
+        const res = await fetch('/home/photos', {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ filename })
+        });
+        if (res.ok) loadPhotos();
+        else alert('删除失败');
+      } catch (err) {
+        alert('网络错误');
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', loadPhotos);
+  </script>
+</body>
+</html>

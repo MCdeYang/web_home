@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>系统数据</title>
+  <!-- 引入分离的 CSS -->
+  <link rel="stylesheet" href="/assets/system.css">
+</head>
+<body>
+  <div class="container">
+    <h1>🖥️ 系统实时数据</h1>
+
+    <div id="content">
+      <div class="loading">正在加载系统数据...</div>
+    </div>
+
+    <div id="last-update" class="last-update"></div>
+
+    <a href="/index.html" class="back">← 返回首页</a>
+  </div>
+
+  <!-- 🔒 登录状态检测（新增） -->
+  <script>
+    (async () => {
+      try {
+        const res = await fetch('/home/check-auth');
+        if (res.status === 401) {
+          window.location.replace('/login.html');
+          return;
+        }
+        // 已认证：继续执行后续脚本
+      } catch (err) {
+        window.location.replace('/login.html');
+        return;
+      }
+    })();
+  </script>
+
+  <!-- 原有数据加载逻辑（保持不变） -->
+  <script>
+    function fetchData() {
+      const content = document.getElementById('content');
+      const lastUpdate = document.getElementById('last-update');
+
+      fetch('/home/system')
+        .then(res => {
+          if (!res.ok) throw new Error('HTTP ' + res.status);
+          return res.json();
+        })
+        .then(data => {
+          let html = '';
+
+          if (data.load_percent !== undefined) {
+            html += `<div class="row"><span class="label">CPU 负载</span><span class="value">${data.load_percent.toFixed(1)}%</span></div>`;
+          }
+          if (data.uptime_minutes !== undefined) {
+            html += `<div class="row"><span class="label">运行时间</span><span class="value">${data.uptime_minutes} 分钟</span></div>`;
+          }
+          if (data.memory_percent !== undefined) {
+            html += `<div class="row"><span class="label">内存使用</span><span class="value">${data.memory_used_mb} MB / ${data.memory_total_mb} MB (${data.memory_percent}%)</span></div>`;
+          }
+          if (data.ip) {
+            html += `<div class="row"><span class="label">IP 地址</span><span class="value">${data.ip}</span></div>`;
+          }
+          if (data.cpu_temp_c !== undefined) {
+            html += `<div class="row"><span class="label">CPU 温度</span><span class="value">${data.cpu_temp_c}°C</span></div>`;
+          }
+          if (data.disk_percent !== undefined) {
+            html += `<div class="row"><span class="label">磁盘使用</span><span class="value">${data.disk_used_gb} GB / ${data.disk_total_gb} GB (${data.disk_percent}%)</span></div>`;
+          }
+
+          content.innerHTML = html || '<div class="error">暂无数据</div>';
+          lastUpdate.textContent = '最后更新：' + new Date().toLocaleTimeString();
+        })
+        .catch(err => {
+          console.error('获取数据失败:', err);
+          content.innerHTML = `<div class="error">❌ 加载失败：${err.message}</div>`;
+          lastUpdate.textContent = '';
+        });
+    }
+
+    fetchData();
+    setInterval(fetchData, 10000); // 每10秒刷新
+  </script>
+</body>
+</html>

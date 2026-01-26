@@ -1,0 +1,31 @@
+#!/bin/sh
+
+DAEMON=/usr/sbin/lighttpd
+NAME=lighttpd
+DESC="Lighttpd Web Server"
+CONF_FILE="/etc/lighttpd/lighttpd.conf"   # ← 自定义配置路径
+
+test -x "$DAEMON" || exit 0
+test -f "$CONF_FILE" || { echo "Config $CONF_FILE not found!"; exit 1; }
+
+case "$1" in
+  start)
+    echo "Starting $DESC: $NAME"
+    $DAEMON -f "$CONF_FILE"
+    ;;
+  stop)
+    echo "Stopping $DESC: $NAME"
+    killall $NAME 2>/dev/null
+    ;;
+  restart)
+    $0 stop
+    sleep 1
+    $0 start
+    ;;
+  *)
+    echo "Usage: $0 {start|stop|restart}"
+    exit 1
+    ;;
+esac
+
+exit 0 

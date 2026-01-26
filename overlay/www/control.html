@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>家庭智能控制终端</title>
+    <link rel="stylesheet" href="assets/control.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🏠 家庭智能控制</h1>
+            <p>实时控制您的家居设备</p>
+        </header>
+
+        <main class="controls-grid">
+            <!-- 灯控制 -->
+            <div class="control-card" id="light-card">
+                <div class="device-icon">
+                    <span class="icon">💡</span>
+                    <h3>客厅灯</h3>
+                </div>
+                <div class="switch-container">
+                    <label class="switch">
+                        <input type="checkbox" id="light-switch" onchange="toggleDevice('light')">
+                        <span class="slider"></span>
+                    </label>
+                    <span class="status" id="light-status">加载中...</span>
+                </div>
+            </div>
+
+            <!-- 空调控制 -->
+            <div class="control-card" id="ac-card">
+                <div class="device-icon">
+                    <span class="icon">❄️</span>
+                    <h3>空调</h3>
+                </div>
+                <div class="switch-container">
+                    <label class="switch">
+                        <input type="checkbox" id="ac-switch" onchange="toggleDevice('ac')">
+                        <span class="slider"></span>
+                    </label>
+                    <span class="status" id="ac-status">加载中...</span>
+                </div>
+            </div>
+
+            <!-- 洗衣机控制 -->
+            <div class="control-card" id="washer-card">
+                <div class="device-icon">
+                    <span class="icon">🧺</span>
+                    <h3>洗衣机</h3>
+                </div>
+                <div class="switch-container">
+                    <label class="switch">
+                        <input type="checkbox" id="washer-switch" onchange="toggleDevice('washer')">
+                        <span class="slider"></span>
+                    </label>
+                    <span class="status" id="washer-status">加载中...</span>
+                </div>
+            </div>
+
+            <!-- 风扇控制 -->
+            <div class="control-card" id="fan-card">
+                <div class="device-icon">
+                    <span class="icon">🌀</span>
+                    <h3>风扇</h3>
+                </div>
+                <div class="switch-container">
+                    <label class="switch">
+                        <input type="checkbox" id="fan-switch" onchange="toggleDevice('fan')">
+                        <span class="slider"></span>
+                    </label>
+                    <span class="status" id="fan-status">加载中...</span>
+                </div>
+            </div>
+
+            <!-- 门锁控制 -->
+            <div class="control-card" id="door-card">
+                <div class="device-icon">
+                    <span class="icon">🔒</span>
+                    <h3>大门</h3>
+                </div>
+                <div class="switch-container">
+                    <label class="switch">
+                        <input type="checkbox" id="door-switch" onchange="toggleDevice('door')">
+                        <span class="slider"></span>
+                    </label>
+                    <span class="status" id="door-status">加载中...</span>
+                </div>
+            </div>
+        </main>
+
+        <footer>
+            <button class="back-btn" onclick="goBack()">🔙 返回主页</button>
+        </footer>
+    </div>
+
+    <script>
+        // === 设备到 API 路径映射（使用 /home 前缀）===
+        const DEVICE_API_PATHS = {
+            light:   '/home/control/light',
+            ac:      '/home/control/aircon',
+            washer:  '/home/control/washing_machine',
+            fan:     '/home/control/fan',
+            door:    '/home/control/door'
+        };
+
+        // 设备状态存储（初始值仅作备用）
+        let deviceStates = {
+            light: false,
+            ac: false,
+            washer: false,
+            fan: false,
+            door: true
+        };
+
+        function toggleDevice(device) {
+            const switchElement = document.getElementById(`${device}-switch`);
+            const statusElement = document.getElementById(`${device}-status`);
+            const cardElement = document.getElementById(`${device}-card`);
+
+            if (!switchElement || !statusElement || !cardElement) {
+                console.error(`设备元素缺失: ${device}`);
+                return;
+            }
+
+            deviceStates[device] = switchElement.checked;
+            updateDeviceDisplay(device);
+            animateDevice(device);
+            sendControlRequest(device, deviceStates[device]);
+        }
+
+        function animateDevice(device) {
+            const card = document.getElementById(`${device}-card`);
+            if (card) {
+                card.classList.add('pulse');
+                setTimeout(() => card.classList.remove('pulse'), 300);
+            }
+        }
+
+        function sendControlRequest(device, state) {
+            const url = DEVICE_API_PATHS[device];
+            if (!url) {
+                console.error('未知设备:', device);
+                return;
+            }
+
+            fetch(url, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ state: state ? 1 : 0 })
+            })
+            .then(response => {
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                return response.text();
+            })
+            .catch(error => {
+                console.error(`控制 ${device} 失败:`, error);
+                // 回滚 UI
+                const switchEl = document.getElementById(`${device}-switch`);
+                if (switchEl) {
+                    switchEl.checked = !switchEl.checked;
+                    deviceStates[device] = !deviceStates[device];
+                    updateDeviceDisplay(device);
+                }
+            });
+        }
+
+        function updateDeviceDisplay(device) {
+            const statusElement = document.getElementById(`${device}-status`);
+            const cardElement = document.getElementById(`${device}-card`);
+            if (!statusElement || !cardElement) return;
+
+            const state = deviceStates[device];
+
+            if (device === 'light') {
+                statusElement.textContent = state ? '开启' : '关闭';
+                cardElement.style.backgroundColor = state ? '#fff3cd' : '#f8d7da';
+            } else if (device === 'ac') {
+                statusElement.textContent = state ? '制冷中' : '关闭';
+                cardElement.style.backgroundColor = state ? '#d1ecf1' : '#f8d7da';
+            } else if (device === 'washer') {
+                statusElement.textContent = state ? '运转中' : '停止';
+                cardElement.style.backgroundColor = state ? '#d4edda' : '#f8d7da';
+            } else if (device === 'fan') {
+                statusElement.textContent = state ? '运转中' : '关闭';
+                cardElement.style.backgroundColor = state ? '#cce5ff' : '#f8d7da';
+            } else if (device === 'door') {
+                statusElement.textContent = state ? '解锁' : '锁定';
+                cardElement.style.backgroundColor = state ? '#d1ecf1' : '#f8d7da';
+                const icon = cardElement.querySelector('.icon');
+                if (icon) icon.textContent = state ? '🔓' : '🔒';
+            }
+        }
+
+        function goBack() {
+            window.location.href = 'index.html';
+        }
+
+        // ✅ 页面加载时：自动 GET 所有设备状态
+        window.onload = function() {
+            const devices = ['light', 'ac', 'washer', 'fan', 'door'];
+
+            devices.forEach(device => {
+                const url = DEVICE_API_PATHS[device];
+                fetch(url, { method: 'GET' })
+                    .then(response => {
+                        if (!response.ok) throw new Error(`状态码: ${response.status}`);
+                        return response.json();
+                    })
+                    .then(data => {
+                        // 假设返回: {"state": 0} 或 {"state": 1}
+                        const state = (data.state === 1);
+                        deviceStates[device] = state;
+
+                        const switchEl = document.getElementById(`${device}-switch`);
+                        if (switchEl) switchEl.checked = state;
+
+                        updateDeviceDisplay(device);
+                    })
+                    .catch(error => {
+                        console.error(`获取 ${device} 状态失败:`, error);
+                        // 保留默认状态，更新 UI
+                        updateDeviceDisplay(device);
+                    });
+            });
+        };
+    </script>
+</body>
+</html>

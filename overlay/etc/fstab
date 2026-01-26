@@ -1,0 +1,20 @@
+# /etc/fstab: static file system information.
+#
+# <file system>        <mount point>    <type>    <options>                     <dump>  <pass>
+
+/dev/root              /                auto      rw,noauto                      0       1
+proc                   /proc            proc      defaults                       0       0
+devpts                 /dev/pts         devpts    defaults,gid=5,mode=620        0       0
+tmpfs                  /dev/shm         tmpfs     mode=0777                      0       0
+tmpfs                  /tmp             tmpfs     mode=1777                      0       0
+tmpfs                  /run             tmpfs     mode=0755,nosuid,nodev         0       0
+sysfs                  /sys             sysfs     defaults                       0       0
+
+# SSD: NVMe partition formatted as ext4 (mounted at /mnt/ssd)
+/dev/nvme0n1p3         /mnt/ssd         ext4      defaults,rw                    0       2
+
+# SD Card: microSD slot (mmcblk1p1) mounted at /media/sdcard for photos
+/dev/mmcblk1p1         /media/sdcard    ext4      defaults,rw     0  2
+
+debugfs                /sys/kernel/debug debugfs   defaults                       0       0
+pstore                 /sys/fs/pstore   pstore    defaults                       0       0
