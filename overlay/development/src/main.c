@@ -20,5 +20,6 @@ int main() {
     pthread_join(env_thread, NULL);
     pthread_join(task_thread, NULL);
 
+
     return EXIT_SUCCESS;
 }

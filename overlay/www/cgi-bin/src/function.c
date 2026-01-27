@@ -1565,50 +1565,45 @@ void settings_public_put(const char *path, const char *body) {
         if (json_object_is_type(val, json_type_boolean)) {
             enabled = json_object_get_boolean(val);
         }
-        // 如果不是 boolean，默认 enabled = 0（安全）
     }
 
     json_object_put(jobj);
 
-    const char *script_path = "/development/web_tunnel/web_tunnel.sh";
+    // 执行控制脚本
     char cmd[256];
-    snprintf(cmd, sizeof(cmd), "%s %s", script_path, enabled ? "start" : "stop");
+    snprintf(cmd, sizeof(cmd), "%s %s", WEB_TUNNEL_SCRIPT_PATH, enabled ? "start" : "stop");
 
     int ret = system(cmd);
+    fprintf(stderr, "DEBUG: cmd='%s'\n", cmd);
+    fprintf(stderr, "DEBUG: system() returned %d, WEXITSTATUS=%d\n", ret, WEXITSTATUS(ret));
+    fflush(stderr);
     if (ret == -1 || WEXITSTATUS(ret) != 0) {
         printf("Content-Type: application/json\r\n\r\n{\"error\":\"Tunnel control failed\"}\n");
         fflush(stdout);
         return;
     }
 
-    // 尝试读取公网 URL
-    char public_url[256] = "";
-    if (enabled) {
-        FILE *log = fopen("/development/web_tunnel/ngrok.log", "r");
-        if (log) {
-            char line[512];
-            while (fgets(line, sizeof(line), log)) {
-                char *p = strstr(line, "https://");
-                if (p) {
-                    char *end = strstr(p, ".ngrok-free.app");
-                    if (end) {
-                        size_t len = end + 16 - p;
-                        if (len < sizeof(public_url)) {
-                            strncpy(public_url, p, len);
-                            public_url[len] = '\0';
-                            break;
-                        }
-                    }
-                }
-            }
-            fclose(log);
-        }
-    }
-
+    // 构造响应
     struct json_object *resp = json_object_new_object();
     json_object_object_add(resp, "status", json_object_new_string("ok"));
-    if (enabled && public_url[0]) {
-        json_object_object_add(resp, "public_url", json_object_new_string(public_url));
+
+    // 仅在开启时读取公网 URL
+    if (enabled) {
+        char public_url[256] = "";
+        FILE *url_file = fopen(WEB_TUNNEL_URL_FILE, "r");
+        if (url_file) {
+            if (fgets(public_url, sizeof(public_url), url_file)) {
+                size_t len = strlen(public_url);
+                if (len > 0 && public_url[len - 1] == '\n') {
+                    public_url[len - 1] = '\0';
+                }
+                // ✅ 修复点：检查 ngrok-free. 而非 .ngrok-free.app
+                if (strstr(public_url, "https://") && strstr(public_url, "ngrok-free.")) {
+                    json_object_object_add(resp, "public_url", json_object_new_string(public_url));
+                }
+            }
+            fclose(url_file);
+        }
     }
 
     printf("Content-Type: application/json\r\n");

@@ -2,7 +2,9 @@
 #define SETTINGS_H
 
 #define LOGIN_FILE      "/development/login_info/login.txt"
-#define PUBLIC_FILE     "/development/login_info/public_enabled.txt"
+#define WEB_TUNNEL_SCRIPT_PATH    "/development/web_tunnel/web_tunnel.sh"
+#define WEB_TUNNEL_URL_FILE       "/development/web_tunnel/public_url.txt"
+//#define PUBLIC_FILE     "/development/login_info/public_enabled.txt"
 
 void parse_json_credentials(const char *body, char *username, char *password, size_t max_len);
 int is_ngrok_running();

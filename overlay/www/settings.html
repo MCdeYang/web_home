@@ -5,11 +5,47 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>系统设置</title>
   <link rel="stylesheet" href="/assets/settings.css" />
+  <style>
+    #publicUrlDisplay {
+      margin-top: 10px;
+      padding: 8px;
+      background: #f0f8ff;
+      border-radius: 4px;
+      word-break: break-all;
+    }
+    #publicUrlDisplay a {
+      color: #1e90ff;
+      text-decoration: none;
+    }
+    #publicUrlDisplay a:hover {
+      text-decoration: underline;
+    }
+    .hidden {
+      display: none !important;
+    }
+
+    /* 转圈动画样式 */
+    @keyframes rotate {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+    .spinner {
+      display: inline-block;
+      vertical-align: middle;
+      width: 20px;
+      height: 20px;
+      border: 2px solid #f3f3f3;
+      border-top: 2px solid #1e90ff;
+      border-radius: 50%;
+      animation: rotate 1s linear infinite;
+    }
+  </style>
 </head>
 <body style="background-image: url('/assets/settings.png'); background-size: cover; background-attachment: fixed;">
   <div class="container">
     <h2>系统设置</h2>
 
+    <!-- 用户名 & 密码表单 -->
     <form id="passwordForm">
       <label for="username">用户名:</label>
       <input type="text" id="username" name="username" placeholder="请输入新用户名（支持中文）" />
@@ -23,6 +59,7 @@
       <button type="submit">保存设置</button>
     </form>
 
+    <!-- 公网穿透控制表单 -->
     <form id="publicForm" style="margin-top: 30px;">
       <label>
         <input type="checkbox" id="publicToggle" />
@@ -31,7 +68,16 @@
       <div id="warning" class="warning hidden">
         ⚠️ 警告：开启后您的设备将暴露在公网上，可能被攻击！仅在必要时开启，并尽快关闭。
       </div>
-      <button type="submit" style="margin-top: 10px;">保存公网设置</button>
+
+      <!-- 公网URL显示区域 -->
+      <div id="publicUrlDisplay" class="hidden"></div>
+
+      <!-- Loading 提示 -->
+      <div id="publicLoading" class="hidden" style="margin-top: 10px; color: #1e90ff; text-align: center;">
+        <span class="spinner"></span> 正在启动公网服务，请稍候...
+      </div>
+
+      <button type="submit" id="publicSubmitBtn" style="margin-top: 10px;">保存公网设置</button>
     </form>
 
     <a href="/index.html" class="home-button">返回主页</a>
@@ -40,14 +86,24 @@
   <script>
     const API_BASE = '/home';
 
-    // 获取当前设置
+    // 更新公网URL显示
+    function updatePublicUrlDisplay(publicUrl) {
+      const el = document.getElementById('publicUrlDisplay');
+      if (publicUrl && publicUrl.startsWith('http')) {
+        el.innerHTML = `🌐 公网地址：<a href="${publicUrl}" target="_blank">${publicUrl}</a>`;
+        el.classList.remove('hidden');
+      } else {
+        el.classList.add('hidden');
+      }
+    }
+
+    // 初始化：加载当前设置
     Promise.all([
       fetch(API_BASE + '/settings/change-password').then(r => r.json()),
       fetch(API_BASE + '/settings/public').then(r => r.json())
     ]).then(([userRes, publicRes]) => {
       const usernameEl = document.getElementById('username');
       usernameEl.value = userRes.username || 'admin';
-      // 保存原始用户名，用于后续判断是否被修改
       usernameEl.dataset.original = userRes.username || 'admin';
 
       const toggle = document.getElementById('publicToggle');
@@ -55,41 +111,36 @@
       if (publicRes.enabled) {
         document.getElementById('warning').classList.remove('hidden');
       }
+      updatePublicUrlDisplay(publicRes.public_url);
     }).catch(err => {
       console.error('加载失败:', err);
       alert('无法加载设置，请确保服务运行正常。');
     });
 
-    // 公网开关警告
-    document.getElementById('publicToggle').addEventListener('change', function() {
-      const w = document.getElementById('warning');
+    // 公网开关变化时显示警告
+    document.getElementById('publicToggle').addEventListener('change', function () {
+      const warning = document.getElementById('warning');
       if (this.checked) {
-        w.classList.remove('hidden');
+        warning.classList.remove('hidden');
         alert('⚠️ 安全警告\n\n您即将开启公网访问。这意味着任何人都可能访问您的设备！\n\n请确保：\n1. 已设置强密码\n');
       } else {
-        w.classList.add('hidden');
+        warning.classList.add('hidden');
+        updatePublicUrlDisplay('');
       }
     });
 
-    // 提交用户名和密码（带安全提示）
+    // 提交用户名/密码
     document.getElementById('passwordForm').addEventListener('submit', async (e) => {
       e.preventDefault();
-      
       const usernameEl = document.getElementById('username');
       const originalUsername = usernameEl.dataset.original || 'admin';
       let username = usernameEl.value.trim();
       const np = document.getElementById('newPassword').value;
       const cp = document.getElementById('confirmPassword').value;
 
-      // 校验用户名
-      if (!username) {
-        return alert('用户名不能为空！');
-      }
-      if (username.length < 2 || username.length > 32) {
-        return alert('用户名长度需为 2～32 个字符（支持中文）！');
-      }
+      if (!username) return alert('用户名不能为空！');
+      if (username.length < 2 || username.length > 32) return alert('用户名长度需为 2～32 个字符（支持中文）！');
 
-      // 检查：是否修改了用户名但未提供新密码？
       const isUsernameChanged = username !== originalUsername;
       const isPasswordEmpty = !np;
 
@@ -99,12 +150,9 @@
           '为安全起见，建议同时更新密码。\n\n' +
           '请同时修改密码，或点击“取消”返回。'
         );
-        if (!confirmed) {
-          return; // 用户取消提交
-        }
+        if (!confirmed) return;
       }
 
-      // 校验密码（如果提供了）
       if (np) {
         if (np !== cp) return alert('密码不一致！');
         if (np.length < 4) return alert('密码至少4位！');
@@ -116,15 +164,13 @@
           headers: { 'Content-Type': 'application/json; charset=utf-8' },
           body: JSON.stringify({
             username: username,
-            password: np || ""  // 空字符串表示不改密码
+            password: np || ""
           })
         });
 
         if (res.ok) {
           alert('设置已更新！');
-          // 更新原始值，避免重复提示
           usernameEl.dataset.original = username;
-          // 清空密码输入框
           document.getElementById('newPassword').value = '';
           document.getElementById('confirmPassword').value = '';
         } else {
@@ -136,24 +182,41 @@
       }
     });
 
-    // 提交公网设置
+    // 提交公网设置（带 loading）
     document.getElementById('publicForm').addEventListener('submit', async (e) => {
       e.preventDefault();
-      const enabled = document.getElementById('publicToggle').checked;
+      const toggle = document.getElementById('publicToggle');
+      const btn = document.getElementById('publicSubmitBtn');
+      const loading = document.getElementById('publicLoading');
+      const enabled = toggle.checked;
+
+      // 显示加载状态
+      btn.disabled = true;
+      loading.classList.remove('hidden');
+
       try {
         const res = await fetch(API_BASE + '/settings/public', {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ enabled })
         });
+
         if (res.ok) {
+          const data = await res.json();
           alert(`公网访问已${enabled ? '开启' : '关闭'}。`);
+          updatePublicUrlDisplay(enabled ? data.public_url : '');
         } else {
           const text = await res.text();
           alert('设置失败：' + (text || '未知错误'));
+          updatePublicUrlDisplay('');
         }
       } catch (err) {
         alert('请求失败：' + err.message);
+        updatePublicUrlDisplay('');
+      } finally {
+        // 恢复按钮和隐藏 loading
+        btn.disabled = false;
+        loading.classList.add('hidden');
       }
     });
   </script>

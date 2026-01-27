@@ -39,7 +39,33 @@ case $VERSION in
         exit 1
         ;;
 esac
+# === 下载 ngrok 到 overlay/development/web_tunnel/ ===
+NGROK_DIR="overlay/development/web_tunnel"
+LOCAL_TGZ="ngrok-v3-stable-linux-arm64.tgz"
 
+mkdir -p "$NGROK_DIR"
+if [ -f "$NGROK_DIR/ngrok" ]; then
+    echo "Removing existing ngrok binary..."
+    rm -f "$NGROK_DIR/ngrok"
+fi
+if [ ! -f "$NGROK_DIR/ngrok" ]; then
+    echo "Checking for local ngrok archive..."
+    if [ -f "$LOCAL_TGZ" ]; then
+        echo "Using local $LOCAL_TGZ"
+        cp "$LOCAL_TGZ" /tmp/ngrok.tgz
+    else
+        echo "Local archive not found, downloading from internet..."
+        wget -q --timeout=30 --tries=3 https://bin.equinox.io/c/bNyj1mQVY4c/ngrok-v3-stable-linux-arm64.tgz -O /tmp/ngrok.tgz
+        if [ $? -ne 0 ]; then
+            echo "ERROR: Failed to download ngrok. Please place '$LOCAL_TGZ' in current directory and retry."
+            exit 1
+        fi
+    fi
+    tar -xzf /tmp/ngrok.tgz -C "$NGROK_DIR" ngrok
+    chmod +x "$NGROK_DIR/ngrok"
+    rm -f /tmp/ngrok.tgz
+    echo "ngrok placed in overlay/development/web_tunnel/"
+fi
 # === 应用 overlay ===
 if [ -d overlay ]; then
     echo "Applying overlay..."
@@ -70,8 +96,8 @@ sudo chroot "${chroot_dir}" /bin/bash -c "
 
     # 创建 APT 缓存目录（防止 partial 错误）
     mkdir -p /var/cache/apt/archives/partial
-    # ✅ 只安装你需要的软件（lighttpd）
-    # ❌ 避免安装 vim（易引发版本冲突）
+    # 只安装你需要的软件（lighttpd）
+    # 避免安装 vim（易引发版本冲突）
     apt install -y --no-install-recommends lighttpd
 	apt install -y --no-install-recommends libcurl4-openssl-dev 
 	apt install -y --no-install-recommends libjson-c-dev
@@ -87,17 +113,6 @@ sudo chroot "${chroot_dir}" /bin/bash -c "
     apt clean
     rm -rf /var/lib/apt/lists/*
 "
-# === 下载 ngrok 到 overlay/development/web_tunnel/ ===
-NGROK_DIR="overlay/development/web_tunnel"
-mkdir -p " $ NGROK_DIR"
-if [ ! -f " $ NGROK_DIR/ngrok" ]; then
-    echo "downloading ngrok for aarch64 into overlay..."
-    wget -q https://bin.equinox.io/c/bNyj1mQVY4c/ngrok-v3-stable-linux-arm64.tgz -O /tmp/ngrok.tgz
-    tar -xzf /tmp/ngrok.tgz -C " $ NGROK_DIR" ngrok
-    chmod +x " $ NGROK_DIR/ngrok"
-    rm -f /tmp/ngrok.tgz
-    echo "ngrok puted overlay/development/web_tunnel/"
-fi
 # === 编译 CGI ===
 echo "Building CGI programs using Makefile..."
 if [ -f overlay/www/cgi-bin/src/Makefile ]; then
@@ -156,6 +171,16 @@ if [ -f "$SRC_INIT" ]; then
     echo "${DST_NAME} installed and enabled."
 else
     echo "Warning: $SRC_INIT not found, skipping."
+fi
+# === 更改ngrok的属主 ===
+echo "Setting ownership for web_tunnel files to nobody..."
+if [ -f "${chroot_dir}/development/web_tunnel/ngrok" ]; then
+    sudo chown 65534:65534 "${chroot_dir}/development/web_tunnel/ngrok"
+    sudo chmod 755 "${chroot_dir}/development/web_tunnel/ngrok"
+fi
+if [ -f "${chroot_dir}/development/web_tunnel/web_tunnel.sh" ]; then
+    sudo chown 65534:65534 "${chroot_dir}/development/web_tunnel/web_tunnel.sh"
+    sudo chmod 755 "${chroot_dir}/development/web_tunnel/web_tunnel.sh"
 fi
 # === 安全卸载所有挂载点 ===
 echo "Unmounting virtual filesystems..."
