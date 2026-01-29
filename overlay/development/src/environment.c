@@ -3,6 +3,8 @@
 #include <string.h>
 #include <unistd.h>
 #include <time.h>
+#include <fcntl.h>
+#include <sys/file.h>
 #include <curl/curl.h>
 #include "environment.h"
 
@@ -80,12 +82,20 @@ int fetch_weather_to_file() {
         return -1;
     }
 
-    FILE *fp = fopen(WEATHER_CACHE_FILE, "w");
-    if (fp) {
-        fwrite(chunk.memory, 1, chunk.size, fp);
-        fclose(fp);
-    } else {
+    int fd = open(WEATHER_CACHE_FILE, O_WRONLY | O_CREAT | O_TRUNC, 0644);
+    if (fd < 0) {
         fprintf(stderr, "Failed to open weather cache file for writing\n");
+    } else {
+        if (flock(fd, LOCK_EX) != 0) {
+            perror("flock failed");
+        } else {
+            ssize_t written = write(fd, chunk.memory, chunk.size);
+            if (written < 0) {
+                perror("write failed");
+            }
+            flock(fd, LOCK_UN);
+        }
+        close(fd);
     }
 
     curl_easy_cleanup(curl);

@@ -17,6 +17,10 @@ struct route routes[] = {
         .get = weather_get
     },
     {
+        .path = "/temperature",
+        .get = temperature_get
+    },
+    {
         .path = "/picture",
         .get = picture_get,
         .put = picture_put

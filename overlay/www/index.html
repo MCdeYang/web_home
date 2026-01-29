@@ -59,43 +59,33 @@
   </div>
 
   <!-- 🔐 登录状态检测（关键：放在内容之后、动画之前） -->
-  <script>
-    (async () => {
+    <script>
+    // === 温湿度轮询 ===
+    async function fetchAndRenderTemperature() {
+      const tempEl = document.getElementById('temperature');
       try {
-        const res = await fetch('/home/check-auth');
-        if (res.status === 401) {
-          window.location.replace('/login.html');
-          return;
+        const res = await fetch('/home/temperature');
+        if (!res.ok) throw new Error('Network error');
+
+        const data = await res.json();
+
+        // 检查是否有有效数据
+        if (data.humidity != null && data.temperature != null) {
+          const hum = parseFloat(data.humidity).toFixed(1);
+          const temp = parseFloat(data.temperature).toFixed(1);
+          tempEl.textContent = `🌡️ 室温：${temp}°C · 湿度：${hum}%`;
+        } else if (data.error) {
+          tempEl.textContent = `🌡️ ${data.error}`;
+        } else {
+          tempEl.textContent = '🌡️ 数据异常';
         }
-
-        let data;
-        try {
-          data = await res.json();
-        } catch (e) {
-          data = {};
-        }
-
-        if (data.error && data.error.includes('Unauthorized')) {
-          window.location.replace('/login.html');
-          return;
-        }
-
-        document.getElementById('auth-guard').style.display = 'none';
-        document.getElementById('app-content').style.display = 'block';
-
-        // ✅ 认证成功后，启动天气轮询
-        fetchAndRenderWeather(); // 立即获取
-        setInterval(fetchAndRenderWeather, 5 * 60 * 1000); // 每5分钟
-
       } catch (err) {
-        window.location.replace('/login.html');
+        console.error('Temperature fetch failed:', err);
+        tempEl.textContent = '🌡️ 加载失败';
       }
-    })();
-  </script>
+    }
 
-  <!-- ⏱️ 时间 & 🌟 粒子动画（仅在认证后执行） -->
-  <script>
-    // 天气图标映射（根据 QWeather 的 text 字段）
+    // === 天气图标映射（保持不变）===
     const WEATHER_ICONS = {
       '晴': '☀️',
       '多云': '⛅',
@@ -146,9 +136,9 @@
         const windScale = data.wind_scale ? `${data.wind_scale}级` : '';
 
         let desc = `${weather} · ${temp}°C`;
-        if (feelsLike !== '--') desc += ` · 体感${feelsLike}°C`;
-        if (humidity !== '--') desc += ` · 湿度${humidity}%`;
-        if (windDir || windScale) desc += ` · ${windDir}${windScale}`;
+        if (feelsLike !== '--') desc += ` · 体感 ${feelsLike}°C`;
+        if (humidity !== '--') desc += ` · 湿度 ${humidity}%`;
+        if (windDir || windScale) desc += ` · ${windDir} ${windScale}`;
 
         weatherTextEl.textContent = desc;
         weatherIconEl.textContent = getWeatherIcon(weather);
@@ -160,7 +150,48 @@
       }
     }
 
-    // 只有认证通过后才初始化动画和时间
+    // === 认证 & 初始化 ===
+    (async () => {
+      try {
+        const res = await fetch('/home/check-auth');
+        if (res.status === 401) {
+          window.location.replace('/login.html');
+          return;
+        }
+
+        let data;
+        try {
+          data = await res.json();
+        } catch (e) {
+          data = {};
+        }
+
+        if (data.error && data.error.includes('Unauthorized')) {
+          window.location.replace('/login.html');
+          return;
+        }
+
+        // 隐藏遮罩，显示内容
+        document.getElementById('auth-guard').style.display = 'none';
+        document.getElementById('app-content').style.display = 'block';
+
+        // ✅ 启动温湿度轮询（立即 + 每30秒）
+        fetchAndRenderTemperature();
+        setInterval(fetchAndRenderTemperature, 30 * 1000);
+
+        // 启动天气轮询（立即 + 每5分钟）
+        fetchAndRenderWeather();
+        setInterval(fetchAndRenderWeather, 5 * 60 * 1000);
+
+        // 初始化时间 & 粒子动画
+        initApp();
+
+      } catch (err) {
+        window.location.replace('/login.html');
+      }
+    })();
+
+    // === 时间 & 粒子动画（保持不变）===
     function initApp() {
       // === 实时时间 ===
       function updateTime() {
@@ -226,13 +257,6 @@
         requestAnimationFrame(animate);
       }
       animate();
-    }
-
-    // 等待 DOM 加载完成
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', initApp);
-    } else {
-      initApp();
     }
   </script>
 </body>

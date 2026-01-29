@@ -3,6 +3,7 @@
 //GET
 void check_auth_get(const char *path, const char *body);
 void weather_get(const char *path, const char *body);
+void temperature_get(const char *path, const char *body);
 void picture_get(const char *path, const char *body);
 void notice_get(const char *path, const char *body);
 void system_get(const char *path, const char *body);

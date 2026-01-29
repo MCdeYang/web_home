@@ -1,10 +1,14 @@
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
-#include <sys/stat.h> 
 #include <stdlib.h>
 #include <errno.h>
+#include <fcntl.h>
+#include <sys/stat.h> 
+#include <sys/file.h>
+#include <stdbool.h>
 #include <json-c/json.h>
+
 #include "function.h"
 #include "util.h"
 #include "error.h"
@@ -18,10 +22,11 @@
 #include "token.h"
 
 extern const char* get_disk_root(void);
-#define VALID_USERNAME "root"
-#define VALID_PASSWORD "root"
+//#define VALID_USERNAME "root"
+//#define VALID_PASSWORD "root"
 
 #define WEATHER "/development/tmp/weather.json"
+#define TEMP_JSON_PATH "/development/tmp/temperature.json"
 
 static void send_json_response(struct json_object *obj) {
     printf("Content-Type: application/json\r\n\r\n");
@@ -31,44 +36,66 @@ static void send_json_response(struct json_object *obj) {
 
 //GET
 void weather_get(const char *path, const char *body) {
+    (void)path;
+    (void)body;
+    
+    int fd;
+    off_t fsize;
+    char *buffer = NULL;
+    ssize_t bytes_read;
+    WeatherData wd;
+    json_object *resp = NULL;
+    const char *output;
     // 1. 输出 HTTP 头（仅此一次！）
     printf("Content-Type: application/json; charset=utf-8\r\n");
     printf("Cache-Control: no-cache\r\n");
     printf("\r\n"); // ← 空行结束头部
 
-    // 2. 读取 /tmp/weather.json
-    FILE *fp = fopen(WEATHER, "r");
-    if (!fp) {
-        printf("{\"code\":\"503\",\"error\":\"Weather cache not found\"}\n");
+    fd = open(WEATHER, O_RDONLY);
+    if (fd < 0) {
+        send_error_404("Weather cache not found");
         return;
     }
-
-    fseek(fp, 0, SEEK_END);
-    long fsize = ftell(fp);
-    fseek(fp, 0, SEEK_SET);
-
-    char *buffer = malloc(fsize + 1);
+    if (flock(fd, LOCK_SH) != 0) {
+        close(fd);
+        send_error_500("Failed to acquire read lock");
+        return;
+    }
+    fsize = lseek(fd, 0, SEEK_END);
+    if (fsize <= 0) {
+        flock(fd, LOCK_UN);
+        close(fd);
+        send_error_404("Weather file is empty");
+        return;
+    }
+    lseek(fd, 0, SEEK_SET);
+    buffer = malloc(fsize + 1);
     if (!buffer) {
-        fclose(fp);
-        printf("{\"code\":\"500\",\"error\":\"Memory error\"}\n");
+        flock(fd, LOCK_UN);
+        close(fd);
+        send_error_500("Memory error");
         return;
     }
-
-    fread(buffer, 1, fsize, fp);
+    bytes_read = read(fd, buffer, fsize);
+    flock(fd, LOCK_UN);
+    close(fd);
+    if (bytes_read != fsize) {
+        free(buffer);
+        send_error_500("Incomplete file read");
+        return;
+    }
     buffer[fsize] = '\0';
-    fclose(fp);
 
     // 3. 解析 JSON
-    WeatherData wd;
     if (parse_weather_json(buffer, &wd) != 0) {
         free(buffer);
-        printf("{\"code\":\"500\",\"error\":\"JSON parse failed\"}\n");
+        send_error_500("JSON parse failed");
         return;
     }
     free(buffer);
 
     // 4. 构建响应 JSON
-    json_object *resp = json_object_new_object();
+    resp = json_object_new_object();
     json_object_object_add(resp, "code", json_object_new_string(wd.code));
 
     if (wd.valid) {
@@ -83,10 +110,138 @@ void weather_get(const char *path, const char *body) {
     }
 
     // 5. 只输出 JSON（不再输出任何头！）
-    const char *output = json_object_to_json_string_ext(resp, JSON_C_TO_STRING_PLAIN);
+    output = json_object_to_json_string_ext(resp, JSON_C_TO_STRING_PLAIN);
     printf("%s\n", output);
 
     json_object_put(resp);
+}
+void temperature_get(const char *path, const char *body) {
+    (void)path;
+    (void)body;
+
+    // 打开文件
+    int fd = open(TEMP_JSON_PATH, O_RDONLY);
+    if (fd < 0) {
+        // 构造错误响应
+        json_object *resp = json_object_new_object();
+        json_object_object_add(resp, "error", json_object_new_string("Temperature data not available"));
+        json_object_object_add(resp, "code", json_object_new_int(404));
+        
+        printf("Content-Type: application/json\r\n\r\n");
+        printf("%s\n", json_object_to_json_string(resp));
+        json_object_put(resp);
+        return;
+    }
+
+    // 加共享读锁
+    if (flock(fd, LOCK_SH) != 0) {
+        close(fd);
+        json_object *resp = json_object_new_object();
+        json_object_object_add(resp, "error", json_object_new_string("Failed to acquire read lock"));
+        json_object_object_add(resp, "code", json_object_new_int(500));
+        
+        printf("Content-Type: application/json\r\n\r\n");
+        printf("%s\n", json_object_to_json_string(resp));
+        json_object_put(resp);
+        return;
+    }
+
+    // 读取整个文件
+    off_t size = lseek(fd, 0, SEEK_END);
+    if (size <= 0) {
+        flock(fd, LOCK_UN);
+        close(fd);
+        json_object *resp = json_object_new_object();
+        json_object_object_add(resp, "error", json_object_new_string("Temperature file is empty"));
+        json_object_object_add(resp, "code", json_object_new_int(404));
+        
+        printf("Content-Type: application/json\r\n\r\n");
+        printf("%s\n", json_object_to_json_string(resp));
+        json_object_put(resp);
+        return;
+    }
+    lseek(fd, 0, SEEK_SET);
+
+    char *buffer = malloc(size + 1);
+    if (!buffer) {
+        flock(fd, LOCK_UN);
+        close(fd);
+        json_object *resp = json_object_new_object();
+        json_object_object_add(resp, "error", json_object_new_string("Memory allocation failed"));
+        json_object_object_add(resp, "code", json_object_new_int(500));
+        
+        printf("Content-Type: application/json\r\n\r\n");
+        printf("%s\n", json_object_to_json_string(resp));
+        json_object_put(resp);
+        return;
+    }
+
+    ssize_t bytes_read = read(fd, buffer, size);
+    flock(fd, LOCK_UN);
+    close(fd);
+
+    if (bytes_read != size) {
+        free(buffer);
+        json_object *resp = json_object_new_object();
+        json_object_object_add(resp, "error", json_object_new_string("Incomplete file read"));
+        json_object_object_add(resp, "code", json_object_new_int(500));
+        
+        printf("Content-Type: application/json\r\n\r\n");
+        printf("%s\n", json_object_to_json_string(resp));
+        json_object_put(resp);
+        return;
+    }
+    buffer[bytes_read] = '\0';
+
+    // 尝试解析 JSON
+    json_object *parsed = json_tokener_parse(buffer);
+    free(buffer);
+
+    json_object *response = json_object_new_object();
+
+    if (parsed == NULL) {
+        // 解析失败
+        json_object_object_add(response, "error", json_object_new_string("Invalid JSON in temperature file"));
+        json_object_object_add(response, "code", json_object_new_int(500));
+    } else {
+        // 提取字段（安全检查类型）
+        json_object *h_obj, *t_obj, *ts_obj;
+        double humidity = -1.0, temperature = -1.0;
+        int64_t timestamp = 0;
+
+        if (json_object_object_get_ex(parsed, "humidity", &h_obj) &&
+            json_object_is_type(h_obj, json_type_double)) {
+            humidity = json_object_get_double(h_obj);
+        }
+
+        if (json_object_object_get_ex(parsed, "temperature", &t_obj) &&
+            json_object_is_type(t_obj, json_type_double)) {
+            temperature = json_object_get_double(t_obj);
+        }
+
+        if (json_object_object_get_ex(parsed, "timestamp", &ts_obj) &&
+            json_object_is_type(ts_obj, json_type_int)) {
+            timestamp = json_object_get_int64(ts_obj);
+        }
+
+        json_object_put(parsed); // 释放原始解析对象
+
+        // 构造成功响应
+        if (humidity >= 0 && temperature >= -50) { // 简单有效性检查
+            json_object_object_add(response, "humidity", json_object_new_double(humidity));
+            json_object_object_add(response, "temperature", json_object_new_double(temperature));
+            json_object_object_add(response, "timestamp", json_object_new_int64(timestamp));
+            json_object_object_add(response, "success", json_object_new_boolean(true));
+        } else {
+            json_object_object_add(response, "error", json_object_new_string("Missing or invalid sensor data"));
+            json_object_object_add(response, "code", json_object_new_int(500));
+        }
+    }
+
+    // 输出最终响应
+    printf("Content-Type: application/json\r\n\r\n");
+    printf("%s\n", json_object_to_json_string_ext(response, JSON_C_TO_STRING_PRETTY));
+    json_object_put(response);
 }
 void picture_get(const char *path, const char *body){}
 void notice_get(const char *path, const char *body){}

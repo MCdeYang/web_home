@@ -1,7 +1,8 @@
+
 CC = gcc
 CFLAGS = -Iincludes -pthread
 LDFLAGS = -lcurl -ljson-c -pthread
-SRC = src/main.c src/environment.c src/check_task.c
+SRC = $(wildcard src/*.c)
 OBJ = $(SRC:.c=.o)
 TARGET = environment
 

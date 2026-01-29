@@ -3,9 +3,10 @@
 #include <pthread.h>
 #include "environment.h"
 #include "check_task.h"
+#include "temperature.h"
 
 int main() {
-    pthread_t env_thread, task_thread;
+    pthread_t env_thread, task_thread, temp_thread;
 
     if (pthread_create(&env_thread, NULL, environment_thread, NULL) != 0) {
         perror("Failed to create environment thread");
@@ -14,6 +15,10 @@ int main() {
 
     if (pthread_create(&task_thread, NULL, check_task_thread, NULL) != 0) {
         perror("Failed to create check_task thread");
+        return EXIT_FAILURE;
+    }
+    if (pthread_create(&temp_thread, NULL, temperature_thread, NULL) != 0) {
+        perror("Failed to create temperature thread");
         return EXIT_FAILURE;
     }
 
