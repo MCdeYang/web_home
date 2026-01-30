@@ -19,7 +19,7 @@
 #define MQ_NAME        "/zigbee_cmd"
 #define MQ_MAX_MSG     10
 #define MAX_CMD_LEN    32
-#define SERIAL_DEVICE  "/dev/ttyUSB4"  // 👈 请根据实际设备修改！
+#define SERIAL_DEVICE  "/dev/zigbee_module"
 
 // 函数声明
 int init_zigbee_mq(void);

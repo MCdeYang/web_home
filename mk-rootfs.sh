@@ -157,6 +157,14 @@ if [ -f "${chroot_dir}/etc/init.d/environment" ]; then
         update-rc.d environment defaults
     "
 fi
+# === 启用 serial-symlinks 开机自启 ===
+if [ -f "${chroot_dir}/etc/init.d/serial-symlinks" ]; then
+    echo "Enabling serial-symlinks at boot..."
+    sudo chroot "${chroot_dir}" /bin/bash -c "
+        chmod +x /etc/init.d/serial-symlinks
+        update-rc.d serial-symlinks defaults
+    "
+fi
 # === 安装并启用 create_photos_dir 开机自启 ===
 echo "Installing and enabling create_photos_dir init script..."
 SRC_INIT="overlay/etc/init.d/S16_create_photos_dir"

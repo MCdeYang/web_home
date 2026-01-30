@@ -21,6 +21,8 @@ pthread_mutex_t g_mq_write_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 // 状态文件路径
 #define STATE_FILE "/development/tmp/device_state.txt"
+#define MAX_RETRY 10
+#define RETRY_DELAY_SEC 2
 
 // 合法命令列表（共享）
 static const char* valid_commands[] = {
@@ -99,16 +101,43 @@ static void save_state_to_file(int light, int fan, int aircon, int washing, int 
 
 // 打开 Zigbee 串口
 static int open_serial_port(void) {
-    int fd = open(SERIAL_DEVICE, O_RDWR | O_NOCTTY);
-    if (fd < 0) return -1;
+    int fd = -1;
+    int retry = 0;
 
-    struct termios tty;
-    tcgetattr(fd, &tty);
-    cfmakeraw(&tty);
-    cfsetspeed(&tty, B115200);
-    tcsetattr(fd, TCSANOW, &tty);
-    tcflush(fd, TCIOFLUSH);
-    return fd;
+    while (retry < MAX_RETRY) {
+        fd = open(SERIAL_DEVICE, O_RDWR | O_NOCTTY);
+        if (fd >= 0) {
+            // 成功打开，配置串口
+            struct termios tty;
+            if (tcgetattr(fd, &tty) != 0) {
+                perror("tcgetattr failed");
+                close(fd);
+                return -1;
+            }
+            cfmakeraw(&tty);
+            cfsetspeed(&tty, B115200);
+            if (tcsetattr(fd, TCSANOW, &tty) != 0) {
+                perror("tcsetattr failed");
+                close(fd);
+                return -1;
+            }
+            tcflush(fd, TCIOFLUSH);
+            printf("[Zigbee] Serial port opened successfully: %s\n", SERIAL_DEVICE);
+            return fd;
+        }
+
+        // 打开失败
+        fprintf(stderr, "[Zigbee] Failed to open %s (attempt %d/%d): %s\n",
+                SERIAL_DEVICE, retry + 1, MAX_RETRY, strerror(errno));
+
+        retry++;
+        if (retry < MAX_RETRY) {
+            sleep(RETRY_DELAY_SEC);
+        }
+    }
+
+    fprintf(stderr, "[Zigbee] Giving up after %d attempts.\n", MAX_RETRY);
+    return -1;
 }
 
 // 验证命令（内部函数）
