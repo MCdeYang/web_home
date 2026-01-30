@@ -1556,18 +1556,21 @@ void control_door_put(const char *path, const char *body) {
         printf("Status: 500 Internal Server Error\r\n\r\n");
     }
 }
-
 void control_light_get(const char *path, const char *body) {
+    int state = get_light_state();  // 从本地状态获取
+    printf("Content-Type: application/json\r\n\r\n");
+    printf("{\"state\": %d}", state);
+}
 
-    int state = 1; // 固定返回“开启”用于测试
-
+void control_fan_get(const char *path, const char *body) {
+    int state = get_fan_state();
     printf("Content-Type: application/json\r\n\r\n");
     printf("{\"state\": %d}", state);
 }
 
 void control_aircon_get(const char *path, const char *body) {
 
-    int state = 0; // 固定返回“关闭”
+    int state = get_aircon_state(); // 从本地状态获取
 
     printf("Content-Type: application/json\r\n\r\n");
     printf("{\"state\": %d}", state);
@@ -1575,15 +1578,7 @@ void control_aircon_get(const char *path, const char *body) {
 
 void control_washing_machine_get(const char *path, const char *body) {
 
-    int state = 0; // 固定返回“停止”
-
-    printf("Content-Type: application/json\r\n\r\n");
-    printf("{\"state\": %d}", state);
-}
-
-void control_fan_get(const char *path, const char *body) {
-
-    int state = 1; // 固定返回“运转中”
+    int state = get_washing_state(); // 从本地状态获取
 
     printf("Content-Type: application/json\r\n\r\n");
     printf("{\"state\": %d}", state);
@@ -1593,7 +1588,7 @@ void control_door_get(const char *path, const char *body) {
 
     // 注意：门默认“锁定”对应 state=0（因为前端 door: true 表示锁定）
     // 但为了统一语义，建议：state=1 表示“解锁”，state=0 表示“锁定”
-    int state = 0; // 固定返回“锁定”
+    int state = get_door_state(); // 从本地状态获取
 
     printf("Content-Type: application/json\r\n\r\n");
     printf("{\"state\": %d}", state);
