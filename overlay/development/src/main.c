@@ -4,10 +4,16 @@
 #include "environment.h"
 #include "check_task.h"
 #include "temperature.h"
+#include "zigbee_mq.h"
 
 int main() {
-    pthread_t env_thread, task_thread, temp_thread;
-
+    pthread_t env_thread, task_thread, temp_thread, zig_thread;
+    //初始化 Zigbee 消息队列
+    if (init_zigbee_mq() != 0) {
+        fprintf(stderr, "Failed to init MQ\n");
+        return 1;
+    }
+    //创建各个线程
     if (pthread_create(&env_thread, NULL, environment_thread, NULL) != 0) {
         perror("Failed to create environment thread");
         return EXIT_FAILURE;
@@ -21,10 +27,15 @@ int main() {
         perror("Failed to create temperature thread");
         return EXIT_FAILURE;
     }
+    if (pthread_create(&zig_thread, NULL, zigbee_thread, NULL) != 0) {
+        perror("Failed to create zigbee thread");
+        return EXIT_FAILURE;
+    }
 
     pthread_join(env_thread, NULL);
     pthread_join(task_thread, NULL);
-
+    pthread_join(temp_thread, NULL);
+    pthread_join(zig_thread, NULL);
 
     return EXIT_SUCCESS;
 }

@@ -40,8 +40,3 @@ int parse_state_from_json(const char *json_body) {
     json_object_put(root); // 释放内存
     return state; // 0, 1, or -1
 }
-int set_light_state(int on) { return 0; }
-int set_aircon_state(int on) { return 0; }
-int set_washing_machine_state(int on) { return 0; }
-int set_fan_state(int on) { return 0; }
-int set_door_state(int unlocked) { return 0; }

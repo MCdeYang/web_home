@@ -10,6 +10,7 @@
 #include <json-c/json.h>
 
 #include "function.h"
+#include "common.h"
 #include "util.h"
 #include "error.h"
 #include "system.h"
@@ -19,6 +20,7 @@
 #include "family.h"
 #include "control.h"
 #include "settings.h"
+#include "zigbee_mq.h"
 #include "token.h"
 
 extern const char* get_disk_root(void);
@@ -29,7 +31,7 @@ extern const char* get_disk_root(void);
 #define TEMP_JSON_PATH "/development/tmp/temperature.json"
 
 static void send_json_response(struct json_object *obj) {
-    printf("Content-Type: application/json\r\n\r\n");
+    send_json_headers();
     printf("%s\n", json_object_to_json_string_ext(obj, JSON_C_TO_STRING_PLAIN));
     json_object_put(obj);
 }
@@ -46,21 +48,20 @@ void weather_get(const char *path, const char *body) {
     WeatherData wd;
     json_object *resp = NULL;
     const char *output;
-    // 1. 输出 HTTP 头（仅此一次！）
-    printf("Content-Type: application/json; charset=utf-8\r\n");
-    printf("Cache-Control: no-cache\r\n");
-    printf("\r\n"); // ← 空行结束头部
 
+    send_json_headers();
     fd = open(WEATHER, O_RDONLY);
     if (fd < 0) {
         send_error_404("Weather cache not found");
         return;
     }
+    //加读锁并读取文件内容
     if (flock(fd, LOCK_SH) != 0) {
         close(fd);
         send_error_500("Failed to acquire read lock");
         return;
     }
+    //读取整个文件
     fsize = lseek(fd, 0, SEEK_END);
     if (fsize <= 0) {
         flock(fd, LOCK_UN);
@@ -85,19 +86,16 @@ void weather_get(const char *path, const char *body) {
         return;
     }
     buffer[fsize] = '\0';
-
-    // 3. 解析 JSON
+    //解析 JSON
     if (parse_weather_json(buffer, &wd) != 0) {
         free(buffer);
         send_error_500("JSON parse failed");
         return;
     }
     free(buffer);
-
-    // 4. 构建响应 JSON
+    //构建响应 JSON
     resp = json_object_new_object();
     json_object_object_add(resp, "code", json_object_new_string(wd.code));
-
     if (wd.valid) {
         json_object_object_add(resp, "weather",      json_object_new_string(wd.weather));
         json_object_object_add(resp, "temperature",  json_object_new_string(wd.temperature));
@@ -108,11 +106,9 @@ void weather_get(const char *path, const char *body) {
     } else {
         json_object_object_add(resp, "error", json_object_new_string("Weather data invalid"));
     }
-
-    // 5. 只输出 JSON（不再输出任何头！）
+    //只输出JSON
     output = json_object_to_json_string_ext(resp, JSON_C_TO_STRING_PLAIN);
     printf("%s\n", output);
-
     json_object_put(resp);
 }
 void temperature_get(const char *path, const char *body) {
@@ -239,7 +235,7 @@ void temperature_get(const char *path, const char *body) {
     }
 
     // 输出最终响应
-    printf("Content-Type: application/json\r\n\r\n");
+    send_json_headers();
     printf("%s\n", json_object_to_json_string_ext(response, JSON_C_TO_STRING_PRETTY));
     json_object_put(response);
 }
@@ -270,27 +266,21 @@ void system_get(const char *path, const char *body) {
     }
 
     // 🧱 3. 构建 JSON 响应
+    send_json_headers();
     struct json_object *root = json_object_new_object();
-
     json_object_object_add(root, "load_percent",     json_object_new_double(info.load_percent));
     json_object_object_add(root, "uptime_minutes",   json_object_new_int64(info.uptime_minutes));
     json_object_object_add(root, "memory_total_mb",  json_object_new_int64(info.memory_total_mb));
     json_object_object_add(root, "memory_used_mb",   json_object_new_int64(info.memory_used_mb));
     json_object_object_add(root, "memory_percent",   json_object_new_double(info.memory_percent));
     json_object_object_add(root, "ip",               json_object_new_string(info.ip));
-
     if (info.cpu_temp_c >= 0) {
         json_object_object_add(root, "cpu_temp_c",   json_object_new_double(info.cpu_temp_c));
     }
-
     json_object_object_add(root, "disk_total_gb",    json_object_new_int64(info.disk_total_gb));
     json_object_object_add(root, "disk_used_gb",     json_object_new_int64(info.disk_used_gb));
     json_object_object_add(root, "disk_percent",     json_object_new_double(info.disk_percent));
-
-    // 📤 4. 输出响应（注意：先 Content-Type，再空行，再 body）
-    printf("Content-Type: application/json; charset=utf-8\r\n\r\n");
     printf("%s\n", json_object_to_json_string_ext(root, JSON_C_TO_STRING_PLAIN));
-
     json_object_put(root);
 }
 
@@ -1283,20 +1273,16 @@ void photos_delete(const char *path, const char *body) {
 void family_members_get(const char *path, const char *body) {
     (void)path; (void)body;
 
-    printf("Content-Type: application/json; charset=utf-8\r\n\r\n");
-
     json_object *root = load_family_data();
+    send_json_headers();
     if (!root) {
         printf("{\"error\":\"Internal error\"}\n");
         return;
     }
-
     json_object *resp = json_object_new_object();
     json_object_object_add(resp, "members",
         json_object_get(json_object_object_get(root, "members")));
-
     printf("%s\n", json_object_to_json_string_ext(resp, JSON_C_TO_STRING_PLAIN));
-
     json_object_put(resp);
     json_object_put(root);
 }
@@ -1304,31 +1290,26 @@ void family_members_get(const char *path, const char *body) {
 void family_members_post(const char *path, const char *body) {
     (void)path;
 
-    printf("Content-Type: application/json; charset=utf-8\r\n\r\n");
-
     json_object *req = json_tokener_parse(body);
+    send_json_headers();
     if (!req) {
         printf("{\"error\":\"Invalid JSON\"}\n");
         return;
     }
-
     const char *name = json_object_get_string(json_object_object_get(req, "name"));
     const char *wechat_id = json_object_get_string(json_object_object_get(req, "wechat_id"));
     const char *birthday = json_object_get_string(json_object_object_get(req, "birthday"));
-
     if (!name || !wechat_id || !birthday) {
         json_object_put(req);
         printf("{\"error\":\"Missing name/wechat_id/birthday\"}\n");
         return;
     }
-
     json_object *root = load_family_data();
     if (!root) {
         json_object_put(req);
         printf("{\"error\":\"Failed to load data\"}\n");
         return;
     }
-
     json_object *members = json_object_object_get(root, "members");
     int exists = 0;
     for (int i = 0; i < json_object_array_length(members); i++) {
@@ -1339,28 +1320,24 @@ void family_members_post(const char *path, const char *body) {
             break;
         }
     }
-
     if (exists) {
         json_object_put(req);
         json_object_put(root);
         printf("{\"error\":\"Member already exists\"}\n");
         return;
     }
-
     json_object *new_member = json_object_new_object();
     json_object_object_add(new_member, "name", json_object_new_string(name));
     json_object_object_add(new_member, "wechat_id", json_object_new_string(wechat_id));
     json_object_object_add(new_member, "birthday", json_object_new_string(birthday));
     json_object_object_add(new_member, "tasks", json_object_new_array());
     json_object_array_add(members, new_member);
-
     if (save_family_data(root) != 0) {
         json_object_put(req);
         json_object_put(root);
         printf("{\"error\":\"Failed to save\"}\n");
         return;
     }
-
     json_object_put(req);
     json_object_put(root);
     printf("{\"status\":\"success\"}\n");
@@ -1369,7 +1346,7 @@ void family_members_post(const char *path, const char *body) {
 void family_task_post(const char *path, const char *body) {
     (void)path;
 
-    printf("Content-Type: application/json; charset=utf-8\r\n\r\n");
+    send_json_headers();
 
     json_object *req = json_tokener_parse(body);
     if (!req) {
@@ -1442,7 +1419,7 @@ void family_my_tasks_get(const char *path, const char *body) {
     (void)path;
     (void)body;
 
-    printf("Content-Type: application/json; charset=utf-8\r\n\r\n");
+    send_json_headers();
 
     json_object *root = load_family_data();
     if (!root) {
@@ -1516,7 +1493,8 @@ void control_light_put(const char *path, const char *body) {
         printf("Status: 400 Bad Request\r\n\r\n");
         return;
     }
-    if (set_light_state(state) == 0) {
+    const char* cmd = (state == 1) ? ZIGBEE_CMD_LIGHT_ON : ZIGBEE_CMD_LIGHT_OFF;
+    if (cgi_send_zigbee_cmd(cmd) == 0) {
         printf("Status: 200 OK\r\nContent-Type: application/json\r\n\r\n{\"result\":\"success\"}");
     } else {
         printf("Status: 500 Internal Server Error\r\n\r\n");
@@ -1529,7 +1507,8 @@ void control_aircon_put(const char *path, const char *body) {
         printf("Status: 400 Bad Request\r\n\r\n");
         return;
     }
-    if (set_aircon_state(state) == 0) {
+    const char* cmd = (state == 1) ? ZIGBEE_CMD_AIRCON_ON : ZIGBEE_CMD_AIRCON_OFF;
+    if (cgi_send_zigbee_cmd(cmd) == 0) {
         printf("Status: 200 OK\r\nContent-Type: application/json\r\n\r\n{\"result\":\"success\"}");
     } else {
         printf("Status: 500 Internal Server Error\r\n\r\n");
@@ -1542,7 +1521,8 @@ void control_washing_machine_put(const char *path, const char *body) {
         printf("Status: 400 Bad Request\r\n\r\n");
         return;
     }
-    if (set_washing_machine_state(state) == 0) {
+    const char* cmd = (state == 1) ? ZIGBEE_CMD_WASHING_ON : ZIGBEE_CMD_WASHING_OFF;
+    if (cgi_send_zigbee_cmd(cmd) == 0) {
         printf("Status: 200 OK\r\nContent-Type: application/json\r\n\r\n{\"result\":\"success\"}");
     } else {
         printf("Status: 500 Internal Server Error\r\n\r\n");
@@ -1555,7 +1535,8 @@ void control_fan_put(const char *path, const char *body) {
         printf("Status: 400 Bad Request\r\n\r\n");
         return;
     }
-    if (set_fan_state(state) == 0) {
+    const char* cmd = (state == 1) ? ZIGBEE_CMD_FAN_ON : ZIGBEE_CMD_FAN_OFF;
+    if (cgi_send_zigbee_cmd(cmd) == 0) {
         printf("Status: 200 OK\r\nContent-Type: application/json\r\n\r\n{\"result\":\"success\"}");
     } else {
         printf("Status: 500 Internal Server Error\r\n\r\n");
@@ -1568,7 +1549,8 @@ void control_door_put(const char *path, const char *body) {
         printf("Status: 400 Bad Request\r\n\r\n");
         return;
     }
-    if (set_door_state(state) == 0) {
+    const char* cmd = (state == 1) ? ZIGBEE_CMD_DOOR_OPEN : ZIGBEE_CMD_DOOR_CLOSE;
+    if (cgi_send_zigbee_cmd(cmd) == 0) {
         printf("Status: 200 OK\r\nContent-Type: application/json\r\n\r\n{\"result\":\"success\"}");
     } else {
         printf("Status: 500 Internal Server Error\r\n\r\n");
@@ -1576,7 +1558,7 @@ void control_door_put(const char *path, const char *body) {
 }
 
 void control_light_get(const char *path, const char *body) {
-    // TODO: 从共享内存读取真实状态
+
     int state = 1; // 固定返回“开启”用于测试
 
     printf("Content-Type: application/json\r\n\r\n");
@@ -1584,7 +1566,7 @@ void control_light_get(const char *path, const char *body) {
 }
 
 void control_aircon_get(const char *path, const char *body) {
-    // TODO: 从共享内存读取空调状态
+
     int state = 0; // 固定返回“关闭”
 
     printf("Content-Type: application/json\r\n\r\n");
@@ -1592,7 +1574,7 @@ void control_aircon_get(const char *path, const char *body) {
 }
 
 void control_washing_machine_get(const char *path, const char *body) {
-    // TODO: 从共享内存读取洗衣机状态
+
     int state = 0; // 固定返回“停止”
 
     printf("Content-Type: application/json\r\n\r\n");
@@ -1600,7 +1582,7 @@ void control_washing_machine_get(const char *path, const char *body) {
 }
 
 void control_fan_get(const char *path, const char *body) {
-    // TODO: 从共享内存读取风扇状态
+
     int state = 1; // 固定返回“运转中”
 
     printf("Content-Type: application/json\r\n\r\n");
@@ -1608,7 +1590,7 @@ void control_fan_get(const char *path, const char *body) {
 }
 
 void control_door_get(const char *path, const char *body) {
-    // TODO: 从共享内存读取门锁状态
+
     // 注意：门默认“锁定”对应 state=0（因为前端 door: true 表示锁定）
     // 但为了统一语义，建议：state=1 表示“解锁”，state=0 表示“锁定”
     int state = 0; // 固定返回“锁定”
@@ -1631,8 +1613,7 @@ void settings_change_password_get(const char *path, const char *body) {
     struct json_object *resp = json_object_new_object();
     json_object_object_add(resp, "username", json_object_new_string(username));
 
-    printf("Content-Type: application/json\r\n");
-    printf("\r\n");
+    send_json_headers();
     printf("%s\n", json_object_to_json_string_ext(resp, JSON_C_TO_STRING_PLAIN));
     fflush(stdout);
 
@@ -1644,14 +1625,16 @@ void settings_change_password_post(const char *path, const char *body) {
     (void)path;
 
     if (!body || body[0] == '\0') {
-        printf("Content-Type: application/json\r\n\r\n{\"error\":\"Empty request body\"}\n");
+        send_json_headers();
+        printf("{\"error\":\"Empty request body\"}\n");
         fflush(stdout);
         return;
     }
 
     struct json_object *jobj = json_tokener_parse(body);
     if (!jobj) {
-        printf("Content-Type: application/json\r\n\r\n{\"error\":\"Invalid JSON\"}\n");
+        send_json_headers();
+        printf("{\"error\":\"Invalid JSON\"}\n");
         fflush(stdout);
         return;
     }
@@ -1665,18 +1648,21 @@ void settings_change_password_post(const char *path, const char *body) {
     json_object_put(jobj);
 
     if (!ok || username[0] == '\0') {
-        printf("Content-Type: application/json\r\n\r\n{\"error\":\"Username required\"}\n");
+        send_json_headers();
+        printf("{\"error\":\"Username required\"}\n");
         fflush(stdout);
         return;
     }
 
     if (write_login_file(username, password) != 0) {
-        printf("Content-Type: application/json\r\n\r\n{\"error\":\"Failed to save\"}\n");
+        send_json_headers();
+        printf("{\"error\":\"Failed to save\"}\n");
         fflush(stdout);
         return;
     }
 
-    printf("Content-Type: application/json\r\n\r\n{\"status\":\"ok\"}\n");
+    send_json_headers();
+    printf("{\"status\":\"ok\"}\n");
     fflush(stdout);
 }
 
@@ -1689,8 +1675,7 @@ void settings_public_get(const char *path, const char *body) {
     struct json_object *resp = json_object_new_object();
     json_object_object_add(resp, "enabled", json_object_new_boolean(enabled));
 
-    printf("Content-Type: application/json\r\n");
-    printf("\r\n");
+    send_json_headers();
     printf("%s\n", json_object_to_json_string_ext(resp, JSON_C_TO_STRING_PLAIN));
     fflush(stdout);
 
@@ -1702,14 +1687,16 @@ void settings_public_put(const char *path, const char *body) {
     (void)path;
 
     if (!body || body[0] == '\0') {
-        printf("Content-Type: application/json\r\n\r\n{\"error\":\"Empty request body\"}\n");
+        send_json_headers();
+        printf("{\"error\":\"Empty request body\"}\n");
         fflush(stdout);
         return;
     }
 
     struct json_object *jobj = json_tokener_parse(body);
     if (!jobj) {
-        printf("Content-Type: application/json\r\n\r\n{\"error\":\"Invalid JSON\"}\n");
+        send_json_headers();
+        printf("{\"error\":\"Invalid JSON\"}\n");
         fflush(stdout);
         return;
     }
@@ -1761,8 +1748,7 @@ void settings_public_put(const char *path, const char *body) {
         }
     }
 
-    printf("Content-Type: application/json\r\n");
-    printf("\r\n");
+    send_json_headers();
     printf("%s\n", json_object_to_json_string_ext(resp, JSON_C_TO_STRING_PLAIN));
     fflush(stdout);
 

@@ -3,8 +3,11 @@ CC      ?= gcc
 CFLAGS  ?= -O2 -Wall -Wextra
 LDFLAGS ?=
 LIBS    = -ljson-c
+ZIGBEE_DIR := /development
+CFLAGS += -I$(ZIGBEE_DIR)/includes
 
-SRCS   := $(wildcard *.c)
+LOCAL_SRCS   := $(wildcard *.c)
+SRCS         := $(LOCAL_SRCS) $(ZIGBEE_DIR)/src/zigbee_mq.c
 TARGET := /www/cgi-bin/main.cgi
 
 .PHONY: all clean
