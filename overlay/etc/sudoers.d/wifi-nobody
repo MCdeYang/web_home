@@ -1,0 +1,2 @@
+# Allow user 'nobody' to run nmcli without password for Wi-Fi connect only
+nobody ALL=(ALL) NOPASSWD: /usr/bin/nmcli device wifi connect *

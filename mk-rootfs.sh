@@ -71,6 +71,18 @@ if [ -d overlay ]; then
     echo "Applying overlay..."
     sudo cp -rfp overlay/* "${chroot_dir}/" || true
 fi
+# === 允许 nobody 无密码执行 nmcli Wi-Fi 连接 ===
+echo "Configuring sudoers for 'nobody' Wi-Fi access..."
+sudo mkdir -p "${chroot_dir}/etc/sudoers.d"
+sudo chown root:root "${chroot_dir}/etc/sudoers.d"    # ←←← 新增这行！
+sudo chmod 755 "${chroot_dir}/etc/sudoers.d"         # ←←← 建议加上
+cat > /tmp/wifi-nobody <<'EOF'
+# Allow user 'nobody' to run nmcli wifi connect without password
+nobody ALL=(ALL) NOPASSWD: /usr/bin/nmcli device wifi connect *
+EOF
+sudo cp /tmp/wifi-nobody "${chroot_dir}/etc/sudoers.d/wifi-nobody"
+sudo chmod 440 "${chroot_dir}/etc/sudoers.d/wifi-nobody"
+sudo chown root:root "${chroot_dir}/etc/sudoers.d/wifi-nobody"
 
 # === 挂载虚拟文件系统 ===
 echo "Mounting virtual filesystems..."
@@ -89,7 +101,7 @@ echo "Running apt inside chroot..."
 sudo chroot "${chroot_dir}" /bin/bash -c "
     set -e
     export DEBIAN_FRONTEND=noninteractive
-	echo 'force-confold' > /etc/dpkg/dpkg.cfg.d/01-no-backup-conf
+        echo 'force-confold' > /etc/dpkg/dpkg.cfg.d/01-no-backup-conf
 
     # 更新软件源
     apt update
@@ -99,19 +111,24 @@ sudo chroot "${chroot_dir}" /bin/bash -c "
     # 只安装你需要的软件（lighttpd）
     # 避免安装 vim（易引发版本冲突）
     apt install -y --no-install-recommends lighttpd
-	apt install -y --no-install-recommends libcurl4-openssl-dev 
-	apt install -y --no-install-recommends libjson-c-dev
-	apt install -y --no-install-recommends rsync
-	apt install -y --no-install-recommends rsyslog
-	apt install -y --no-install-recommends ntfs-3g
-	#apt install -y --no-install-recommends fcgi
-	#apt install -y --no-install-recommends openssl
-	#apt install -y --no-install-recommends iproute2
+        apt install -y --no-install-recommends libcurl4-openssl-dev
+        apt install -y --no-install-recommends libjson-c-dev
+        apt install -y --no-install-recommends rsync
+        apt install -y --no-install-recommends rsyslog
+        apt install -y --no-install-recommends ntfs-3g
+        #apt install -y --no-install-recommends fcgi
+        #apt install -y --no-install-recommends openssl
+        #apt install -y --no-install-recommends iproute2
     # apt install -y --no-install-recommends curl wget net-tools
 
     # 清理缓存
     apt clean
     rm -rf /var/lib/apt/lists/*
+"
+# === 修复 nobody 的 shell（关键！）===
+echo "Fixing nobody shell to /bin/sh for CGI system() calls..."
+sudo chroot "${chroot_dir}" /bin/bash -c "
+    usermod -s /bin/sh nobody
 "
 # === 编译 CGI ===
 echo "Building CGI programs using Makefile..."

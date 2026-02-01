@@ -121,5 +121,10 @@ struct route routes[] = {
         .get = settings_public_get,
         .put = settings_public_put
     },
+    {
+        .path = "/settings/wifi",
+        .get = settings_wifi_get,
+        .put = settings_wifi_put
+    },
     { NULL, NULL, NULL, NULL, NULL, NULL }
 };

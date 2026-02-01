@@ -20,6 +20,7 @@
 #include "family.h"
 #include "control.h"
 #include "settings.h"
+#include "wifi.h"
 #include "zigbee_mq.h"
 #include "token.h"
 
@@ -1747,5 +1748,164 @@ void settings_public_put(const char *path, const char *body) {
     printf("%s\n", json_object_to_json_string_ext(resp, JSON_C_TO_STRING_PLAIN));
     fflush(stdout);
 
+    json_object_put(resp);
+}
+
+
+
+
+
+
+
+
+void settings_wifi_get(const char *path, const char *body) {
+    (void)path; (void)body;
+
+    json_object *root = json_object_new_object();
+    char ssid[64] = {0};
+    int connected = 0;
+
+    // 尝试通过 wpa_cli 获取 SSID
+    FILE *fp = popen("wpa_cli -i wlan0 status 2>/dev/null | grep '^ssid=' | cut -d= -f2", "r");
+    if (fp && fgets(ssid, sizeof(ssid), fp)) {
+        char *nl = strchr(ssid, '\n');
+        if (nl) *nl = '\0';
+        connected = 1;
+    }
+    if (fp) pclose(fp);
+
+    if (!connected) {
+        // 备用：检查 wlan0 是否有非 127.0.0.1 的 inet 地址
+        FILE *ip_fp = popen("ip addr show wlan0 2>/dev/null | grep -E 'inet ([0-9]{1,3}\\.){3}[0-9]{1,3}' | grep -v '127.0.0.1' | wc -l", "r");
+        char buf[8] = "0";
+        if (ip_fp) {
+            fgets(buf, sizeof(buf), ip_fp);
+            pclose(ip_fp);
+        }
+        if (atoi(buf) > 0) {
+            strcpy(ssid, "(unknown)");
+            connected = 1;
+        }
+    }
+
+    if (connected) {
+        json_object_object_add(root, "status", json_object_new_string("connected"));
+        json_object_object_add(root, "ssid", json_object_new_string(ssid));
+    } else {
+        json_object_object_add(root, "status", json_object_new_string("disconnected"));
+        json_object_object_add(root, "ssid", NULL);
+    }
+
+    printf("Content-Type: application/json\r\n\r\n");
+    printf("%s\n", json_object_to_json_string_ext(root, JSON_C_TO_STRING_PLAIN));
+    json_object_put(root);
+}
+
+// PUT /settings/wifi —— 设置 Wi-Fi（启用/禁用）
+void settings_wifi_put(const char *path, const char *body) {
+    (void)path;
+
+    json_object *req = json_tokener_parse(body);
+    if (!req) {
+        printf("Content-Type: application/json\r\n\r\n");
+        printf("{\"status\":\"error\",\"message\":\"Invalid JSON\"}\n");
+        return;
+    }
+
+    json_object *j_enable = NULL;
+    int enable = 1; // 默认启用
+
+    if (json_object_object_get_ex(req, "enable", &j_enable) &&
+        json_object_is_type(j_enable, json_type_boolean)) {
+        enable = json_object_get_boolean(j_enable);
+    }
+
+    json_object *resp = json_object_new_object();
+
+    if (!enable) {
+        // ========== 停止 Wi-Fi ==========
+        int ret = system(WIFI_STOP_SCRIPT " >/dev/null 2>&1");
+        if (ret == 0) {
+            json_object_object_add(resp, "status", json_object_new_string("success"));
+            json_object_object_add(resp, "message", json_object_new_string("Wi-Fi disabled"));
+        } else {
+            json_object_object_add(resp, "status", json_object_new_string("error"));
+            json_object_object_add(resp, "message", json_object_new_string("Failed to disable Wi-Fi"));
+        }
+        goto output;
+    }
+
+    // ========== 启用 Wi-Fi ==========
+    json_object *j_ssid = NULL, *j_password = NULL;
+    const char *ssid = NULL, *password = NULL;
+
+    // 检查 SSID
+    if (!json_object_object_get_ex(req, "ssid", &j_ssid) ||
+        !json_object_is_type(j_ssid, json_type_string)) {
+        json_object_object_add(resp, "status", json_object_new_string("error"));
+        json_object_object_add(resp, "message", json_object_new_string("SSID is required"));
+        goto output;
+    }
+    ssid = json_object_get_string(j_ssid);
+
+    // 检查 Password
+    if (!json_object_object_get_ex(req, "password", &j_password) ||
+        !json_object_is_type(j_password, json_type_string)) {
+        json_object_object_add(resp, "status", json_object_new_string("error"));
+        json_object_object_add(resp, "message", json_object_new_string("Password is required"));
+        goto output;
+    }
+    password = json_object_get_string(j_password);
+
+    // 验证长度（与你的脚本一致）
+    size_t ssid_len = strlen(ssid);
+    size_t pwd_len = strlen(password);
+
+    if (ssid_len == 0 || ssid_len > 32) {
+        json_object_object_add(resp, "status", json_object_new_string("error"));
+        json_object_object_add(resp, "message", json_object_new_string("SSID must be 1-32 characters"));
+        goto output;
+    }
+
+    if (pwd_len < 8 || pwd_len > 63) {
+        json_object_object_add(resp, "status", json_object_new_string("error"));
+        json_object_object_add(resp, "message", json_object_new_string("Password must be 8-63 characters"));
+        goto output;
+    }
+
+    // 安全字符检查（防止 shell 注入）
+    if (!is_safe_string(ssid, 1) || !is_safe_string(password, 1)) {
+        json_object_object_add(resp, "status", json_object_new_string("error"));
+        json_object_object_add(resp, "message", json_object_new_string("Invalid characters in SSID or password"));
+        goto output;
+    }
+
+    // 构造命令：用单引号包裹参数，避免 shell 解析
+    char cmd[512];
+    snprintf(cmd, sizeof(cmd), "%s '%s' '%s'", WIFI_START_SCRIPT, ssid, password);
+
+    char result[256];
+    if (run_command_capture(cmd, result, sizeof(result)) != 0) {
+        json_object_object_add(resp, "status", json_object_new_string("error"));
+        json_object_object_add(resp, "message", json_object_new_string("Failed to execute Wi-Fi script"));
+        goto output;
+    }
+
+    // 解析脚本返回（匹配你的 SUCCESS/ERROR 格式）
+    if (strncmp(result, "SUCCESS:", 8) == 0) {
+        json_object_object_add(resp, "status", json_object_new_string("success"));
+        json_object_object_add(resp, "message", json_object_new_string(result + 9));
+    } else if (strncmp(result, "ERROR:", 6) == 0) {
+        json_object_object_add(resp, "status", json_object_new_string("error"));
+        json_object_object_add(resp, "message", json_object_new_string(result + 7));
+    } else {
+        json_object_object_add(resp, "status", json_object_new_string("error"));
+        json_object_object_add(resp, "message", json_object_new_string("Unexpected output from script"));
+    }
+
+output:
+    printf("Content-Type: application/json\r\n\r\n");
+    printf("%s\n", json_object_to_json_string_ext(resp, JSON_C_TO_STRING_PLAIN));
+    json_object_put(req);
     json_object_put(resp);
 }

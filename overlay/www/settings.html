@@ -39,6 +39,15 @@
       border-radius: 50%;
       animation: rotate 1s linear infinite;
     }
+
+    /* Wi-Fi 状态样式 */
+    .wifi-status.connected {
+      color: #2e8b57;
+      font-weight: bold;
+    }
+    .wifi-status.disconnected {
+      color: #dc3545;
+    }
   </style>
 </head>
 <body style="background-image: url('/assets/settings.png'); background-size: cover; background-attachment: fixed;">
@@ -57,6 +66,35 @@
       <input type="password" id="confirmPassword" name="confirmPassword" />
 
       <button type="submit">保存设置</button>
+    </form>
+
+    <!-- Wi-Fi 设置表单 -->
+    <form id="wifiForm" style="margin-top: 30px; padding-top: 20px; border-top: 1px dashed #ccc;">
+      <h3>Wi-Fi 设置</h3>
+      
+      <div style="margin-bottom: 10px;">
+        当前状态: <span id="wifiStatus" class="wifi-status">加载中...</span>
+      </div>
+
+      <label>
+        <input type="checkbox" id="wifiEnable" />
+        启用 Wi-Fi
+      </label>
+
+      <div id="wifiFields" class="hidden" style="margin-top: 15px;">
+        <label for="wifiSsid">Wi-Fi 名称 (SSID):</label>
+        <input type="text" id="wifiSsid" placeholder="例如: MyHomeWiFi" maxlength="32" />
+
+        <label for="wifiPassword">密码:</label>
+        <input type="password" id="wifiPassword" placeholder="至少8位" minlength="8" maxlength="63" />
+      </div>
+
+      <!-- Loading 提示 -->
+      <div id="wifiLoading" class="hidden" style="margin-top: 10px; color: #1e90ff; text-align: center;">
+        <span class="spinner"></span> 正在配置 Wi-Fi，请稍候...
+      </div>
+
+      <button type="submit" id="wifiSubmitBtn" style="margin-top: 15px;">保存 Wi-Fi 设置</button>
     </form>
 
     <!-- 公网穿透控制表单 -->
@@ -86,38 +124,62 @@
   <script>
     const API_BASE = '/home';
 
-    // 更新公网URL显示
-    function updatePublicUrlDisplay(publicUrl) {
-      const el = document.getElementById('publicUrlDisplay');
-      if (publicUrl && publicUrl.startsWith('http')) {
-        el.innerHTML = `🌐 公网地址：<a href="${publicUrl}" target="_blank">${publicUrl}</a>`;
-        el.classList.remove('hidden');
+    // 更新 Wi-Fi 状态显示
+    function updateWifiStatus(status, ssid) {
+      const el = document.getElementById('wifiStatus');
+      if (status === 'connected') {
+        el.textContent = `已连接到 "${ssid}"`;
+        el.className = 'wifi-status connected';
       } else {
-        el.classList.add('hidden');
+        el.textContent = '未连接';
+        el.className = 'wifi-status disconnected';
       }
+    }
+
+    // 切换 Wi-Fi 字段显示
+    function toggleWifiFields() {
+      const enabled = document.getElementById('wifiEnable').checked;
+      document.getElementById('wifiFields').classList.toggle('hidden', !enabled);
     }
 
     // 初始化：加载当前设置
     Promise.all([
       fetch(API_BASE + '/settings/change-password').then(r => r.json()),
-      fetch(API_BASE + '/settings/public').then(r => r.json())
-    ]).then(([userRes, publicRes]) => {
+      fetch(API_BASE + '/settings/public').then(r => r.json()),
+      fetch(API_BASE + '/settings/wifi').then(r => r.json()) // ← 新增：加载 Wi-Fi 状态
+    ]).then(([userRes, publicRes, wifiRes]) => {
+      // 用户名
       const usernameEl = document.getElementById('username');
       usernameEl.value = userRes.username || 'admin';
       usernameEl.dataset.original = userRes.username || 'admin';
 
+      // 公网
       const toggle = document.getElementById('publicToggle');
       toggle.checked = publicRes.enabled;
       if (publicRes.enabled) {
         document.getElementById('warning').classList.remove('hidden');
       }
       updatePublicUrlDisplay(publicRes.public_url);
+
+      // Wi-Fi
+      const wifiEnable = document.getElementById('wifiEnable');
+      const wifiSsid = document.getElementById('wifiSsid');
+      if (wifiRes.status === 'connected') {
+        wifiEnable.checked = true;
+        wifiSsid.value = wifiRes.ssid || '';
+        updateWifiStatus('connected', wifiRes.ssid);
+      } else {
+        wifiEnable.checked = false;
+        wifiSsid.value = '';
+        updateWifiStatus('disconnected', '');
+      }
+      toggleWifiFields();
     }).catch(err => {
       console.error('加载失败:', err);
       alert('无法加载设置，请确保服务运行正常。');
     });
 
-    // 公网开关变化时显示警告
+    // 公网开关变化（略，保持不变）
     document.getElementById('publicToggle').addEventListener('change', function () {
       const warning = document.getElementById('warning');
       if (this.checked) {
@@ -129,7 +191,65 @@
       }
     });
 
-    // 提交用户名/密码
+    // Wi-Fi 启用开关变化
+    document.getElementById('wifiEnable').addEventListener('change', toggleWifiFields);
+
+    // 提交 Wi-Fi 设置
+    document.getElementById('wifiForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const enable = document.getElementById('wifiEnable').checked;
+      const ssid = document.getElementById('wifiSsid').value.trim();
+      const password = document.getElementById('wifiPassword').value;
+
+      const btn = document.getElementById('wifiSubmitBtn');
+      const loading = document.getElementById('wifiLoading');
+
+      // 验证（仅在启用时）
+      if (enable) {
+        if (!ssid) return alert('请输入 Wi-Fi 名称！');
+        if (password.length < 8) return alert('密码至少 8 位！');
+      }
+
+      btn.disabled = true;
+      loading.classList.remove('hidden');
+
+      try {
+        const payload = { enable };
+        if (enable) {
+          payload.ssid = ssid;
+          payload.password = password;
+        }
+
+        const res = await fetch(API_BASE + '/settings/wifi', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        const data = await res.json();
+
+        if (res.ok && data.status === 'success') {
+          alert('Wi-Fi 设置已更新！');
+          // 刷新状态
+          if (enable) {
+            updateWifiStatus('connected', ssid);
+          } else {
+            updateWifiStatus('disconnected', '');
+          }
+          // 清空密码框
+          document.getElementById('wifiPassword').value = '';
+        } else {
+          alert('Wi-Fi 设置失败：' + (data.message || '未知错误'));
+        }
+      } catch (err) {
+        alert('请求失败：' + err.message);
+      } finally {
+        btn.disabled = false;
+        loading.classList.add('hidden');
+      }
+    });
+
+    // 提交用户名/密码（略，保持不变）
     document.getElementById('passwordForm').addEventListener('submit', async (e) => {
       e.preventDefault();
       const usernameEl = document.getElementById('username');
@@ -182,7 +302,7 @@
       }
     });
 
-    // 提交公网设置（带 loading）
+    // 提交公网设置（略，保持不变）
     document.getElementById('publicForm').addEventListener('submit', async (e) => {
       e.preventDefault();
       const toggle = document.getElementById('publicToggle');
@@ -190,7 +310,6 @@
       const loading = document.getElementById('publicLoading');
       const enabled = toggle.checked;
 
-      // 显示加载状态
       btn.disabled = true;
       loading.classList.remove('hidden');
 
@@ -214,11 +333,21 @@
         alert('请求失败：' + err.message);
         updatePublicUrlDisplay('');
       } finally {
-        // 恢复按钮和隐藏 loading
         btn.disabled = false;
         loading.classList.add('hidden');
       }
     });
+
+    // 公网 URL 显示函数（保持不变）
+    function updatePublicUrlDisplay(publicUrl) {
+      const el = document.getElementById('publicUrlDisplay');
+      if (publicUrl && publicUrl.startsWith('http')) {
+        el.innerHTML = `🌐 公网地址：<a href="${publicUrl}" target="_blank">${publicUrl}</a>`;
+        el.classList.remove('hidden');
+      } else {
+        el.classList.add('hidden');
+      }
+    }
   </script>
 </body>
 </html>
