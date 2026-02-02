@@ -9,7 +9,7 @@ html {
   height: 100%;
 }
 
-body {
+body:not(.ui) {
   font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
   background-color: #f8f5f0;
   background-image: url("notes.png"); 
@@ -24,6 +24,53 @@ body {
   transition: background-color 0.3s ease; /* 平滑背景过渡 */
 }
 
+body.ui {
+  padding: 14px;
+  min-height: 100%;
+  color: var(--ui-text);
+}
+
+body.ui h1,
+body.ui .card,
+body.ui .member-item,
+body.ui .task-item,
+body.ui #my-tasks-list p,
+body.ui #members-list p,
+body.ui #task-form label,
+body.ui .btn-primary,
+body.ui .btn-success {
+  opacity: 1;
+  transform: none;
+  animation: none;
+}
+
+.ui .home-btn {
+  color: var(--ui-accent);
+}
+
+.ui .home-btn:hover {
+  color: var(--ui-accent-2);
+}
+
+.ui h1 {
+  color: var(--ui-text);
+}
+
+.ui .card {
+  background: var(--ui-surface);
+  border: 1px solid var(--ui-border);
+  box-shadow: var(--ui-shadow-sm);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.ui .card h2 {
+  color: var(--ui-text);
+}
+
+body.ui .card h2::after {
+  background: rgba(124, 92, 255, 0.45);
+}
 .header {
   display: flex;
   align-items: center;
@@ -167,8 +214,8 @@ h1 {
   box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.2);
 }
 
-.btn-primary,
-.btn-success {
+body:not(.ui) .btn-primary,
+body:not(.ui) .btn-success {
   background: #4a90e2;
   color: white;
   border: none;
@@ -178,24 +225,29 @@ h1 {
   font-size: 1em;
   margin-top: 10px;
   transition: all 0.2s ease;
-  opacity: 0;
-  animation: fadeIn 0.6s forwards;
 }
 
-.btn-success {
+body:not(.ui) .btn-success {
   background: #4caf50;
 }
 
-.btn-primary:hover,
-.btn-success:hover {
-  opacity: 1;
+body:not(.ui) .btn-primary:hover,
+body:not(.ui) .btn-success:hover {
   transform: translateY(-2px);
   box-shadow: 0 4px 8px rgba(0,0,0,0.15);
 }
 
-.btn-primary:active,
-.btn-success:active {
+body:not(.ui) .btn-primary:active,
+body:not(.ui) .btn-success:active {
   transform: translateY(0);
+}
+
+body.ui .btn-primary {
+  --btn-accent: rgba(124, 92, 255, 0.42);
+}
+
+body.ui .btn-success {
+  --btn-accent: rgba(34, 197, 94, 0.38);
 }
 
 /* 加载中状态 */

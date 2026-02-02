@@ -4,16 +4,16 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>家庭备忘录</title>
-  <link rel="stylesheet" href="assets/notes.css" />
+  <link rel="stylesheet" href="/assets/ui.css" />
+  <link rel="stylesheet" href="/assets/notes.css" />
 </head>
-<body>
-  <!-- 返回主页按钮 -->
+<body class="ui">
+  <a href="/index.html" class="btn btn--ghost ui-home-btn" aria-label="返回主页"><svg class="ui-icon" aria-hidden="true"><use href="/assets/icons.svg#icon-home"/></svg><span>返回主页</span></a>
   <div class="header">
-    <a href="index.html" class="home-btn">🏠 返回主页</a>
     <h1>家庭备忘录</h1>
   </div>
 
-  <main class="container">
+  <main class="container ui-animate-in">
     <!-- 成员管理区 -->
     <section class="card">
       <h2>家庭成员</h2>

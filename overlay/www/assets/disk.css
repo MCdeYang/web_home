@@ -5,7 +5,7 @@
   box-sizing: border-box;
 }
 
-body {
+body:not(.ui) {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   background-image: url('/assets/disk.png');
   background-size: cover;
@@ -17,8 +17,13 @@ body {
   position: relative;
 }
 
+body.ui {
+  padding: 20px;
+  min-height: 100vh;
+}
+
 /* 毛玻璃背景遮罩 */
-body::before {
+body:not(.ui)::before {
   content: '';
   position: absolute;
   top: 0; left: 0;
@@ -181,6 +186,10 @@ button:hover {
   text-align: center;
   font-weight: bold;
   font-size: 16px;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   transition: transform 0.2s ease;
 }
 
@@ -218,6 +227,16 @@ button:hover {
 
 .file-item:hover .action-btn {
   opacity: 1;
+}
+
+.file-item:focus-within .action-btn {
+  opacity: 1;
+}
+
+@media (hover: none), (pointer: coarse) {
+  .action-btn {
+    opacity: 1;
+  }
 }
 
 .toast {
@@ -261,7 +280,44 @@ input[type="file"] {
 
 /* 毛玻璃降级 */
 @supports not (backdrop-filter: blur(4px)) {
-  body::before {
+  body:not(.ui)::before {
     background: rgba(255, 255, 255, 0.92);
   }
+}
+
+.ui .header {
+  border-bottom-color: var(--ui-border);
+}
+
+.ui .path-display {
+  color: var(--ui-accent);
+}
+
+.ui .file-list {
+  background: var(--ui-surface);
+  border: 1px solid var(--ui-border);
+  box-shadow: var(--ui-shadow);
+}
+
+.ui .file-item {
+  border-bottom-color: rgba(15, 23, 42, 0.08);
+}
+
+.ui .file-item.dir {
+  background-color: rgba(15, 23, 42, 0.03);
+}
+
+.ui .file-item:hover {
+  background-color: rgba(124, 92, 255, 0.08) !important;
+}
+
+.ui .file-meta {
+  color: var(--ui-text-2);
+}
+
+.ui .toast {
+  background: rgba(15, 23, 42, 0.86);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
 }

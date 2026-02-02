@@ -4,20 +4,21 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>家庭相册</title>
-  <link rel="stylesheet" href="./assets/photos.css">
+  <link rel="stylesheet" href="/assets/ui.css">
+  <link rel="stylesheet" href="/assets/photos.css">
 </head>
-<body>
-  <div class="container">
-    <h1>📸 家庭相册</h1>
+<body class="ui">
+  <a href="/index.html" class="btn btn--ghost ui-home-btn" aria-label="返回主页"><svg class="ui-icon" aria-hidden="true"><use href="/assets/icons.svg#icon-home"/></svg><span>返回主页</span></a>
+  <div class="container ui-animate-in">
+    <h1><svg class="ui-icon" aria-hidden="true"><use href="/assets/icons.svg#icon-photos"/></svg><span>家庭相册</span></h1>
 
     <div class="controls">
-      <button class="btn home-btn" onclick="window.location.href='index.html'">🏠 返回主页</button>
-      <button class="btn refresh-btn" onclick="loadPhotos()">🔄 刷新相册</button>
+      <button class="btn refresh-btn" onclick="loadPhotos()"><svg class="ui-icon" aria-hidden="true"><use href="/assets/icons.svg#icon-refresh"/></svg><span>刷新相册</span></button>
     </div>
 
     <div class="upload-area">
       <input type="file" id="file-input" accept="image/*" multiple />
-      <button class="btn upload-btn" onclick="uploadFiles()">📤 上传照片</button>
+      <button class="btn upload-btn" onclick="uploadFiles()"><svg class="ui-icon" aria-hidden="true"><use href="/assets/icons.svg#icon-upload"/></svg><span>上传照片</span></button>
     </div>
 
     <div class="gallery" id="gallery">

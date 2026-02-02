@@ -5,7 +5,7 @@
     box-sizing: border-box;
 }
 
-body {
+body:not(.ui) {
     font-family: 'Arial', sans-serif;
     background-image: url('control.png');
     background-size: cover;
@@ -17,13 +17,24 @@ body {
     padding: 20px;
 }
 
+body.ui {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
 .container {
     width: 100%;
     max-width: 800px;
-    background: rgba(255, 255, 255, 0.95);
     border-radius: 20px;
-    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
     overflow: hidden;
+}
+
+body:not(.ui) .container {
+    background: rgba(255, 255, 255, 0.95);
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
     backdrop-filter: blur(10px);
 }
 
@@ -38,6 +49,10 @@ header h1 {
     font-size: 2.5rem;
     margin-bottom: 10px;
     text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
 }
 
 header p {
@@ -76,12 +91,12 @@ header p {
     display: block;
     font-size: 3rem;
     margin-bottom: 10px;
-    animation: float 3s ease-in-out infinite;
+    animation: float 8s ease-in-out infinite;
 }
 
 @keyframes float {
     0%, 100% { transform: translateY(0px); }
-    50% { transform: translateY(-10px); }
+    50% { transform: translateY(-6px); }
 }
 
 .device-icon h3 {
@@ -96,6 +111,7 @@ header p {
     justify-content: center;
     gap: 15px;
     margin-top: 15px;
+    flex-wrap: wrap;
 }
 
 .switch {

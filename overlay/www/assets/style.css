@@ -11,35 +11,20 @@ html, body {
 body {
   overflow: hidden;
   font-family: "PingFang SC", "Microsoft YaHei", "Segoe UI", sans-serif;
-  background: #f8f5f0;
-  color: #333;
+  background: transparent;
+  color: var(--ui-text);
   height: 100vh;
   line-height: 1.4;
 }
 
 /* 背景图：从 /assets/ 目录加载 */
 .bg {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-image: url("/assets/home.png");
-  background-size: cover;
-  background-position: center;
-  filter: brightness(0.9) contrast(1.1);
-  z-index: -3;
+  display: none;
 }
 
 /* 柔光遮罩层：提升文字可读性 */
 .overlay {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(255, 253, 245, 0.7); /* 米白色半透明 */
-  z-index: -2;
+  display: none;
 }
 
 /* 粒子动画画布 */
@@ -60,31 +45,41 @@ body {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  min-height: 100vh;
-  padding: 20px;
+  width: min(980px, calc(100vw - 40px));
+  min-height: calc(100vh - 40px);
+  margin: 20px auto;
+  padding: 26px 22px;
   text-align: center;
+}
+
+body.ui .container {
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
 }
 
 /* 时间显示 */
 .time {
   font-size: 5.5rem;
   font-weight: 500;
-  color: #5a4a42;
+  color: var(--ui-text);
   margin-bottom: 15px;
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  text-shadow: 0 10px 28px rgba(15, 23, 42, 0.14);
 }
 
 /* 温度显示 */
 .temp {
   font-size: 2.8rem;
   margin: 12px 0;
-  color: #8b6f55;
+  color: var(--ui-text-2);
 }
 
 /* 天气信息 */
 .weather {
   font-size: 2rem;
-  color: #a68a70;
+  color: var(--ui-text-2);
   margin-bottom: 40px;
 }
 
@@ -97,28 +92,34 @@ body {
   width: 100%;
 }
 
-/* 功能按钮样式 */
-.btn {
-  display: block;
-  padding: 24px 10px;
-  background: rgba(255, 255, 255, 0.85);
-  border: 1px solid rgba(200, 180, 160, 0.4);
-  border-radius: 18px;
-  color: #6b5545;
+/* 功能按钮尺寸（样式由 ui.css 统一提供） */
+.buttons .btn {
+  padding: 24px 10px 24px 14px;
   font-size: 1.9rem;
-  text-decoration: none;
-  transition: all 0.3s ease;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-  backdrop-filter: blur(4px);
-  cursor: pointer;
-  font-weight: 500;
 }
 
-.btn:hover {
-  transform: translateY(-4px);
-  background: rgba(255, 255, 255, 0.95);
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
-  border-color: rgba(180, 150, 130, 0.6);
+.buttons .btn:nth-child(1) {
+  --btn-accent: rgba(124, 92, 255, 0.42);
+}
+
+.buttons .btn:nth-child(2) {
+  --btn-accent: rgba(34, 197, 94, 0.38);
+}
+
+.buttons .btn:nth-child(3) {
+  --btn-accent: rgba(245, 158, 11, 0.36);
+}
+
+.buttons .btn:nth-child(4) {
+  --btn-accent: rgba(236, 72, 153, 0.34);
+}
+
+.buttons .btn:nth-child(5) {
+  --btn-accent: rgba(20, 184, 166, 0.32);
+}
+
+.buttons .btn:nth-child(6) {
+  --btn-accent: rgba(71, 85, 105, 0.34);
 }
 
 /* 响应式适配 */
@@ -132,7 +133,7 @@ body {
   .weather {
     font-size: 1.7rem;
   }
-  .btn {
+  .buttons .btn {
     font-size: 1.5rem;
     padding: 18px 5px;
   }

@@ -5,17 +5,19 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>系统设置</title>
+  <link rel="stylesheet" href="/assets/ui.css" />
   <link rel="stylesheet" href="/assets/settings.css" />
   <style>
     #publicUrlDisplay {
       margin-top: 10px;
       padding: 8px;
-      background: #f0f8ff;
+      background: rgba(255, 255, 255, 0.70);
+      border: 1px solid rgba(15, 23, 42, 0.10);
       border-radius: 4px;
       word-break: break-all;
     }
     #publicUrlDisplay a {
-      color: #1e90ff;
+      color: var(--ui-accent);
       text-decoration: none;
     }
     #publicUrlDisplay a:hover {
@@ -35,8 +37,8 @@
       vertical-align: middle;
       width: 20px;
       height: 20px;
-      border: 2px solid #f3f3f3;
-      border-top: 2px solid #1e90ff;
+      border: 2px solid rgba(15, 23, 42, 0.12);
+      border-top: 2px solid rgba(124, 92, 255, 0.85);
       border-radius: 50%;
       animation: rotate 1s linear infinite;
     }
@@ -51,8 +53,9 @@
     }
   </style>
 </head>
-<body style="background-image: url('/assets/settings.png'); background-size: cover; background-attachment: fixed;">
-  <div class="container">
+<body class="ui">
+  <a href="/index.html" class="btn btn--ghost ui-home-btn" aria-label="返回主页"><svg class="ui-icon" aria-hidden="true"><use href="/assets/icons.svg#icon-home"/></svg><span>返回主页</span></a>
+  <div class="container ui-animate-in">
     <h2>系统设置</h2>
 
     <!-- 用户名 & 密码表单 -->
@@ -91,7 +94,7 @@
       </div>
 
       <!-- Loading 提示 -->
-      <div id="wifiLoading" class="hidden" style="margin-top: 10px; color: #1e90ff; text-align: center;">
+      <div id="wifiLoading" class="hidden" style="margin-top: 10px; color: var(--ui-accent); text-align: center;">
         <span class="spinner"></span> 正在配置 Wi-Fi，请稍候...
       </div>
 
@@ -112,14 +115,13 @@
       <div id="publicUrlDisplay" class="hidden"></div>
 
       <!-- Loading 提示 -->
-      <div id="publicLoading" class="hidden" style="margin-top: 10px; color: #1e90ff; text-align: center;">
+      <div id="publicLoading" class="hidden" style="margin-top: 10px; color: var(--ui-accent); text-align: center;">
         <span class="spinner"></span> 正在启动公网服务，请稍候...
       </div>
 
       <button type="submit" id="publicSubmitBtn" style="margin-top: 10px;">保存公网设置</button>
     </form>
 
-    <a href="/index.html" class="home-button">返回主页</a>
   </div>
 
   <script>

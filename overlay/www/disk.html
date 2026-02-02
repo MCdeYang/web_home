@@ -4,17 +4,18 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>我的私人网盘</title>
+  <link rel="stylesheet" href="/assets/ui.css">
   <link rel="stylesheet" href="/assets/disk.css">
 </head>
-<body>
-  <div class="header">
+<body class="ui">
+  <button class="btn btn--ghost ui-home-btn" id="home" aria-label="返回主页"><svg class="ui-icon" aria-hidden="true"><use href="/assets/icons.svg#icon-home"/></svg><span>返回主页</span></button>
+  <div class="header ui-animate-in">
     <div class="path-display" id="current-path">/</div>
     <div class="controls">
-      <button class="home-btn" id="home">🏠 返回首页</button>
-      <button class="refresh-btn" id="refresh">🔄 刷新</button>
-      <button class="upload-btn" id="upload-trigger">上传文件</button>
+      <button class="refresh-btn" id="refresh"><svg class="ui-icon" aria-hidden="true"><use href="/assets/icons.svg#icon-refresh"/></svg><span>刷新</span></button>
+      <button class="upload-btn" id="upload-trigger"><svg class="ui-icon" aria-hidden="true"><use href="/assets/icons.svg#icon-upload"/></svg><span>上传文件</span></button>
       <input type="file" id="file-upload" multiple />
-      <button id="new-folder">新建文件夹</button>
+      <button id="new-folder"><svg class="ui-icon" aria-hidden="true"><use href="/assets/icons.svg#icon-disk"/></svg><span>新建文件夹</span></button>
     </div>
   </div>
 

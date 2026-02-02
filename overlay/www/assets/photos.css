@@ -6,7 +6,7 @@
   box-sizing: border-box;
 }
 
-body {
+body:not(.ui) {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif;
   background: url('./photos.png') center/cover fixed no-repeat;
   color: #333;
@@ -15,7 +15,11 @@ body {
   padding: 20px;
 }
 
-.container {
+body.ui {
+  padding: 20px;
+}
+
+body:not(.ui) .container {
   max-width: 1200px;
   margin: 0 auto;
   background: rgba(255, 255, 255, 0.94);
@@ -26,16 +30,30 @@ body {
   border: 1px solid rgba(255, 255, 255, 0.6);
 }
 
+body.ui .container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 24px;
+}
+
 h1 {
   text-align: center;
   margin: 20px 0 30px;
   color: #2c3e50;
   font-size: 2.2rem;
   font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+
+body.ui h1 {
+  color: var(--ui-text);
 }
 
 /* ===== 按钮美化 ===== */
-.btn {
+body:not(.ui) .btn {
   background: linear-gradient(135deg, #4a6cf7, #3a5bf5);
   color: white;
   border: none;
@@ -52,35 +70,35 @@ h1 {
   justify-content: center;
   gap: 6px;
 }
-.btn:hover {
+body:not(.ui) .btn:hover {
   transform: translateY(-2px);
   box-shadow: 0 6px 14px rgba(74, 108, 247, 0.45);
 }
-.btn:active {
+body:not(.ui) .btn:active {
   transform: translateY(0);
 }
 
-.home-btn {
+body:not(.ui) .home-btn {
   background: linear-gradient(135deg, #6c5ce7, #5d4aee);
   box-shadow: 0 4px 10px rgba(108, 92, 231, 0.3);
 }
-.home-btn:hover {
+body:not(.ui) .home-btn:hover {
   box-shadow: 0 6px 14px rgba(108, 92, 231, 0.45);
 }
 
-.refresh-btn {
+body:not(.ui) .refresh-btn {
   background: linear-gradient(135deg, #00b894, #00a085);
   box-shadow: 0 4px 10px rgba(0, 184, 148, 0.3);
 }
-.refresh-btn:hover {
+body:not(.ui) .refresh-btn:hover {
   box-shadow: 0 6px 14px rgba(0, 184, 148, 0.45);
 }
 
-.upload-btn {
+body:not(.ui) .upload-btn {
   background: linear-gradient(135deg, #28a745, #218838);
   box-shadow: 0 4px 10px rgba(40, 167, 69, 0.3);
 }
-.upload-btn:hover {
+body:not(.ui) .upload-btn:hover {
   box-shadow: 0 6px 14px rgba(40, 167, 69, 0.45);
 }
 

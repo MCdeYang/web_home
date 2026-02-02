@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>家庭智能终端</title>
+  <link rel="stylesheet" href="/assets/ui.css">
   <link rel="stylesheet" href="/assets/style.css">
   <!-- 防止未登录用户看到页面内容 -->
   <style>
@@ -24,7 +25,7 @@
     #app-content { display: none; }
   </style>
 </head>
-<body>
+<body class="ui">
   <!-- 🔒 认证遮罩（默认显示） -->
   <div id="auth-guard">
     验证登录中，请稍候...
@@ -35,8 +36,9 @@
     <div class="bg"></div>
     <div class="overlay"></div>
     <canvas id="particles"></canvas>
+    <img class="ui-brand" src="/assets/logo-yymk.svg" alt="YYMK" />
 
-    <div class="container">
+    <div class="container ui-animate-in">
       <div class="time" id="time">--:--</div>
       <div class="temp" id="temperature">🌡️ 室温：23°C</div>
       
@@ -48,12 +50,12 @@
       
       <!-- 6个功能入口 -->
       <div class="buttons">
-        <a href="/disk.html" class="btn">📁 私人网盘</a>
-        <a href="/control.html" class="btn">💡 家居控制</a>
-        <a href="/notes.html" class="btn">📅 家庭备忘录</a>
-        <a href="/photos.html" class="btn">📸 家庭相册</a>
-        <a href="/system.html" class="btn">🖥️ 系统数据</a>
-        <a href="/settings.html" class="btn">⚙️ 设置</a>
+        <a href="/disk.html" class="btn"><svg class="ui-icon" aria-hidden="true"><use href="/assets/icons.svg#icon-disk"/></svg><span>私人网盘</span></a>
+        <a href="/control.html" class="btn"><svg class="ui-icon" aria-hidden="true"><use href="/assets/icons.svg#icon-control"/></svg><span>家居控制</span></a>
+        <a href="/notes.html" class="btn"><svg class="ui-icon" aria-hidden="true"><use href="/assets/icons.svg#icon-notes"/></svg><span>家庭备忘录</span></a>
+        <a href="/photos.html" class="btn"><svg class="ui-icon" aria-hidden="true"><use href="/assets/icons.svg#icon-photos"/></svg><span>家庭相册</span></a>
+        <a href="/system.html" class="btn"><svg class="ui-icon" aria-hidden="true"><use href="/assets/icons.svg#icon-system"/></svg><span>系统数据</span></a>
+        <a href="/settings.html" class="btn"><svg class="ui-icon" aria-hidden="true"><use href="/assets/icons.svg#icon-settings"/></svg><span>设置</span></a>
       </div>
     </div>
   </div>
