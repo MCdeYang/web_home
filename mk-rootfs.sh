@@ -115,6 +115,8 @@ sudo chroot "${chroot_dir}" /bin/bash -c "
         apt install -y --no-install-recommends libjson-c-dev
         apt install -y --no-install-recommends rsync
         apt install -y --no-install-recommends rsyslog
+        #apt install -y --no-install-recommends udhcpc
+        
         apt install -y --no-install-recommends ntfs-3g
         #apt install -y --no-install-recommends fcgi
         #apt install -y --no-install-recommends openssl

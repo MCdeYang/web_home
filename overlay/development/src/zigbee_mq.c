@@ -30,7 +30,9 @@ static const char* valid_commands[] = {
     ZIGBEE_CMD_AIRCON_ON, ZIGBEE_CMD_AIRCON_OFF,
     ZIGBEE_CMD_WASHING_ON, ZIGBEE_CMD_WASHING_OFF,
     ZIGBEE_CMD_FAN_ON, ZIGBEE_CMD_FAN_OFF,
-    ZIGBEE_CMD_DOOR_OPEN, ZIGBEE_CMD_DOOR_CLOSE
+    ZIGBEE_CMD_DOOR_OPEN, ZIGBEE_CMD_DOOR_CLOSE,
+    ZIGBEE_CMD_WIFI_ON, ZIGBEE_CMD_WIFI_OFF,
+    ZIGBEE_CMD_4G_ON, ZIGBEE_CMD_4G_OFF
 };
 #define VALID_CMD_COUNT (sizeof(valid_commands) / sizeof(valid_commands[0]))
 
@@ -50,36 +52,38 @@ static int create_state_dir(void) {
 }
 
 // 从文件加载当前状态到内存（可选，用于 environment 内部一致性）
-static void load_state_from_file(int* light, int* fan, int* aircon, int* washing, int* door) {
+static void load_state_from_file(int* light, int* fan, int* aircon, int* washing, int* door, int* wifi) {
     FILE* f = fopen(STATE_FILE, "r");
     if (!f) {
         // 文件不存在，使用默认值（全关）
-        *light = *fan = *aircon = *washing = *door = 0;
+        *light = *fan = *aircon = *washing = *door = *wifi = 0;
         return;
     }
     if (flock(fileno(f), LOCK_SH) != 0) {
         perror("flock SH");
         fclose(f);
-        *light = *fan = *aircon = *washing = *door = 0;
+        *light = *fan = *aircon = *washing = *door = *wifi = 0;
         return;
     }
-    int l, f_val, a, w, d;
-    if (fscanf(f, "%d %d %d %d %d", &l, &f_val, &a, &w, &d) == 5) {
+    int l, f_val, a, w, d, wi;
+    int n = fscanf(f, "%d %d %d %d %d %d", &l, &f_val, &a, &w, &d, &wi);
+    if (n == 5 || n == 6) {
         *light = l;
         *fan = f_val;
         *aircon = a;
         *washing = w;
         *door = d;
+        *wifi = (n == 6) ? wi : 0;
     } else {
         // 格式错误，重置为默认
-        *light = *fan = *aircon = *washing = *door = 0;
+        *light = *fan = *aircon = *washing = *door = *wifi = 0;
     }
     flock(fileno(f), LOCK_UN);
     fclose(f);
 }
 
 // 将状态写入文件（线程安全）
-static void save_state_to_file(int light, int fan, int aircon, int washing, int door) {
+static void save_state_to_file(int light, int fan, int aircon, int washing, int door, int wifi) {
     // 确保目录存在
     create_state_dir();
 
@@ -93,7 +97,7 @@ static void save_state_to_file(int light, int fan, int aircon, int washing, int 
         fclose(f);
         return;
     }
-    fprintf(f, "%d %d %d %d %d\n", light, fan, aircon, washing, door);
+    fprintf(f, "%d %d %d %d %d %d\n", light, fan, aircon, washing, door, wifi);
     fflush(f); // 确保写入磁盘
     flock(fileno(f), LOCK_UN);
     fclose(f);
@@ -169,8 +173,8 @@ int init_zigbee_mq(void) {
 // ✅ 根据命令更新状态并保存到文件
 static void update_and_save_state(const char* cmd) {
     // 先读取当前状态（避免覆盖其他设备状态）
-    int light, fan, aircon, washing, door;
-    load_state_from_file(&light, &fan, &aircon, &washing, &door);
+    int light, fan, aircon, washing, door, wifi;
+    load_state_from_file(&light, &fan, &aircon, &washing, &door, &wifi);
 
     if (strcmp(cmd, ZIGBEE_CMD_LIGHT_ON) == 0) {
         light = 1;
@@ -192,10 +196,14 @@ static void update_and_save_state(const char* cmd) {
         door = 1;  // 解锁
     } else if (strcmp(cmd, ZIGBEE_CMD_DOOR_CLOSE) == 0) {
         door = 0;  // 锁定
+    } else if (strcmp(cmd, ZIGBEE_CMD_WIFI_ON) == 0) {
+        wifi = 1;
+    } else if (strcmp(cmd, ZIGBEE_CMD_WIFI_OFF) == 0) {
+        wifi = 0;
     }
 
     // 保存回文件
-    save_state_to_file(light, fan, aircon, washing, door);
+    save_state_to_file(light, fan, aircon, washing, door, wifi);
 }
 
 // 发送命令（给 environment 内部的 voice 线程使用）
@@ -254,32 +262,32 @@ int cgi_send_zigbee_cmd(const char* cmd) {
 
 // ✅ 从文件读取状态（供 main.cgi 调用）
 int get_light_state(void) {
-    int light, fan, aircon, washing, door;
-    load_state_from_file(&light, &fan, &aircon, &washing, &door);
+    int light, fan, aircon, washing, door, wifi;
+    load_state_from_file(&light, &fan, &aircon, &washing, &door, &wifi);
     return light;
 }
 
 int get_fan_state(void) {
-    int light, fan, aircon, washing, door;
-    load_state_from_file(&light, &fan, &aircon, &washing, &door);
+    int light, fan, aircon, washing, door, wifi;
+    load_state_from_file(&light, &fan, &aircon, &washing, &door, &wifi);
     return fan;
 }
 
 int get_aircon_state(void) {
-    int light, fan, aircon, washing, door;
-    load_state_from_file(&light, &fan, &aircon, &washing, &door);
+    int light, fan, aircon, washing, door, wifi;
+    load_state_from_file(&light, &fan, &aircon, &washing, &door, &wifi);
     return aircon;
 }
 
 int get_washing_state(void) {
-    int light, fan, aircon, washing, door;
-    load_state_from_file(&light, &fan, &aircon, &washing, &door);
+    int light, fan, aircon, washing, door, wifi;
+    load_state_from_file(&light, &fan, &aircon, &washing, &door, &wifi);
     return washing;
 }
 
 int get_door_state(void) {
-    int light, fan, aircon, washing, door;
-    load_state_from_file(&light, &fan, &aircon, &washing, &door);
+    int light, fan, aircon, washing, door, wifi;
+    load_state_from_file(&light, &fan, &aircon, &washing, &door, &wifi);
     return door;
 }
 

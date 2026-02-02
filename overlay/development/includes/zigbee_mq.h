@@ -14,6 +14,10 @@
 #define ZIGBEE_CMD_FAN_OFF      "F0"
 #define ZIGBEE_CMD_DOOR_OPEN    "D1"
 #define ZIGBEE_CMD_DOOR_CLOSE   "D0"
+#define ZIGBEE_CMD_WIFI_ON      "WIFI1"
+#define ZIGBEE_CMD_WIFI_OFF     "WIFI0"
+#define ZIGBEE_CMD_4G_ON        "4G1"
+#define ZIGBEE_CMD_4G_OFF       "4G0"
 
 // 配置
 #define MQ_NAME        "/zigbee_cmd"

@@ -1,23 +1,29 @@
 #!/bin/sh
-# 标准化 Wi-Fi 脚本输出，供 CGI 解析
+# 标准化 Wi-Fi 脚本输出，支持开放网络（无密码）和加密网络
 
 SSID="$1"
 PASS="$2"
 
-if [ -z "$SSID" ] || [ -z "$PASS" ]; then
-    echo "ERROR: Missing SSID or password" >&2
+if [ -z "$SSID" ]; then
+    echo "ERROR: Missing SSID" >&2
     exit 1
 fi
 
-# 关键：只捕获 nmcli 的标准输出，抑制 sudo 警告（重定向 stderr）
-OUTPUT=$(/usr/bin/sudo -n /usr/bin/nmcli device wifi connect "$SSID" password "$PASS" 2>&1)
+# 构造 nmcli 命令
+if [ -z "$PASS" ]; then
+    # 无密码：开放网络
+    CMD="/usr/bin/sudo -n /usr/bin/nmcli device wifi connect '$SSID'"
+else
+    # 有密码：WPA/WPA2 等
+    CMD="/usr/bin/sudo -n /usr/bin/nmcli device wifi connect '$SSID' password '$PASS'"
+fi
 
-# 检查 nmcli 是否成功（通过退出码）
-if [ $? -eq 0 ]; then
-    # 提取连接的接口名（可选）
-    # 你可以自定义成功消息
+# 执行命令并捕获输出
+OUTPUT=$(eval "$CMD" 2>&1)
+RET=$?
+
+if [ $RET -eq 0 ]; then
     echo "SUCCESS: Connected to $SSID"
 else
-    # 输出原始错误（截断避免超长）
     echo "ERROR: ${OUTPUT}" | head -c 200
 fi

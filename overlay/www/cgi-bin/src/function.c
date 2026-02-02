@@ -30,6 +30,8 @@ extern const char* get_disk_root(void);
 
 #define WEATHER "/development/tmp/weather.json"
 #define TEMP_JSON_PATH "/development/tmp/temperature.json"
+#define FOUR_G_SCRIPT "/development/4G/4G.sh"
+
 
 static void send_json_response(struct json_object *obj) {
     send_json_headers();
@@ -1828,6 +1830,7 @@ void settings_wifi_put(const char *path, const char *body) {
         if (ret == 0) {
             json_object_object_add(resp, "status", json_object_new_string("success"));
             json_object_object_add(resp, "message", json_object_new_string("Wi-Fi disabled"));
+            cgi_send_zigbee_cmd(ZIGBEE_CMD_WIFI_OFF);
         } else {
             json_object_object_add(resp, "status", json_object_new_string("error"));
             json_object_object_add(resp, "message", json_object_new_string("Failed to disable Wi-Fi"));
@@ -1837,9 +1840,10 @@ void settings_wifi_put(const char *path, const char *body) {
 
     // ========== 启用 Wi-Fi ==========
     json_object *j_ssid = NULL, *j_password = NULL;
-    const char *ssid = NULL, *password = NULL;
+    const char *ssid = NULL;
+    const char *password = ""; // 默认为空密码（支持开放网络）
 
-    // 检查 SSID
+    // 检查 SSID（必须提供）
     if (!json_object_object_get_ex(req, "ssid", &j_ssid) ||
         !json_object_is_type(j_ssid, json_type_string)) {
         json_object_object_add(resp, "status", json_object_new_string("error"));
@@ -1848,35 +1852,45 @@ void settings_wifi_put(const char *path, const char *body) {
     }
     ssid = json_object_get_string(j_ssid);
 
-    // 检查 Password
-    if (!json_object_object_get_ex(req, "password", &j_password) ||
-        !json_object_is_type(j_password, json_type_string)) {
-        json_object_object_add(resp, "status", json_object_new_string("error"));
-        json_object_object_add(resp, "message", json_object_new_string("Password is required"));
-        goto output;
+    // 检查 Password（可选）
+    if (json_object_object_get_ex(req, "password", &j_password)) {
+        if (!json_object_is_type(j_password, json_type_string)) {
+            json_object_object_add(resp, "status", json_object_new_string("error"));
+            json_object_object_add(resp, "message", json_object_new_string("Password must be a string"));
+            goto output;
+        }
+        password = json_object_get_string(j_password);
     }
-    password = json_object_get_string(j_password);
 
-    // 验证长度（与你的脚本一致）
+    // 验证 SSID 长度：1-32 字符
     size_t ssid_len = strlen(ssid);
-    size_t pwd_len = strlen(password);
-
     if (ssid_len == 0 || ssid_len > 32) {
         json_object_object_add(resp, "status", json_object_new_string("error"));
         json_object_object_add(resp, "message", json_object_new_string("SSID must be 1-32 characters"));
         goto output;
     }
 
-    if (pwd_len < 8 || pwd_len > 63) {
-        json_object_object_add(resp, "status", json_object_new_string("error"));
-        json_object_object_add(resp, "message", json_object_new_string("Password must be 8-63 characters"));
-        goto output;
+    // 验证 Password 长度：仅当非空时要求 8-63 字符
+    if (password[0] != '\0') {
+        size_t pwd_len = strlen(password);
+        if (pwd_len < 8 || pwd_len > 63) {
+            json_object_object_add(resp, "status", json_object_new_string("error"));
+            json_object_object_add(resp, "message", json_object_new_string("Password must be 8-63 characters"));
+            goto output;
+        }
     }
 
     // 安全字符检查（防止 shell 注入）
-    if (!is_safe_string(ssid, 1) || !is_safe_string(password, 1)) {
+    // 注意：is_safe_string 的第二个参数含义需确认（通常 1=严格，0=宽松）
+    // 假设 is_safe_string(str, allow_empty) 或类似；若不支持空串，可加判断
+    if (!is_safe_string(ssid, 1)) {
         json_object_object_add(resp, "status", json_object_new_string("error"));
-        json_object_object_add(resp, "message", json_object_new_string("Invalid characters in SSID or password"));
+        json_object_object_add(resp, "message", json_object_new_string("Invalid characters in SSID"));
+        goto output;
+    }
+    if (password[0] != '\0' && !is_safe_string(password, 1)) {
+        json_object_object_add(resp, "status", json_object_new_string("error"));
+        json_object_object_add(resp, "message", json_object_new_string("Invalid characters in password"));
         goto output;
     }
 
@@ -1891,10 +1905,11 @@ void settings_wifi_put(const char *path, const char *body) {
         goto output;
     }
 
-    // 解析脚本返回（匹配你的 SUCCESS/ERROR 格式）
+    // 解析脚本返回（匹配 SUCCESS:/ERROR: 格式）
     if (strncmp(result, "SUCCESS:", 8) == 0) {
         json_object_object_add(resp, "status", json_object_new_string("success"));
         json_object_object_add(resp, "message", json_object_new_string(result + 9));
+        cgi_send_zigbee_cmd(ZIGBEE_CMD_WIFI_ON);
     } else if (strncmp(result, "ERROR:", 6) == 0) {
         json_object_object_add(resp, "status", json_object_new_string("error"));
         json_object_object_add(resp, "message", json_object_new_string(result + 7));
