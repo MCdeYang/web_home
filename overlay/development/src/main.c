@@ -19,7 +19,6 @@ int main() {
         perror("Failed to create environment thread");
         return EXIT_FAILURE;
     }
-
     if (pthread_create(&task_thread, NULL, check_task_thread, NULL) != 0) {
         perror("Failed to create check_task thread");
         return EXIT_FAILURE;

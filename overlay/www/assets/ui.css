@@ -7,8 +7,8 @@
   --ui-border: rgba(15, 23, 42, 0.12);
   --ui-text: rgba(15, 23, 42, 0.92);
   --ui-text-2: rgba(15, 23, 42, 0.66);
-  --ui-accent: #7c5cff;
-  --ui-accent-2: #22c55e;
+  --ui-accent: #4f7cff;
+  --ui-accent-2: #2ac6a4;
   --ui-danger: #ff4d6d;
   --ui-radius-sm: 12px;
   --ui-radius: 16px;
@@ -20,7 +20,7 @@
   --ui-dur-fast: 160ms;
   --ui-dur: 260ms;
   --ui-dur-slow: 900ms;
-  --ui-focus: 0 0 0 3px rgba(124, 92, 255, 0.22), 0 0 0 1px rgba(15, 23, 42, 0.10) inset;
+  --ui-focus: 0 0 0 3px rgba(79, 124, 255, 0.22), 0 0 0 1px rgba(15, 23, 42, 0.10) inset;
 }
 
 :where(.ui, .ui *) {
@@ -196,29 +196,28 @@ body.ui::after {
   gap: 10px;
   position: relative;
   overflow: hidden;
+  --btn-tint: rgba(79, 124, 255, 0.16);
   padding: 10px 14px 10px 16px;
   border-radius: 14px;
-  border: 1px solid rgba(15, 23, 42, 0.24);
+  border: 1px solid rgba(15, 23, 42, 0.18);
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(255, 255, 255, 0.76));
-  color: var(--ui-text);
+  color: rgba(15, 23, 42, 0.92);
   font-weight: 600;
   letter-spacing: 0.2px;
   cursor: pointer;
   transition: transform var(--ui-dur) var(--ui-ease), box-shadow var(--ui-dur) var(--ui-ease), background-color var(--ui-dur) var(--ui-ease), border-color var(--ui-dur) var(--ui-ease);
   user-select: none;
   -webkit-tap-highlight-color: transparent;
-  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.75) inset, 0 18px 55px rgba(15, 23, 42, 0.12);
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.72) inset, 0 16px 44px rgba(15, 23, 42, 0.12);
 }
 
-.btn::before,
-:where(.ui) button:not(.action-btn)::before {
+.btn::after,
+:where(.ui) button:not(.action-btn)::after {
   content: "";
   position: absolute;
-  left: 0;
-  top: 0;
-  bottom: 0;
-  width: 4px;
-  background: var(--btn-accent, rgba(15, 23, 42, 0.22));
+  inset: 0;
+  background: radial-gradient(140px 96px at 18% 22%, var(--btn-tint), transparent 62%);
+  opacity: 1;
 }
 
 .btn > *,
@@ -232,8 +231,8 @@ body.ui::after {
 :where(.ui) input[type="button"]:hover,
 :where(.ui) input[type="submit"]:hover {
   transform: translate3d(0, -2px, 0);
-  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.78) inset, 0 26px 85px rgba(15, 23, 42, 0.14);
-  border-color: rgba(15, 23, 42, 0.30);
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.76) inset, 0 24px 74px rgba(15, 23, 42, 0.16);
+  border-color: rgba(15, 23, 42, 0.24);
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(255, 255, 255, 0.82));
 }
 
@@ -245,18 +244,14 @@ body.ui::after {
 }
 
 .btn--primary {
-  background: linear-gradient(135deg, rgba(124, 92, 255, 0.88), rgba(32, 211, 255, 0.58));
-  border-color: rgba(15, 23, 42, 0.10);
-  color: rgba(255, 255, 255, 0.96);
+  --btn-tint: rgba(79, 124, 255, 0.22);
+  border-color: rgba(15, 23, 42, 0.18);
 }
 
 .btn--ghost {
+  --btn-tint: rgba(71, 85, 105, 0.14);
   background: rgba(255, 255, 255, 0.62);
-  --btn-accent: transparent;
-}
-
-.btn--ghost::before {
-  display: none;
+  border-color: rgba(15, 23, 42, 0.16);
 }
 
 .btn.ui-home-btn {
@@ -268,11 +263,15 @@ body.ui::after {
   z-index: 100000;
   padding: 10px 12px;
   border-radius: 999px;
+  background: rgba(255, 255, 255, 0.62);
 }
 
-.btn.ui-home-btn::before {
-  display: none;
-}
+:where(.ui) .refresh-btn { --btn-tint: rgba(79, 124, 255, 0.18); }
+:where(.ui) .upload-btn { --btn-tint: rgba(42, 198, 164, 0.18); }
+:where(.ui) .btn-primary { --btn-tint: rgba(79, 124, 255, 0.20); }
+:where(.ui) .btn-success { --btn-tint: rgba(42, 198, 164, 0.18); }
+:where(.ui) .delete-btn { --btn-tint: rgba(240, 141, 177, 0.18); }
+:where(.ui) .rename-btn { --btn-tint: rgba(100, 116, 139, 0.18); }
 
 .ui-icon {
   width: 1.1em;
@@ -284,6 +283,13 @@ body.ui::after {
   stroke-linecap: round;
   stroke-linejoin: round;
   opacity: 0.92;
+}
+
+.ui-icon-color {
+  width: 1.25em;
+  height: 1.25em;
+  flex: 0 0 auto;
+  display: inline-block;
 }
 
 :where(.ui) input[type="text"],

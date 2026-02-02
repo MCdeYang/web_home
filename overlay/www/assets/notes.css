@@ -80,6 +80,12 @@ body.ui .card h2::after {
   animation: fadeInDown 0.5s ease-out;
 }
 
+body.ui .header {
+  width: 100%;
+  justify-content: center;
+  text-align: center;
+}
+
 .home-btn {
   text-decoration: none;
   font-size: 1.4em;

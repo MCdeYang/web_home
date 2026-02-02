@@ -3,4 +3,4 @@
 
 void *environment_thread(void *arg);
 
-#endif // ENVIRONMENT_H
+#endif

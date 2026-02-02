@@ -8,10 +8,10 @@
     <link rel="stylesheet" href="/assets/control.css">
 </head>
 <body class="ui">
-    <a href="/index.html" class="btn btn--ghost ui-home-btn" aria-label="返回主页"><svg class="ui-icon" aria-hidden="true"><use href="/assets/icons.svg#icon-home"/></svg><span>返回主页</span></a>
+    <a href="/index.html" class="btn btn--ghost ui-home-btn" aria-label="返回主页"><svg class="ui-icon-color" aria-hidden="true"><use href="/assets/icons-color.svg#icon-home"/></svg><span>返回主页</span></a>
     <div class="container ui-animate-in">
         <header>
-            <h1><svg class="ui-icon" aria-hidden="true"><use href="/assets/icons.svg#icon-control"/></svg><span>家庭智能控制</span></h1>
+            <h1><svg class="ui-icon-color" aria-hidden="true"><use href="/assets/icons-color.svg#icon-control"/></svg><span>家庭智能控制</span></h1>
             <p>实时控制您的家居设备</p>
         </header>
 
@@ -19,7 +19,7 @@
             <!-- 灯控制 -->
             <div class="control-card" id="light-card">
                 <div class="device-icon">
-                    <span class="icon"><svg class="ui-icon" aria-hidden="true"><use href="/assets/icons.svg#icon-light"/></svg></span>
+                    <span class="icon"><svg class="ui-icon-color" aria-hidden="true"><use href="/assets/icons-color.svg#icon-light"/></svg></span>
                     <h3>客厅灯</h3>
                 </div>
                 <div class="switch-container">
@@ -34,7 +34,7 @@
             <!-- 空调控制 -->
             <div class="control-card" id="ac-card">
                 <div class="device-icon">
-                    <span class="icon"><svg class="ui-icon" aria-hidden="true"><use href="/assets/icons.svg#icon-snow"/></svg></span>
+                    <span class="icon"><svg class="ui-icon-color" aria-hidden="true"><use href="/assets/icons-color.svg#icon-snow"/></svg></span>
                     <h3>空调</h3>
                 </div>
                 <div class="switch-container">
@@ -49,7 +49,7 @@
             <!-- 洗衣机控制 -->
             <div class="control-card" id="washer-card">
                 <div class="device-icon">
-                    <span class="icon"><svg class="ui-icon" aria-hidden="true"><use href="/assets/icons.svg#icon-washer"/></svg></span>
+                    <span class="icon"><svg class="ui-icon-color" aria-hidden="true"><use href="/assets/icons-color.svg#icon-washer"/></svg></span>
                     <h3>洗衣机</h3>
                 </div>
                 <div class="switch-container">
@@ -64,7 +64,7 @@
             <!-- 风扇控制 -->
             <div class="control-card" id="fan-card">
                 <div class="device-icon">
-                    <span class="icon"><svg class="ui-icon" aria-hidden="true"><use href="/assets/icons.svg#icon-fan"/></svg></span>
+                    <span class="icon"><svg class="ui-icon-color" aria-hidden="true"><use href="/assets/icons-color.svg#icon-fan"/></svg></span>
                     <h3>风扇</h3>
                 </div>
                 <div class="switch-container">
@@ -79,7 +79,7 @@
             <!-- 门锁控制 -->
             <div class="control-card" id="door-card">
                 <div class="device-icon">
-                    <span class="icon" id="door-icon"><svg class="ui-icon" aria-hidden="true"><use href="/assets/icons.svg#icon-lock"/></svg></span>
+                    <span class="icon" id="door-icon"><svg class="ui-icon-color" aria-hidden="true"><use href="/assets/icons-color.svg#icon-lock"/></svg></span>
                     <h3>大门</h3>
                 </div>
                 <div class="switch-container">
@@ -188,7 +188,7 @@
                 statusElement.textContent = state ? '解锁' : '锁定';
                 cardElement.style.backgroundColor = state ? '#d1ecf1' : '#f8d7da';
                 const iconUse = document.querySelector('#door-icon use');
-                if (iconUse) iconUse.setAttribute('href', state ? '/assets/icons.svg#icon-unlock' : '/assets/icons.svg#icon-lock');
+                if (iconUse) iconUse.setAttribute('href', state ? '/assets/icons-color.svg#icon-unlock' : '/assets/icons-color.svg#icon-lock');
             }
         }
 

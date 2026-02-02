@@ -40,22 +40,22 @@
 
     <div class="container ui-animate-in">
       <div class="time" id="time">--:--</div>
-      <div class="temp" id="temperature">🌡️ 室温：23°C</div>
+      <div class="temp"><svg class="ui-icon-color" aria-hidden="true"><use href="/assets/icons-color.svg#icon-temp"/></svg><span id="temperature">室温：23°C</span></div>
       
       <!-- ✅ 修改：动态天气行 -->
       <div class="weather" id="weather">
-        <span id="weather-icon" class="weather-icon">🌤️</span>
+        <svg id="weather-icon" class="ui-icon-color" aria-hidden="true"><use href="/assets/icons-color.svg#icon-weather"/></svg>
         <span id="weather-text">加载中...</span>
       </div>
       
       <!-- 6个功能入口 -->
       <div class="buttons">
-        <a href="/disk.html" class="btn"><svg class="ui-icon" aria-hidden="true"><use href="/assets/icons.svg#icon-disk"/></svg><span>私人网盘</span></a>
-        <a href="/control.html" class="btn"><svg class="ui-icon" aria-hidden="true"><use href="/assets/icons.svg#icon-control"/></svg><span>家居控制</span></a>
-        <a href="/notes.html" class="btn"><svg class="ui-icon" aria-hidden="true"><use href="/assets/icons.svg#icon-notes"/></svg><span>家庭备忘录</span></a>
-        <a href="/photos.html" class="btn"><svg class="ui-icon" aria-hidden="true"><use href="/assets/icons.svg#icon-photos"/></svg><span>家庭相册</span></a>
-        <a href="/system.html" class="btn"><svg class="ui-icon" aria-hidden="true"><use href="/assets/icons.svg#icon-system"/></svg><span>系统数据</span></a>
-        <a href="/settings.html" class="btn"><svg class="ui-icon" aria-hidden="true"><use href="/assets/icons.svg#icon-settings"/></svg><span>设置</span></a>
+        <a href="/disk.html" class="btn"><svg class="ui-icon-color" aria-hidden="true"><use href="/assets/icons-color.svg#icon-disk"/></svg><span>私人网盘</span></a>
+        <a href="/control.html" class="btn"><svg class="ui-icon-color" aria-hidden="true"><use href="/assets/icons-color.svg#icon-control"/></svg><span>家居控制</span></a>
+        <a href="/notes.html" class="btn"><svg class="ui-icon-color" aria-hidden="true"><use href="/assets/icons-color.svg#icon-notes"/></svg><span>家庭备忘录</span></a>
+        <a href="/photos.html" class="btn"><svg class="ui-icon-color" aria-hidden="true"><use href="/assets/icons-color.svg#icon-photos"/></svg><span>家庭相册</span></a>
+        <a href="/system.html" class="btn"><svg class="ui-icon-color" aria-hidden="true"><use href="/assets/icons-color.svg#icon-system"/></svg><span>系统数据</span></a>
+        <a href="/settings.html" class="btn"><svg class="ui-icon-color" aria-hidden="true"><use href="/assets/icons-color.svg#icon-settings"/></svg><span>设置</span></a>
       </div>
     </div>
   </div>
@@ -75,48 +75,22 @@
         if (data.humidity != null && data.temperature != null) {
           const hum = parseFloat(data.humidity).toFixed(1);
           const temp = parseFloat(data.temperature).toFixed(1);
-          tempEl.textContent = `🌡️ 室温：${temp}°C · 湿度：${hum}%`;
+          tempEl.textContent = `室温：${temp}°C · 湿度：${hum}%`;
         } else if (data.error) {
-          tempEl.textContent = `🌡️ ${data.error}`;
+          tempEl.textContent = `${data.error}`;
         } else {
-          tempEl.textContent = '🌡️ 数据异常';
+          tempEl.textContent = '数据异常';
         }
       } catch (err) {
         console.error('Temperature fetch failed:', err);
-        tempEl.textContent = '🌡️ 加载失败';
+        tempEl.textContent = '加载失败';
       }
-    }
-
-    // === 天气图标映射（保持不变）===
-    const WEATHER_ICONS = {
-      '晴': '☀️',
-      '多云': '⛅',
-      '阴': '☁️',
-      '雾': '🌫️',
-      '小雨': '🌦️',
-      '中雨': '🌧️',
-      '大雨': '⛈️',
-      '暴雨': '⛈️',
-      '小雪': '🌨️',
-      '中雪': '❄️',
-      '大雪': '❄️',
-      '扬沙': '💨',
-      '浮尘': '💨',
-      '沙尘暴': '🌪️',
-      '强沙尘暴': '🌪️',
-      '雷阵雨': '⚡',
-      '雨夹雪': '☔',
-      '阵雨': '🌦️',
-      '阵雪': '❄️'
-    };
-
-    function getWeatherIcon(text) {
-      return WEATHER_ICONS[text] || '🌤️';
     }
 
     async function fetchAndRenderWeather() {
       const weatherTextEl = document.getElementById('weather-text');
       const weatherIconEl = document.getElementById('weather-icon');
+      const weatherIconUse = weatherIconEl ? weatherIconEl.querySelector('use') : null;
 
       try {
         const res = await fetch('/home/weather');
@@ -126,7 +100,7 @@
 
         if (data.code !== '200') {
           weatherTextEl.textContent = '天气数据异常';
-          weatherIconEl.textContent = '⚠️';
+          if (weatherIconUse) weatherIconUse.setAttribute('href', '/assets/icons-color.svg#icon-weather');
           return;
         }
 
@@ -143,12 +117,12 @@
         if (windDir || windScale) desc += ` · ${windDir} ${windScale}`;
 
         weatherTextEl.textContent = desc;
-        weatherIconEl.textContent = getWeatherIcon(weather);
+        if (weatherIconUse) weatherIconUse.setAttribute('href', '/assets/icons-color.svg#icon-weather');
 
       } catch (err) {
         console.error('Weather fetch failed:', err);
         weatherTextEl.textContent = '天气加载失败';
-        weatherIconEl.textContent = '❌';
+        if (weatherIconUse) weatherIconUse.setAttribute('href', '/assets/icons-color.svg#icon-weather');
       }
     }
 
