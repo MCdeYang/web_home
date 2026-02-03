@@ -1,3 +1,17 @@
+/**********************************************************************
+ * @file routes.c
+ * @brief CGI 路由表定义
+ *
+ * 本文件定义 CGI 接口路径与处理函数映射表
+ * 供主程序按请求方法分发到对应处理函数
+ *
+ * @author 杨翊
+ * @date 2026-02-02
+ * @version 1.0
+ *
+ * @note
+ * - 路由表只做路径匹配与函数指针绑定
+ **********************************************************************/
 #include <stdio.h>
 #include <string.h>
 #include "routes.h"
@@ -22,9 +36,7 @@ struct route routes[] = {
     },
     {
         .path = "/picture",
-        .get = picture_get,
-        .put = picture_put
-        // POST/DELETE not implemented → NULL
+        .get = picture_get
     },
     {
         .path = "/disk/download",
@@ -61,8 +73,8 @@ struct route routes[] = {
     {
         .path = "/photos",
         .get = photos_list_get,
-        .post = photos_upload,    // POST → 上传新照片
-        .delete = photos_delete // DELETE → 删除指定照片
+        .post = photos_upload,
+        .delete = photos_delete
     },
     {
         .path = "/photo",

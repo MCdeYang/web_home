@@ -317,11 +317,11 @@ static int encode_weather_data(uint8_t* outbuf, size_t outlen) {
 static int open_voice_port(void) {
     int fd = -1;
     int retry = 0;
-    const int MAX_RETRY = 15;      // 最多重试 15 次
-    const int RETRY_DELAY_SEC = 2; // 每次间隔 2 秒
+    const int max_retry = 15;      // 最多重试 15 次
+    const int retry_delay_sec = 2; // 每次间隔 2 秒
     struct termios tty;
 
-    while (retry < MAX_RETRY) {
+    while (retry < max_retry) {
         fd = open(VOICE_SERIAL_DEVICE, O_RDWR | O_NOCTTY);
         if (fd >= 0) {
             // 成功打开，配置串口
@@ -343,13 +343,13 @@ static int open_voice_port(void) {
         }
         // 打开失败
         fprintf(stderr, "[Voice] Failed to open %s (attempt %d/%d): %s\n",
-                VOICE_SERIAL_DEVICE, retry + 1, MAX_RETRY, strerror(errno));
+                VOICE_SERIAL_DEVICE, retry + 1, max_retry, strerror(errno));
         retry++;
-        if (retry < MAX_RETRY) {
-            sleep(RETRY_DELAY_SEC);
+        if (retry < max_retry) {
+            sleep(retry_delay_sec);
         }
     }
-    fprintf(stderr, "[Voice] Giving up after %d attempts. Voice control disabled.\n", MAX_RETRY);
+    fprintf(stderr, "[Voice] Giving up after %d attempts. Voice control disabled.\n", max_retry);
     return -1;
 }
 // 语音线程

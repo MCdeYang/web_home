@@ -150,7 +150,7 @@ static int open_serial_port(void) {
 
 // 验证命令（内部函数）
 static int is_valid_command(const char* cmd) {
-    int i;
+    size_t i;
     for (i = 0; i < VALID_CMD_COUNT; i++) {
         if (strcmp(cmd, valid_commands[i]) == 0)
             return 1;

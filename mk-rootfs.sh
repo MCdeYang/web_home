@@ -134,9 +134,10 @@ sudo chroot "${chroot_dir}" /bin/bash -c "
 "
 # === 编译 CGI ===
 echo "Building CGI programs using Makefile..."
-if [ -f overlay/www/cgi-bin/src/Makefile ]; then
+if [ -f overlay/www/cgi-bin/Makefile ]; then
+    sudo rm -rf "${chroot_dir}/tmp/build-cgi"
     sudo mkdir -p "${chroot_dir}/tmp/build-cgi"
-    sudo cp -rf overlay/www/cgi-bin/src/* "${chroot_dir}/tmp/build-cgi/"
+    sudo cp -rf overlay/www/cgi-bin/* "${chroot_dir}/tmp/build-cgi/"
     sudo chroot "${chroot_dir}" /bin/bash -c "
         cd /tmp/build-cgi
         make

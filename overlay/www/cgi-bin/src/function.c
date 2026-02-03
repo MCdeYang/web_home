@@ -1,3 +1,17 @@
+/**********************************************************************
+ * @file function.c
+ * @brief CGI 请求处理函数实现
+ *
+ * 本文件实现各 CGI 接口的处理函数
+ * 负责解析请求参数并返回 JSON 响应
+ *
+ * @author 杨翊
+ * @date 2026-02-02
+ * @version 1.0
+ *
+ * @note
+ * - 处理函数输出 HTTP 头与 JSON 响应体
+ **********************************************************************/
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
@@ -9,6 +23,7 @@
 #include <stdbool.h>
 #include <json-c/json.h>
 
+#include "define.h"
 #include "function.h"
 #include "common.h"
 #include "util.h"
@@ -28,18 +43,10 @@ extern const char* get_disk_root(void);
 //#define VALID_USERNAME "root"
 //#define VALID_PASSWORD "root"
 
-#define WEATHER "/development/tmp/weather.json"
-#define TEMP_JSON_PATH "/development/tmp/temperature.json"
-#define FOUR_G_SCRIPT "/development/4G/4G.sh"
-
-
-static void send_json_response(struct json_object *obj) {
-    send_json_headers();
-    printf("%s\n", json_object_to_json_string_ext(obj, JSON_C_TO_STRING_PLAIN));
-    json_object_put(obj);
-}
-
-//GET
+//==============================
+// GET
+//==============================
+// 获取天气
 void weather_get(const char *path, const char *body) {
     (void)path;
     (void)body;
@@ -114,6 +121,7 @@ void weather_get(const char *path, const char *body) {
     printf("%s\n", output);
     json_object_put(resp);
 }
+// 获取温湿度
 void temperature_get(const char *path, const char *body) {
     (void)path;
     (void)body;
@@ -132,7 +140,7 @@ void temperature_get(const char *path, const char *body) {
         return;
     }
 
-    // 加共享读锁
+    // 加读锁
     if (flock(fd, LOCK_SH) != 0) {
         close(fd);
         json_object *resp = json_object_new_object();
@@ -242,15 +250,26 @@ void temperature_get(const char *path, const char *body) {
     printf("%s\n", json_object_to_json_string_ext(response, JSON_C_TO_STRING_PRETTY));
     json_object_put(response);
 }
-void picture_get(const char *path, const char *body){}
-void notice_get(const char *path, const char *body){}
+// 获取图片
+void picture_get(const char *path, const char *body){
+    (void)path;
+    (void)body;
+}
+// 获取通知
+void notice_get(const char *path, const char *body){
+    (void)path;
+    (void)body;
+}
 
+// 获取系统信息
 void system_get(const char *path, const char *body) {
-    // 🔒 1. 验证登录状态
+    (void)path;
+    (void)body;
+    // 验证登录状态
     char *token = get_token_from_cookie();
     if (!token || !is_valid_token(token)) {
         free(token);
-        // 直接输出 401 错误（不依赖 send_error_401）
+        // 直接输出 401 错误
         printf("Status: 401 Unauthorized\r\n");
         printf("Content-Type: application/json\r\n\r\n");
         printf("{\"error\":\"Unauthorized\"}\n");
@@ -258,7 +277,7 @@ void system_get(const char *path, const char *body) {
     }
     free(token);
 
-    // 📊 2. 采集系统信息
+    // 采集系统信息
     system_info_t info;
     if (!collect_system_info(&info)) {
         // 直接输出 500 错误
@@ -268,7 +287,7 @@ void system_get(const char *path, const char *body) {
         return;
     }
 
-    // 🧱 3. 构建 JSON 响应
+    // 构建 JSON 响应
     send_json_headers();
     struct json_object *root = json_object_new_object();
     json_object_object_add(root, "load_percent",     json_object_new_double(info.load_percent));
@@ -289,7 +308,10 @@ void system_get(const char *path, const char *body) {
 
 
 
+// 下载文件
 void disk_download_get(const char *path, const char *body) {
+    (void)path;
+    (void)body;
     char *token = get_token_from_cookie();
     if (!token || !is_valid_token(token)) {
         free(token);
@@ -362,7 +384,7 @@ void disk_download_get(const char *path, const char *body) {
         }
         else if (strcasecmp(dot, "pdf") == 0) {
             mime = "application/pdf";
-            disposition = "inline"; // 现代浏览器可直接预览 PDF
+            disposition = "inline";
         }
         else if (strcasecmp(dot, "mp4") == 0) {
             mime = "video/mp4";
@@ -397,7 +419,10 @@ void disk_download_get(const char *path, const char *body) {
     }
     fclose(fp);
 }
+// 列出目录
 void disk_list_get(const char *path, const char *body) {
+    (void)path;
+    (void)body;
     char *token = get_token_from_cookie();
     if (!token || !is_valid_token(token)) {
         free(token);
@@ -441,12 +466,13 @@ void disk_list_get(const char *path, const char *body) {
     }
 
     json_object_object_add(root, "files", arr);
-    send_json_response(root);
+    send_json_object_response(root);
 }
+// 获取照片列表
 void photos_list_get(const char *path, const char *body) {
     (void)path; (void)body;
 
-    // 认证（可选：如果相册公开可移除）
+    // 认证
     char *token = get_token_from_cookie();
     if (!token || !is_valid_token(token)) {
         free(token);
@@ -455,15 +481,16 @@ void photos_list_get(const char *path, const char *body) {
     }
     free(token);
 
-    // 复用你已有的函数
+    // 复用已有的函数
     char *json = photos_build_list_json();
     photos_send_json_response(json);
     free(json);
 }
+// 获取单张照片
 void photos_photo_get(const char *path, const char *body) {
     (void)path; (void)body;
 
-    // 1. 认证（可选）
+    // 认证
     char *token = get_token_from_cookie();
     if (!token || !is_valid_token(token)) {
         free(token);
@@ -472,7 +499,7 @@ void photos_photo_get(const char *path, const char *body) {
     }
     free(token);
 
-    // 2. 从 QUERY_STRING 获取 name 参数
+    // 从 QUERY_STRING 获取 name 参数
     const char *qs = getenv("QUERY_STRING");
     if (!qs || !strstr(qs, "name=")) {
         send_error_400("Missing 'name' parameter");
@@ -482,29 +509,22 @@ void photos_photo_get(const char *path, const char *body) {
     char filename[256] = {0};
     sscanf(qs, "name=%255[^&\r\n]", filename);
     url_decode(filename, filename);
-    /*
-    // 3. 安全检查：只允许安全文件名（无 / \ .. 等）
-    if (!photos_is_safe_filename(filename)) {
-        send_error_403("Invalid filename");
-        return;
-    }
-    */
 
-    // 4. 构建完整路径
+    // 构建完整路径
     char filepath[512];
     if ((size_t)snprintf(filepath, sizeof(filepath), "%s/%s", PHOTOS_DIR, filename) >= sizeof(filepath)) {
         send_error_400("Path too long");
         return;
     }
 
-    // 5. 检查文件是否存在
+    // 检查文件是否存在
     struct stat st;
     if (stat(filepath, &st) != 0 || !S_ISREG(st.st_mode)) {
         send_error_404("Photo not found");
         return;
     }
 
-    // 6. 确定 MIME 类型（和 disk_download_get 一致）
+    // 确定 MIME 类型（和 disk_download_get 一致）
     const char *mime = "application/octet-stream";
     const char *ext = strrchr(filename, '.');
     if (ext) {
@@ -517,7 +537,7 @@ void photos_photo_get(const char *path, const char *body) {
         else if (strcasecmp(ext, "svg") == 0) mime = "image/svg+xml";
     }
 
-    // 7. 打开并发送文件
+    // 打开并发送文件
     FILE *fp = fopen(filepath, "rb");
     if (!fp) {
         send_error_500("Cannot open photo");
@@ -536,10 +556,11 @@ void photos_photo_get(const char *path, const char *body) {
     }
     fclose(fp);
 }
+// 获取照片备注
 void photo_note_get(const char *path, const char *body) {
     (void)path; (void)body;
 
-    // 1. 验证 token
+    // 认证
     char *token = get_token_from_cookie();
     if (!token || !is_valid_token(token)) {
         free(token);
@@ -548,28 +569,21 @@ void photo_note_get(const char *path, const char *body) {
     }
     free(token);
 
-    // 2. 获取查询字符串
+    // 获取查询字符串
     const char *qs = getenv("QUERY_STRING");
     if (!qs || !strstr(qs, "name=")) {
         send_error_400("Missing 'name' parameter");
         return;
     }
 
-    // 3. 提取原始（URL 编码）的 filename
+    // 提取原始（URL 编码）的 filename
     char raw_filename[256] = {0};
     parse_query_string(qs, "name", raw_filename, sizeof(raw_filename));
 
-    // 4. ✅ 关键修复：URL 解码
+    // URL 解码
     char decoded_filename[256] = {0};
     url_decode(raw_filename, decoded_filename);
-    /*
-    // 5. 安全校验（使用解码后的名字）
-    if (!photos_is_safe_filename(decoded_filename)) {
-        send_error_403("Invalid filename");
-        return;
-    }
-    */
-    // 6. 构建注释文件路径
+    // 构建注释文件路径
     char notepath[512];
     int len = snprintf(notepath, sizeof(notepath), "%s/%s.txt", PHOTOS_DIR, decoded_filename);
     if (len >= (int)sizeof(notepath)) {
@@ -577,15 +591,15 @@ void photo_note_get(const char *path, const char *body) {
         return;
     }
 
-    // 7. 尝试打开注释文件
+    // 尝试打开注释文件
     FILE *fp = fopen(notepath, "r");
     if (!fp) {
-        // 文件不存在 → 返回空内容（合法，200 OK）
+        // 文件不存在则返回空内容
         printf("Content-Type: text/plain\r\n\r\n");
         return;
     }
 
-    // 8. 返回文件内容（确保 UTF-8 兼容）
+    // 返回文件内容（确保 UTF-8 兼容）
     printf("Content-Type: text/plain; charset=utf-8\r\n\r\n");
 
     char buf[1024];
@@ -595,6 +609,7 @@ void photo_note_get(const char *path, const char *body) {
     }
     fclose(fp);
 }
+// 获取家庭成员
 void family_members_get(const char *path, const char *body) {
     (void)path; (void)body;
 
@@ -611,7 +626,10 @@ void family_members_get(const char *path, const char *body) {
     json_object_put(resp);
     json_object_put(root);
 }
+// 获取我的任务
 void family_my_tasks_get(const char *path, const char *body) {
+    size_t i;
+    size_t j;
     (void)path;
     (void)body;
 
@@ -628,7 +646,7 @@ void family_my_tasks_get(const char *path, const char *body) {
 
     json_object *members = json_object_object_get(root, "members");
     if (members && json_object_is_type(members, json_type_array)) {
-        for (int i = 0; i < json_object_array_length(members); i++) {
+        for (i = 0; i < json_object_array_length(members); i++) {
             json_object *member = json_object_array_get_idx(members, i);
             const char *member_name = json_object_get_string(
                 json_object_object_get(member, "name")
@@ -638,7 +656,7 @@ void family_my_tasks_get(const char *path, const char *body) {
 
             json_object *tasks = json_object_object_get(member, "tasks");
             if (tasks && json_object_is_type(tasks, json_type_array)) {
-                for (int j = 0; j < json_object_array_length(tasks); j++) {
+                for (j = 0; j < json_object_array_length(tasks); j++) {
                     json_object *task = json_object_array_get_idx(tasks, j);
                     const char *due_str = json_object_get_string(
                         json_object_object_get(task, "due_date")
@@ -673,43 +691,54 @@ void family_my_tasks_get(const char *path, const char *body) {
     json_object_put(result);
     json_object_put(root);
 }
+// 获取灯状态
 void control_light_get(const char *path, const char *body) {
+    (void)path;
+    (void)body;
     int state = get_light_state();  // 从本地状态获取
     printf("Content-Type: application/json\r\n\r\n");
     printf("{\"state\": %d}", state);
 }
 
+// 获取风扇状态
 void control_fan_get(const char *path, const char *body) {
+    (void)path;
+    (void)body;
     int state = get_fan_state();
     printf("Content-Type: application/json\r\n\r\n");
     printf("{\"state\": %d}", state);
 }
 
+// 获取空调状态
 void control_aircon_get(const char *path, const char *body) {
-
+    (void)path;
+    (void)body;
     int state = get_aircon_state(); // 从本地状态获取
 
     printf("Content-Type: application/json\r\n\r\n");
     printf("{\"state\": %d}", state);
 }
 
+// 获取洗衣机状态
 void control_washing_machine_get(const char *path, const char *body) {
-
+    (void)path;
+    (void)body;
     int state = get_washing_state(); // 从本地状态获取
 
     printf("Content-Type: application/json\r\n\r\n");
     printf("{\"state\": %d}", state);
 }
 
+// 获取门状态
 void control_door_get(const char *path, const char *body) {
-
-    // 注意：门默认“锁定”对应 state=0（因为前端 door: true 表示锁定）
-    // 但为了统一语义，建议：state=1 表示“解锁”，state=0 表示“锁定”
+    (void)path;
+    (void)body;
     int state = get_door_state(); // 从本地状态获取
 
     printf("Content-Type: application/json\r\n\r\n");
     printf("{\"state\": %d}", state);
 }
+// 获取修改密码信息
 void settings_change_password_get(const char *path, const char *body) {
     (void)path; (void)body;
 
@@ -725,6 +754,7 @@ void settings_change_password_get(const char *path, const char *body) {
 
     json_object_put(resp);
 }
+// 获取外网访问状态
 void settings_public_get(const char *path, const char *body) {
     (void)path; (void)body;
 
@@ -739,6 +769,7 @@ void settings_public_get(const char *path, const char *body) {
 
     json_object_put(resp);
 }
+// 获取WiFi状态
 void settings_wifi_get(const char *path, const char *body) {
     (void)path; (void)body;
 
@@ -760,7 +791,10 @@ void settings_wifi_get(const char *path, const char *body) {
         FILE *ip_fp = popen("ip addr show wlan0 2>/dev/null | grep -E 'inet ([0-9]{1,3}\\.){3}[0-9]{1,3}' | grep -v '127.0.0.1' | wc -l", "r");
         char buf[8] = "0";
         if (ip_fp) {
-            fgets(buf, sizeof(buf), ip_fp);
+            if(fgets(buf, sizeof(buf), ip_fp)==NULL){
+                buf[0]='0';
+                buf[1]='\0';
+            }
             pclose(ip_fp);
         }
         if (atoi(buf) > 0) {
@@ -782,28 +816,35 @@ void settings_wifi_get(const char *path, const char *body) {
     json_object_put(root);
 }
 //check token
+// 检查认证
 void check_auth_get(const char *path, const char *body) {
-    // 1. 从 Cookie 中提取 token
+    (void)path;
+    (void)body;
+    // 从 Cookie 中提取 token
     char *token = get_token_from_cookie();
     
-    // 2. 验证 token 是否有效（存在 + 未过期）
+    // 验证 token 是否有效（存在 + 未过期）
     if (!token || !is_valid_token(token)) {
         free(token); // 注意：get_token_from_cookie 返回 malloc 内存
         
-        // 3. 无效 → 返回 401 Unauthorized
+        // 无效则返回 401
         printf("Status: 401 Unauthorized\r\n");
         printf("Content-Type: application/json\r\n\r\n");
         printf("{\"error\":\"Unauthorized\"}\n");
         return;
     }
 
-    // 4. 有效 → 返回 200 OK（空 JSON 即可）
+    // 有效则返回 200
     free(token);
     printf("Content-Type: application/json\r\n\r\n");
     printf("{}\n");
 }
-//PUT
+//==============================
+// PUT
+//==============================
+// 设置灯状态
 void control_light_put(const char *path, const char *body) {
+    (void)path;
     int state = parse_state_from_json(body);
     if (state == -1) {
         printf("Status: 400 Bad Request\r\n\r\n");
@@ -817,7 +858,9 @@ void control_light_put(const char *path, const char *body) {
     }
 }
 
+// 设置空调状态
 void control_aircon_put(const char *path, const char *body) {
+    (void)path;
     int state = parse_state_from_json(body);
     if (state == -1) {
         printf("Status: 400 Bad Request\r\n\r\n");
@@ -831,7 +874,9 @@ void control_aircon_put(const char *path, const char *body) {
     }
 }
 
+// 设置洗衣机状态
 void control_washing_machine_put(const char *path, const char *body) {
+    (void)path;
     int state = parse_state_from_json(body);
     if (state == -1) {
         printf("Status: 400 Bad Request\r\n\r\n");
@@ -845,7 +890,9 @@ void control_washing_machine_put(const char *path, const char *body) {
     }
 }
 
+// 设置风扇状态
 void control_fan_put(const char *path, const char *body) {
+    (void)path;
     int state = parse_state_from_json(body);
     if (state == -1) {
         printf("Status: 400 Bad Request\r\n\r\n");
@@ -859,7 +906,9 @@ void control_fan_put(const char *path, const char *body) {
     }
 }
 
+// 设置门状态
 void control_door_put(const char *path, const char *body) {
+    (void)path;
     int state = parse_state_from_json(body);
     if (state == -1) {
         printf("Status: 400 Bad Request\r\n\r\n");
@@ -872,6 +921,7 @@ void control_door_put(const char *path, const char *body) {
         printf("Status: 500 Internal Server Error\r\n\r\n");
     }
 }
+// 设置外网访问
 void settings_public_put(const char *path, const char *body) {
     (void)path;
 
@@ -928,7 +978,7 @@ void settings_public_put(const char *path, const char *body) {
                 if (len > 0 && public_url[len - 1] == '\n') {
                     public_url[len - 1] = '\0';
                 }
-                // ✅ 修复点：检查 ngrok-free. 而非 .ngrok-free.app
+                // 检查域名关键字
                 if (strstr(public_url, "https://") && strstr(public_url, "ngrok-free.")) {
                     json_object_object_add(resp, "public_url", json_object_new_string(public_url));
                 }
@@ -943,6 +993,7 @@ void settings_public_put(const char *path, const char *body) {
 
     json_object_put(resp);
 }
+// 设置WiFi
 void settings_wifi_put(const char *path, const char *body) {
     (void)path;
 
@@ -980,9 +1031,9 @@ void settings_wifi_put(const char *path, const char *body) {
     // ========== 启用 Wi-Fi ==========
     json_object *j_ssid = NULL, *j_password = NULL;
     const char *ssid = NULL;
-    const char *password = ""; // 默认为空密码（支持开放网络）
+    const char *password = ""; // 默认为空密码
 
-    // 检查 SSID（必须提供）
+    // 检查 SSID
     if (!json_object_object_get_ex(req, "ssid", &j_ssid) ||
         !json_object_is_type(j_ssid, json_type_string)) {
         json_object_object_add(resp, "status", json_object_new_string("error"));
@@ -991,7 +1042,7 @@ void settings_wifi_put(const char *path, const char *body) {
     }
     ssid = json_object_get_string(j_ssid);
 
-    // 检查 Password（可选）
+    // 检查 Password
     if (json_object_object_get_ex(req, "password", &j_password)) {
         if (!json_object_is_type(j_password, json_type_string)) {
             json_object_object_add(resp, "status", json_object_new_string("error"));
@@ -1018,10 +1069,6 @@ void settings_wifi_put(const char *path, const char *body) {
             goto output;
         }
     }
-
-    // 安全字符检查（防止 shell 注入）
-    // 注意：is_safe_string 的第二个参数含义需确认（通常 1=严格，0=宽松）
-    // 假设 is_safe_string(str, allow_empty) 或类似；若不支持空串，可加判断
     if (!is_safe_string(ssid, 1)) {
         json_object_object_add(resp, "status", json_object_new_string("error"));
         json_object_object_add(resp, "message", json_object_new_string("Invalid characters in SSID"));
@@ -1033,7 +1080,7 @@ void settings_wifi_put(const char *path, const char *body) {
         goto output;
     }
 
-    // 构造命令：用单引号包裹参数，避免 shell 解析
+    // 构造命令
     char cmd[512];
     snprintf(cmd, sizeof(cmd), "%s '%s' '%s'", WIFI_START_SCRIPT, ssid, password);
 
@@ -1044,7 +1091,7 @@ void settings_wifi_put(const char *path, const char *body) {
         goto output;
     }
 
-    // 解析脚本返回（匹配 SUCCESS:/ERROR: 格式）
+    // 解析脚本返回
     if (strncmp(result, "SUCCESS:", 8) == 0) {
         json_object_object_add(resp, "status", json_object_new_string("success"));
         json_object_object_add(resp, "message", json_object_new_string(result + 9));
@@ -1063,8 +1110,12 @@ output:
     json_object_put(req);
     json_object_put(resp);
 }
-//POST
+//==============================
+// POST
+//==============================
+// 登录
 void login_post(const char *path, const char *body) {
+    (void)path;
     if (!body) {
         send_error_400("Missing request body");
         return;
@@ -1098,7 +1149,7 @@ void login_post(const char *path, const char *body) {
         return;
     }
 
-    // ✅ 从文件加载真实凭据
+    // 从文件加载保存的凭据
     char stored_user[128] = {0};
     char stored_pass[128] = {0};
 
@@ -1145,11 +1196,12 @@ void login_post(const char *path, const char *body) {
     json_object_put(resp);
 }
 
+// 上传文件
 void disk_upload_post(const char *path, const char *body) {
     (void)path;
     (void)body;
 
-    // 1. 验证 token
+    // 验证 token
     char *token = get_token_from_cookie();
     if (!token || !is_valid_token(token)) {
         free(token);
@@ -1158,7 +1210,7 @@ void disk_upload_post(const char *path, const char *body) {
     }
     free(token);
 
-    // 2. 从 QUERY_STRING 获取 target_path
+    // 从 QUERY_STRING 获取 target_path
     const char *query = getenv("QUERY_STRING");
     if (!query) {
         send_error_400("Missing query string");
@@ -1190,13 +1242,13 @@ void disk_upload_post(const char *path, const char *body) {
         pair = strtok(NULL, "&");
     }
 
-    // 3. 安全校验路径
+    // 安全校验路径
     if (!is_safe_relative_path(target_path)) {
         send_error_403("Invalid or unsafe path");
         return;
     }
 
-    // 4. 获取 Content-Length 和 Content-Type
+    // 获取 Content-Length 和 Content-Type
     const char *content_length_str = getenv("CONTENT_LENGTH");
     const char *content_type = getenv("CONTENT_TYPE");
     if (!content_length_str || !content_type) {
@@ -1227,7 +1279,7 @@ void disk_upload_post(const char *path, const char *body) {
     strncpy(boundary, boundary_start, b_len);
     boundary[b_len] = '\0';
 
-    // 5. 读取整个请求体
+    // 读取整个请求体
     char *full_body = malloc(content_length + 1);
     if (!full_body) {
         send_error_500("Out of memory");
@@ -1242,7 +1294,7 @@ void disk_upload_post(const char *path, const char *body) {
    
     full_body[content_length] = '\0';
 
-    // 6. 构建目标目录路径
+    // 构建目标目录路径
     const char *disk_root = get_disk_root();
     if (!disk_root) {
         free(full_body);
@@ -1257,7 +1309,7 @@ void disk_upload_post(const char *path, const char *body) {
         snprintf(save_dir, sizeof(save_dir), "%s%s", disk_root, target_path);
     }
 
-    // 7. 解析 multipart 并保存
+    // 解析 multipart 并保存
     int result = parse_multipart_and_save(full_body, content_length, boundary, save_dir);
     free(full_body);
 
@@ -1272,6 +1324,7 @@ void disk_upload_post(const char *path, const char *body) {
     }
 }
 
+// 创建目录
 void disk_mkdir_post(const char *path, const char *body) {
     (void)path;
 
@@ -1294,7 +1347,7 @@ void disk_mkdir_post(const char *path, const char *body) {
         input_name_raw[name_len] = '\0';
     }
 
-    // 提取 path（可选）
+    // 提取 path
     const char *path_start = strstr(body, "path=");
     if (path_start) {
         path_start += 5;
@@ -1310,24 +1363,26 @@ void disk_mkdir_post(const char *path, const char *body) {
     url_decode(input_name, input_name_raw);
     url_decode(input_path, input_path_raw);
 
-    // >>> 关键修复：清理 path，将 "/" 或 "/xxx" 转为合法相对路径 <<<
     if (input_path[0] == '/') {
         char *p = input_path;
         while (*p == '/') p++;  // 跳过所有前导 /
         if (*p == '\0') {
-            // 只有 "/" → 视为空路径（根目录）
+            // 只有斜杠则视为空路径
             input_path[0] = '\0';
         } else {
-            // 如 "/docs" → 变成 "docs"
+            // 去掉开头斜杠
             memmove(input_path, p, strlen(p) + 1);
         }
     }
 
-    // 调试日志（上线可删，现在保留）
+    // 调试日志
     char debug_msg[600];
     int len = snprintf(debug_msg, sizeof(debug_msg),
                        "[MKDIR FINAL] name='%s', path='%s'\n", input_name, input_path);
-    write(2, debug_msg, len);
+    if (len > 0) {
+        ssize_t w = write(2, debug_msg, (size_t)len);
+        (void)w;
+    }
 
     // 检查文件夹名
     if (strlen(input_name) == 0) {
@@ -1343,7 +1398,7 @@ void disk_mkdir_post(const char *path, const char *body) {
         return;
     }
 
-    // 检查 path（现在已无前导 /，只防 .. 和 \）
+    // 检查 path
     if (input_path[0] != '\0') {
         if (strstr(input_path, "..") || strchr(input_path, '\\')) {
             send_error_403("Invalid path");
@@ -1364,14 +1419,18 @@ void disk_mkdir_post(const char *path, const char *body) {
     if (mkpath(full_dir, 0777) != 0) {
         len = snprintf(debug_msg, sizeof(debug_msg),
                        "[MKDIR ERROR] %s (errno=%d)\n", strerror(errno), errno);
-        write(2, debug_msg, len);
+        if (len > 0) {
+            ssize_t w2 = write(2, debug_msg, (size_t)len);
+            (void)w2;
+        }
         send_error_500("Create directory failed");
         return;
     }
 
     json_success("Folder created");
 }
-// disk_rename_post: 处理 POST /disk/rename
+
+// 重命名
 void disk_rename_post(const char *path, const char *body) {
     (void)path; // 实际路径从 body 中解析
 
@@ -1418,12 +1477,12 @@ void disk_rename_post(const char *path, const char *body) {
         return;
     }
 
-    // 如果目标已存在，先删除（避免 rename 失败）
+    // 如果目标已存在，先删除
     if (access(full_new_path, F_OK) == 0) {
         unlink(full_new_path);
     }
 
-    // 执行重命名（直接传递原始字节，支持中文）
+    // 执行重命名
     if (rename(full_old_path, full_new_path) == 0) {
         json_success("Rename OK");
     } else {
@@ -1434,18 +1493,7 @@ void photos_upload(const char *path, const char *body) {
     (void)path;
     (void)body;
 
-    // 可选：验证 token（如果相册需要权限）
-    /*
-    char *token = get_token_from_cookie();
-    if (!token || !is_valid_token(token)) {
-        free(token);
-        send_error_401("Unauthorized");
-        return;
-    }
-    free(token);
-    */
-
-    // 1. 获取 Content-Length
+    // 获取 Content-Length
     const char *content_length_str = getenv("CONTENT_LENGTH");
     const char *content_type = getenv("CONTENT_TYPE");
     if (!content_length_str || !content_type) {
@@ -1459,7 +1507,7 @@ void photos_upload(const char *path, const char *body) {
         return;
     }
 
-    // 2. 提取 boundary（健壮版）
+    // 提取 boundary
     const char *boundary_start = strstr(content_type, "boundary=");
     if (!boundary_start) {
         send_error_400("No boundary in Content-Type");
@@ -1485,7 +1533,7 @@ void photos_upload(const char *path, const char *body) {
     strncpy(boundary, boundary_start, b_len);
     boundary[b_len] = '\0';
 
-    // 3. 读取完整请求体
+    //读取完整请求体
     char *full_body = malloc(content_length + 1);
     if (!full_body) {
         send_error_500("Out of memory");
@@ -1505,18 +1553,15 @@ void photos_upload(const char *path, const char *body) {
         send_error_500("Read request body failed");
         return;
     }
-    full_body[content_length] = '\0'; // 仅用于调试打印，实际解析用二进制
+    full_body[content_length] = '\0';
 
-    // 4. 设置保存目录（相册专用）
+    //设置保存目录
     const char *photos_dir = "/media/sdcard/photos";
-    // 确保目录存在（可选）
-    // mkdir(photos_dir, 0755);
-
-    // 5. 复用 multipart 解析函数
+    // 复用 multipart 解析函数
     int result = parse_multipart_and_save(full_body, content_length, boundary, photos_dir);
     free(full_body);
 
-    // 6. 返回结果
+    // 返回结果
     if (result == -1) {
         send_error_400("Malformed multipart data");
     } else if (result == -2) {
@@ -1527,6 +1572,7 @@ void photos_upload(const char *path, const char *body) {
         json_success("Photo uploaded successfully");
     }
 }
+// 保存照片备注
 void photo_note_post(const char *path, const char *body) {
     (void)path;
 
@@ -1544,7 +1590,7 @@ void photo_note_post(const char *path, const char *body) {
     }
     free(token);
 
-    // 🔑 关键：先解析整个 JSON 字符串
+    // 先解析 JSON 字符串
     struct json_object *jobj = json_tokener_parse(body);
     if (!jobj) {
         send_error_400("Invalid JSON format");
@@ -1593,6 +1639,7 @@ void photo_note_post(const char *path, const char *body) {
 
     json_success("Note saved");
 }
+// 添加家庭成员
 void family_members_post(const char *path, const char *body) {
     (void)path;
 
@@ -1618,7 +1665,8 @@ void family_members_post(const char *path, const char *body) {
     }
     json_object *members = json_object_object_get(root, "members");
     int exists = 0;
-    for (int i = 0; i < json_object_array_length(members); i++) {
+    size_t i;
+    for (i = 0; i < json_object_array_length(members); i++) {
         json_object *m = json_object_array_get_idx(members, i);
         const char *n = json_object_get_string(json_object_object_get(m, "name"));
         if (n && strcmp(n, name) == 0) {
@@ -1648,6 +1696,7 @@ void family_members_post(const char *path, const char *body) {
     json_object_put(root);
     printf("{\"status\":\"success\"}\n");
 }
+// 添加任务
 void family_task_post(const char *path, const char *body) {
     (void)path;
 
@@ -1679,7 +1728,8 @@ void family_task_post(const char *path, const char *body) {
     json_object *members = json_object_object_get(root, "members");
     json_object *target_member = NULL;
 
-    for (int i = 0; i < json_object_array_length(members); i++) {
+    size_t i;
+    for (i = 0; i < json_object_array_length(members); i++) {
         json_object *m = json_object_array_get_idx(members, i);
         const char *n = json_object_get_string(json_object_object_get(m, "name"));
         if (n && strcmp(n, target) == 0) {
@@ -1705,7 +1755,7 @@ void family_task_post(const char *path, const char *body) {
     json_object_object_add(task, "title", json_object_new_string(title));
     json_object_object_add(task, "due_date", json_object_new_string(due_date));
     json_object_object_add(task, "creator", json_object_new_string("anonymous"));
-    json_object_object_add(task, "notified", json_object_new_boolean(0)); // ← 关键！false
+    json_object_object_add(task, "notified", json_object_new_boolean(0));
     json_object_array_add(tasks, task);
 
     if (save_family_data(root) != 0) {
@@ -1719,6 +1769,7 @@ void family_task_post(const char *path, const char *body) {
     json_object_put(root);
     printf("{\"status\":\"success\"}\n");
 }
+// 修改密码
 void settings_change_password_post(const char *path, const char *body) {
     (void)path;
 
@@ -1763,8 +1814,13 @@ void settings_change_password_post(const char *path, const char *body) {
     printf("{\"status\":\"ok\"}\n");
     fflush(stdout);
 }
-//DELETE
+//==============================
+// DELETE
+//==============================
+// 删除照片
 void disk_delete_handler(const char *path, const char *body) {
+    (void)path;
+    (void)body;
     char *token = get_token_from_cookie();
     if (!token || !is_valid_token(token)) {
         free(token);
@@ -1797,7 +1853,7 @@ void disk_delete_handler(const char *path, const char *body) {
 
     struct json_object *root = json_object_new_object();
     json_object_object_add(root, "message", json_object_new_string("Deleted successfully"));
-    send_json_response(root);
+    send_json_object_response(root);
 }
 void photos_delete(const char *path, const char *body) {
     (void)path;
@@ -1821,56 +1877,3 @@ void photos_delete(const char *path, const char *body) {
 
     free(filename); // 由 strdup 分配
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-// --- PUT /home/settings/public ---
-
-
-
-
-
-
-
-
-
-
-
-// PUT /settings/wifi —— 设置 Wi-Fi（启用/禁用）
-

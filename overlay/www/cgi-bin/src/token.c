@@ -1,4 +1,17 @@
-// token.c (多设备兼容版)
+/**********************************************************************
+ * @file token.c
+ * @brief 会话令牌管理实现
+ *
+ * 本文件实现令牌生成与校验及会话文件维护
+ * 供 CGI 认证流程校验请求合法性
+ *
+ * @author 杨翊
+ * @date 2026-02-02
+ * @version 1.0
+ *
+ * @note
+ * - 会话采用文件形式存储并按时间过期清理
+ **********************************************************************/
 #define _POSIX_C_SOURCE 199309L
 
 #include <stdio.h>
@@ -12,155 +25,183 @@
 #include <limits.h>
 #include "token.h"
 
-#define SESSION_DIR "/tmp/sessions"
-#define EXPIRE_SECONDS 1800
-#define TOKEN_LEN 32
-
 #ifndef CLOCK_REALTIME
 #define USE_FALLBACK_TIME 1
 #else
 #define USE_FALLBACK_TIME 0
 #endif
 
-static void ensure_session_dir(void) {
-    mkdir(SESSION_DIR, 0755);
-    // 确保 nobody 能写（重要！）
-    chmod(SESSION_DIR, 0777);
+// 确保会话目录存在
+static void ensure_session_dir(void){
+    mkdir(SESSION_DIR,0755);
+    chmod(SESSION_DIR,0777);
 }
 
-static unsigned long mix_hash(unsigned long a, unsigned long b, unsigned long c) {
-    unsigned long hash = 5381;
-    hash = ((hash << 5) + hash) ^ a;
-    hash = ((hash << 5) + hash) ^ b;
-    hash = ((hash << 5) + hash) ^ c;
+// 计算混合哈希
+static unsigned long mix_hash(unsigned long a,unsigned long b,unsigned long c){
+    unsigned long hash;
+
+    hash=5381;
+    hash=((hash<<5)+hash)^a;
+    hash=((hash<<5)+hash)^b;
+    hash=((hash<<5)+hash)^c;
     return hash;
 }
 
-void generate_token(char *token, size_t len) {
-    if (!token || len < TOKEN_LEN + 1) {
-        if (token) token[0] = '\0';
+// 生成令牌字符串
+void generate_token(char*token,size_t len){
+    static unsigned int counter=0;
+    unsigned long seed1;
+    unsigned long seed2;
+    unsigned long seed3;
+    unsigned long h1;
+    unsigned long h2;
+
+    if(!token||len<(size_t)TOKEN_LEN+1){
+        if(token){
+            token[0]='\0';
+        }
         return;
     }
 
-    static unsigned int counter = 0;
     counter++;
-
-    unsigned long seed1 = 0, seed2 = 0, seed3 = 0;
+    seed1=0;
+    seed2=0;
+    seed3=0;
 
 #if USE_FALLBACK_TIME
-    time_t t = time(NULL);
-    seed1 = (unsigned long)t;
-    seed2 = (unsigned long)getpid();
-    seed3 = (unsigned long)counter;
+    {
+        time_t t;
+        t=time(NULL);
+        seed1=(unsigned long)t;
+        seed2=(unsigned long)getpid();
+        seed3=(unsigned long)counter;
+    }
 #else
-    struct timespec ts;
-    if (clock_gettime(CLOCK_REALTIME, &ts) == 0) {
-        seed1 = (unsigned long)ts.tv_sec;
-        seed2 = (unsigned long)ts.tv_nsec;
-        seed3 = ((unsigned long)getpid() << 16) | (counter & 0xFFFF);
-    } else {
-        time_t t = time(NULL);
-        seed1 = (unsigned long)t;
-        seed2 = (unsigned long)getpid();
-        seed3 = (unsigned long)counter;
+    {
+        struct timespec ts;
+        if(clock_gettime(CLOCK_REALTIME,&ts)==0){
+            seed1=(unsigned long)ts.tv_sec;
+            seed2=(unsigned long)ts.tv_nsec;
+            seed3=((unsigned long)getpid()<<16)|(counter&0xFFFF);
+        }else{
+            time_t t;
+            t=time(NULL);
+            seed1=(unsigned long)t;
+            seed2=(unsigned long)getpid();
+            seed3=(unsigned long)counter;
+        }
     }
 #endif
 
-    unsigned long h1 = mix_hash(seed1, seed2, seed3);
-    unsigned long h2 = mix_hash(seed2, seed3, seed1);
+    h1=mix_hash(seed1,seed2,seed3);
+    h2=mix_hash(seed2,seed3,seed1);
 
-    snprintf(token, TOKEN_LEN + 1,
-         "%08lx%08lx%08lx%08lx",
-         h1 & 0xFFFFFFFFUL,
-         (h1 >> 32) & 0xFFFFFFFFUL,
-         h2 & 0xFFFFFFFFUL,
-         (h2 >> 32) & 0xFFFFFFFFUL);
-    token[TOKEN_LEN] = '\0';
+    snprintf(token,(size_t)TOKEN_LEN+1,"%08lx%08lx%08lx%08lx",
+        h1&0xFFFFFFFFUL,
+        (h1>>32)&0xFFFFFFFFUL,
+        h2&0xFFFFFFFFUL,
+        (h2>>32)&0xFFFFFFFFUL);
+    token[TOKEN_LEN]='\0';
 }
 
-int add_token(const char *token) {
-    if (!token || strlen(token) != TOKEN_LEN) {
-        return 0;
-    }
-
-    ensure_session_dir();
-
+// 保存令牌
+int add_token(const char*token){
     char path[256];
-    snprintf(path, sizeof(path), "%s/%s", SESSION_DIR, token);
+    FILE*f;
 
-    FILE *f = fopen(path, "w");
-    if (!f) {
+    if(!token||strlen(token)!=(size_t)TOKEN_LEN){
         return 0;
     }
-
-    fprintf(f, "%ld", (long)time(NULL));
+    ensure_session_dir();
+    snprintf(path,sizeof(path),"%s/%s",SESSION_DIR,token);
+    f=fopen(path,"w");
+    if(!f){
+        return 0;
+    }
+    fprintf(f,"%ld",(long)time(NULL));
     fclose(f);
-    chmod(path, 0644); // 允许 nobody 读写
+    chmod(path,0644);
     return 1;
 }
 
-int is_valid_token(const char *token) {
-    if (!token || strlen(token) != TOKEN_LEN) {
+// 校验令牌
+int is_valid_token(const char*token){
+    char path[256];
+    FILE*f;
+    long saved_time;
+    time_t now;
+
+    if(!token||strlen(token)!=(size_t)TOKEN_LEN){
         return 0;
     }
-
-    char path[256];
-    snprintf(path, sizeof(path), "%s/%s", SESSION_DIR, token);
-
-    FILE *f = fopen(path, "r");
-    if (!f) {
-        return 0; // 文件不存在 = token 无效
+    snprintf(path,sizeof(path),"%s/%s",SESSION_DIR,token);
+    f=fopen(path,"r");
+    if(!f){
+        return 0;
     }
-
-    long saved_time;
-    if (fscanf(f, "%ld", &saved_time) != 1) {
+    if(fscanf(f,"%ld",&saved_time)!=1){
         fclose(f);
         unlink(path);
         return 0;
     }
     fclose(f);
-
-    // 检查是否过期
-    if (time(NULL) - saved_time > EXPIRE_SECONDS) {
+    now=time(NULL);
+    if((long)(now-saved_time)>EXPIRE_SECONDS){
         unlink(path);
         return 0;
     }
-
     return 1;
 }
 
-char* get_token_from_cookie(void) {
-    char *cookie = getenv("HTTP_COOKIE");
-    if (!cookie) return NULL;
+// 从 Cookie 获取令牌
+char*get_token_from_cookie(void){
+    char*cookie;
+    char*p;
+    char*end;
+    int len;
+    char*out;
 
-    char *p = strstr(cookie, "token=");
-    if (!p) return NULL;
-
-    p += 6;
-    char *end = strchr(p, ';');
-    int len = end ? (int)(end - p) : (int)strlen(p);
-
-    if (len != TOKEN_LEN) return NULL;
-
-    char *token = malloc(TOKEN_LEN + 1);
-    if (!token) return NULL;
-    strncpy(token, p, len);
-    token[len] = '\0';
-    return token;
+    cookie=getenv("HTTP_COOKIE");
+    if(!cookie){
+        return NULL;
+    }
+    p=strstr(cookie,"token=");
+    if(!p){
+        return NULL;
+    }
+    p+=6;
+    end=strchr(p,';');
+    len=end?(int)(end-p):(int)strlen(p);
+    if(len!=TOKEN_LEN){
+        return NULL;
+    }
+    out=malloc((size_t)TOKEN_LEN+1);
+    if(!out){
+        return NULL;
+    }
+    strncpy(out,p,(size_t)len);
+    out[len]='\0';
+    return out;
 }
 
-void clear_all_tokens(void) {
-    DIR *dir = opendir(SESSION_DIR);
-    if (!dir) return;
-
-    struct dirent *entry;
+// 清理所有令牌
+void clear_all_tokens(void){
+    DIR*dir;
+    struct dirent*entry;
     char path[PATH_MAX];
+    int n;
 
-    while ((entry = readdir(dir)) != NULL) {
-        if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0)
+    dir=opendir(SESSION_DIR);
+    if(!dir){
+        return;
+    }
+    while((entry=readdir(dir))!=NULL){
+        if(strcmp(entry->d_name,".")==0||strcmp(entry->d_name,"..")==0){
             continue;
-        if (snprintf(path, sizeof(path), "%s/%s", SESSION_DIR, entry->d_name) >= (int)sizeof(path)) {
-            fprintf(stderr, "[WARN] Skipping too-long session file: %s\n", entry->d_name);
+        }
+        n=snprintf(path,sizeof(path),"%s/%s",SESSION_DIR,entry->d_name);
+        if(n<0||(size_t)n>=sizeof(path)){
             continue;
         }
         unlink(path);
