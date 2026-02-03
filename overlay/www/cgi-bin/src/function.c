@@ -595,9 +595,474 @@ void photo_note_get(const char *path, const char *body) {
     }
     fclose(fp);
 }
-//PUT
-void picture_put(const char *path, const char *body){}
+void family_members_get(const char *path, const char *body) {
+    (void)path; (void)body;
 
+    json_object *root = load_family_data();
+    send_json_headers();
+    if (!root) {
+        printf("{\"error\":\"Internal error\"}\n");
+        return;
+    }
+    json_object *resp = json_object_new_object();
+    json_object_object_add(resp, "members",
+        json_object_get(json_object_object_get(root, "members")));
+    printf("%s\n", json_object_to_json_string_ext(resp, JSON_C_TO_STRING_PLAIN));
+    json_object_put(resp);
+    json_object_put(root);
+}
+void family_my_tasks_get(const char *path, const char *body) {
+    (void)path;
+    (void)body;
+
+    send_json_headers();
+
+    json_object *root = load_family_data();
+    if (!root) {
+        printf("[]\n");
+        return;
+    }
+
+    time_t now = time(NULL);
+    json_object *result = json_object_new_array();
+
+    json_object *members = json_object_object_get(root, "members");
+    if (members && json_object_is_type(members, json_type_array)) {
+        for (int i = 0; i < json_object_array_length(members); i++) {
+            json_object *member = json_object_array_get_idx(members, i);
+            const char *member_name = json_object_get_string(
+                json_object_object_get(member, "name")
+            );
+            // 如果 name 不存在，跳过该成员
+            if (!member_name) continue;
+
+            json_object *tasks = json_object_object_get(member, "tasks");
+            if (tasks && json_object_is_type(tasks, json_type_array)) {
+                for (int j = 0; j < json_object_array_length(tasks); j++) {
+                    json_object *task = json_object_array_get_idx(tasks, j);
+                    const char *due_str = json_object_get_string(
+                        json_object_object_get(task, "due_date")
+                    );
+
+                    time_t due_time = parse_due_date(due_str);
+                    if (due_time == -1 || due_time <= now) {
+                        continue; // 跳过已过期或无效时间
+                    }
+
+                    // 创建新任务对象（避免修改原始数据）
+                    json_object *output_task = json_object_new_object();
+
+                    // 复制原任务所有字段
+                    json_object_object_foreach(task, key, val) {
+                        json_object_get(val); // 增加引用
+                        json_object_object_add(output_task, key, val);
+                    }
+
+                    // 注入 member_name
+                    json_object_object_add(output_task, "member_name",
+                                         json_object_new_string(member_name));
+
+                    json_object_array_add(result, output_task);
+                }
+            }
+        }
+    }
+
+    printf("%s\n", json_object_to_json_string_ext(result, JSON_C_TO_STRING_PLAIN));
+
+    json_object_put(result);
+    json_object_put(root);
+}
+void control_light_get(const char *path, const char *body) {
+    int state = get_light_state();  // 从本地状态获取
+    printf("Content-Type: application/json\r\n\r\n");
+    printf("{\"state\": %d}", state);
+}
+
+void control_fan_get(const char *path, const char *body) {
+    int state = get_fan_state();
+    printf("Content-Type: application/json\r\n\r\n");
+    printf("{\"state\": %d}", state);
+}
+
+void control_aircon_get(const char *path, const char *body) {
+
+    int state = get_aircon_state(); // 从本地状态获取
+
+    printf("Content-Type: application/json\r\n\r\n");
+    printf("{\"state\": %d}", state);
+}
+
+void control_washing_machine_get(const char *path, const char *body) {
+
+    int state = get_washing_state(); // 从本地状态获取
+
+    printf("Content-Type: application/json\r\n\r\n");
+    printf("{\"state\": %d}", state);
+}
+
+void control_door_get(const char *path, const char *body) {
+
+    // 注意：门默认“锁定”对应 state=0（因为前端 door: true 表示锁定）
+    // 但为了统一语义，建议：state=1 表示“解锁”，state=0 表示“锁定”
+    int state = get_door_state(); // 从本地状态获取
+
+    printf("Content-Type: application/json\r\n\r\n");
+    printf("{\"state\": %d}", state);
+}
+void settings_change_password_get(const char *path, const char *body) {
+    (void)path; (void)body;
+
+    char username[128] = {0};
+    read_username(username, sizeof(username));
+
+    struct json_object *resp = json_object_new_object();
+    json_object_object_add(resp, "username", json_object_new_string(username));
+
+    send_json_headers();
+    printf("%s\n", json_object_to_json_string_ext(resp, JSON_C_TO_STRING_PLAIN));
+    fflush(stdout);
+
+    json_object_put(resp);
+}
+void settings_public_get(const char *path, const char *body) {
+    (void)path; (void)body;
+
+    int enabled = is_ngrok_running();
+
+    struct json_object *resp = json_object_new_object();
+    json_object_object_add(resp, "enabled", json_object_new_boolean(enabled));
+
+    send_json_headers();
+    printf("%s\n", json_object_to_json_string_ext(resp, JSON_C_TO_STRING_PLAIN));
+    fflush(stdout);
+
+    json_object_put(resp);
+}
+void settings_wifi_get(const char *path, const char *body) {
+    (void)path; (void)body;
+
+    json_object *root = json_object_new_object();
+    char ssid[64] = {0};
+    int connected = 0;
+
+    // 尝试通过 wpa_cli 获取 SSID
+    FILE *fp = popen("wpa_cli -i wlan0 status 2>/dev/null | grep '^ssid=' | cut -d= -f2", "r");
+    if (fp && fgets(ssid, sizeof(ssid), fp)) {
+        char *nl = strchr(ssid, '\n');
+        if (nl) *nl = '\0';
+        connected = 1;
+    }
+    if (fp) pclose(fp);
+
+    if (!connected) {
+        // 备用：检查 wlan0 是否有非 127.0.0.1 的 inet 地址
+        FILE *ip_fp = popen("ip addr show wlan0 2>/dev/null | grep -E 'inet ([0-9]{1,3}\\.){3}[0-9]{1,3}' | grep -v '127.0.0.1' | wc -l", "r");
+        char buf[8] = "0";
+        if (ip_fp) {
+            fgets(buf, sizeof(buf), ip_fp);
+            pclose(ip_fp);
+        }
+        if (atoi(buf) > 0) {
+            strcpy(ssid, "(unknown)");
+            connected = 1;
+        }
+    }
+
+    if (connected) {
+        json_object_object_add(root, "status", json_object_new_string("connected"));
+        json_object_object_add(root, "ssid", json_object_new_string(ssid));
+    } else {
+        json_object_object_add(root, "status", json_object_new_string("disconnected"));
+        json_object_object_add(root, "ssid", NULL);
+    }
+
+    printf("Content-Type: application/json\r\n\r\n");
+    printf("%s\n", json_object_to_json_string_ext(root, JSON_C_TO_STRING_PLAIN));
+    json_object_put(root);
+}
+//check token
+void check_auth_get(const char *path, const char *body) {
+    // 1. 从 Cookie 中提取 token
+    char *token = get_token_from_cookie();
+    
+    // 2. 验证 token 是否有效（存在 + 未过期）
+    if (!token || !is_valid_token(token)) {
+        free(token); // 注意：get_token_from_cookie 返回 malloc 内存
+        
+        // 3. 无效 → 返回 401 Unauthorized
+        printf("Status: 401 Unauthorized\r\n");
+        printf("Content-Type: application/json\r\n\r\n");
+        printf("{\"error\":\"Unauthorized\"}\n");
+        return;
+    }
+
+    // 4. 有效 → 返回 200 OK（空 JSON 即可）
+    free(token);
+    printf("Content-Type: application/json\r\n\r\n");
+    printf("{}\n");
+}
+//PUT
+void control_light_put(const char *path, const char *body) {
+    int state = parse_state_from_json(body);
+    if (state == -1) {
+        printf("Status: 400 Bad Request\r\n\r\n");
+        return;
+    }
+    const char* cmd = (state == 1) ? ZIGBEE_CMD_LIGHT_ON : ZIGBEE_CMD_LIGHT_OFF;
+    if (cgi_send_zigbee_cmd(cmd) == 0) {
+        printf("Status: 200 OK\r\nContent-Type: application/json\r\n\r\n{\"result\":\"success\"}");
+    } else {
+        printf("Status: 500 Internal Server Error\r\n\r\n");
+    }
+}
+
+void control_aircon_put(const char *path, const char *body) {
+    int state = parse_state_from_json(body);
+    if (state == -1) {
+        printf("Status: 400 Bad Request\r\n\r\n");
+        return;
+    }
+    const char* cmd = (state == 1) ? ZIGBEE_CMD_AIRCON_ON : ZIGBEE_CMD_AIRCON_OFF;
+    if (cgi_send_zigbee_cmd(cmd) == 0) {
+        printf("Status: 200 OK\r\nContent-Type: application/json\r\n\r\n{\"result\":\"success\"}");
+    } else {
+        printf("Status: 500 Internal Server Error\r\n\r\n");
+    }
+}
+
+void control_washing_machine_put(const char *path, const char *body) {
+    int state = parse_state_from_json(body);
+    if (state == -1) {
+        printf("Status: 400 Bad Request\r\n\r\n");
+        return;
+    }
+    const char* cmd = (state == 1) ? ZIGBEE_CMD_WASHING_ON : ZIGBEE_CMD_WASHING_OFF;
+    if (cgi_send_zigbee_cmd(cmd) == 0) {
+        printf("Status: 200 OK\r\nContent-Type: application/json\r\n\r\n{\"result\":\"success\"}");
+    } else {
+        printf("Status: 500 Internal Server Error\r\n\r\n");
+    }
+}
+
+void control_fan_put(const char *path, const char *body) {
+    int state = parse_state_from_json(body);
+    if (state == -1) {
+        printf("Status: 400 Bad Request\r\n\r\n");
+        return;
+    }
+    const char* cmd = (state == 1) ? ZIGBEE_CMD_FAN_ON : ZIGBEE_CMD_FAN_OFF;
+    if (cgi_send_zigbee_cmd(cmd) == 0) {
+        printf("Status: 200 OK\r\nContent-Type: application/json\r\n\r\n{\"result\":\"success\"}");
+    } else {
+        printf("Status: 500 Internal Server Error\r\n\r\n");
+    }
+}
+
+void control_door_put(const char *path, const char *body) {
+    int state = parse_state_from_json(body);
+    if (state == -1) {
+        printf("Status: 400 Bad Request\r\n\r\n");
+        return;
+    }
+    const char* cmd = (state == 1) ? ZIGBEE_CMD_DOOR_OPEN : ZIGBEE_CMD_DOOR_CLOSE;
+    if (cgi_send_zigbee_cmd(cmd) == 0) {
+        printf("Status: 200 OK\r\nContent-Type: application/json\r\n\r\n{\"result\":\"success\"}");
+    } else {
+        printf("Status: 500 Internal Server Error\r\n\r\n");
+    }
+}
+void settings_public_put(const char *path, const char *body) {
+    (void)path;
+
+    if (!body || body[0] == '\0') {
+        send_json_headers();
+        printf("{\"error\":\"Empty request body\"}\n");
+        fflush(stdout);
+        return;
+    }
+
+    struct json_object *jobj = json_tokener_parse(body);
+    if (!jobj) {
+        send_json_headers();
+        printf("{\"error\":\"Invalid JSON\"}\n");
+        fflush(stdout);
+        return;
+    }
+
+    int enabled = 0;
+    struct json_object *val;
+    if (json_object_object_get_ex(jobj, "enabled", &val)) {
+        if (json_object_is_type(val, json_type_boolean)) {
+            enabled = json_object_get_boolean(val);
+        }
+    }
+
+    json_object_put(jobj);
+
+    // 执行控制脚本
+    char cmd[256];
+    snprintf(cmd, sizeof(cmd), "%s %s", WEB_TUNNEL_SCRIPT_PATH, enabled ? "start" : "stop");
+
+    int ret = system(cmd);
+    fprintf(stderr, "DEBUG: cmd='%s'\n", cmd);
+    fprintf(stderr, "DEBUG: system() returned %d, WEXITSTATUS=%d\n", ret, WEXITSTATUS(ret));
+    fflush(stderr);
+    if (ret == -1 || WEXITSTATUS(ret) != 0) {
+        printf("Content-Type: application/json\r\n\r\n{\"error\":\"Tunnel control failed\"}\n");
+        fflush(stdout);
+        return;
+    }
+
+    // 构造响应
+    struct json_object *resp = json_object_new_object();
+    json_object_object_add(resp, "status", json_object_new_string("ok"));
+
+    // 仅在开启时读取公网 URL
+    if (enabled) {
+        char public_url[256] = "";
+        FILE *url_file = fopen(WEB_TUNNEL_URL_FILE, "r");
+        if (url_file) {
+            if (fgets(public_url, sizeof(public_url), url_file)) {
+                size_t len = strlen(public_url);
+                if (len > 0 && public_url[len - 1] == '\n') {
+                    public_url[len - 1] = '\0';
+                }
+                // ✅ 修复点：检查 ngrok-free. 而非 .ngrok-free.app
+                if (strstr(public_url, "https://") && strstr(public_url, "ngrok-free.")) {
+                    json_object_object_add(resp, "public_url", json_object_new_string(public_url));
+                }
+            }
+            fclose(url_file);
+        }
+    }
+
+    send_json_headers();
+    printf("%s\n", json_object_to_json_string_ext(resp, JSON_C_TO_STRING_PLAIN));
+    fflush(stdout);
+
+    json_object_put(resp);
+}
+void settings_wifi_put(const char *path, const char *body) {
+    (void)path;
+
+    json_object *req = json_tokener_parse(body);
+    if (!req) {
+        printf("Content-Type: application/json\r\n\r\n");
+        printf("{\"status\":\"error\",\"message\":\"Invalid JSON\"}\n");
+        return;
+    }
+
+    json_object *j_enable = NULL;
+    int enable = 1; // 默认启用
+
+    if (json_object_object_get_ex(req, "enable", &j_enable) &&
+        json_object_is_type(j_enable, json_type_boolean)) {
+        enable = json_object_get_boolean(j_enable);
+    }
+
+    json_object *resp = json_object_new_object();
+
+    if (!enable) {
+        // ========== 停止 Wi-Fi ==========
+        int ret = system(WIFI_STOP_SCRIPT " >/dev/null 2>&1");
+        if (ret == 0) {
+            json_object_object_add(resp, "status", json_object_new_string("success"));
+            json_object_object_add(resp, "message", json_object_new_string("Wi-Fi disabled"));
+            cgi_send_zigbee_cmd(ZIGBEE_CMD_WIFI_OFF);
+        } else {
+            json_object_object_add(resp, "status", json_object_new_string("error"));
+            json_object_object_add(resp, "message", json_object_new_string("Failed to disable Wi-Fi"));
+        }
+        goto output;
+    }
+
+    // ========== 启用 Wi-Fi ==========
+    json_object *j_ssid = NULL, *j_password = NULL;
+    const char *ssid = NULL;
+    const char *password = ""; // 默认为空密码（支持开放网络）
+
+    // 检查 SSID（必须提供）
+    if (!json_object_object_get_ex(req, "ssid", &j_ssid) ||
+        !json_object_is_type(j_ssid, json_type_string)) {
+        json_object_object_add(resp, "status", json_object_new_string("error"));
+        json_object_object_add(resp, "message", json_object_new_string("SSID is required"));
+        goto output;
+    }
+    ssid = json_object_get_string(j_ssid);
+
+    // 检查 Password（可选）
+    if (json_object_object_get_ex(req, "password", &j_password)) {
+        if (!json_object_is_type(j_password, json_type_string)) {
+            json_object_object_add(resp, "status", json_object_new_string("error"));
+            json_object_object_add(resp, "message", json_object_new_string("Password must be a string"));
+            goto output;
+        }
+        password = json_object_get_string(j_password);
+    }
+
+    // 验证 SSID 长度：1-32 字符
+    size_t ssid_len = strlen(ssid);
+    if (ssid_len == 0 || ssid_len > 32) {
+        json_object_object_add(resp, "status", json_object_new_string("error"));
+        json_object_object_add(resp, "message", json_object_new_string("SSID must be 1-32 characters"));
+        goto output;
+    }
+
+    // 验证 Password 长度：仅当非空时要求 8-63 字符
+    if (password[0] != '\0') {
+        size_t pwd_len = strlen(password);
+        if (pwd_len < 8 || pwd_len > 63) {
+            json_object_object_add(resp, "status", json_object_new_string("error"));
+            json_object_object_add(resp, "message", json_object_new_string("Password must be 8-63 characters"));
+            goto output;
+        }
+    }
+
+    // 安全字符检查（防止 shell 注入）
+    // 注意：is_safe_string 的第二个参数含义需确认（通常 1=严格，0=宽松）
+    // 假设 is_safe_string(str, allow_empty) 或类似；若不支持空串，可加判断
+    if (!is_safe_string(ssid, 1)) {
+        json_object_object_add(resp, "status", json_object_new_string("error"));
+        json_object_object_add(resp, "message", json_object_new_string("Invalid characters in SSID"));
+        goto output;
+    }
+    if (password[0] != '\0' && !is_safe_string(password, 1)) {
+        json_object_object_add(resp, "status", json_object_new_string("error"));
+        json_object_object_add(resp, "message", json_object_new_string("Invalid characters in password"));
+        goto output;
+    }
+
+    // 构造命令：用单引号包裹参数，避免 shell 解析
+    char cmd[512];
+    snprintf(cmd, sizeof(cmd), "%s '%s' '%s'", WIFI_START_SCRIPT, ssid, password);
+
+    char result[256];
+    if (run_command_capture(cmd, result, sizeof(result)) != 0) {
+        json_object_object_add(resp, "status", json_object_new_string("error"));
+        json_object_object_add(resp, "message", json_object_new_string("Failed to execute Wi-Fi script"));
+        goto output;
+    }
+
+    // 解析脚本返回（匹配 SUCCESS:/ERROR: 格式）
+    if (strncmp(result, "SUCCESS:", 8) == 0) {
+        json_object_object_add(resp, "status", json_object_new_string("success"));
+        json_object_object_add(resp, "message", json_object_new_string(result + 9));
+        cgi_send_zigbee_cmd(ZIGBEE_CMD_WIFI_ON);
+    } else if (strncmp(result, "ERROR:", 6) == 0) {
+        json_object_object_add(resp, "status", json_object_new_string("error"));
+        json_object_object_add(resp, "message", json_object_new_string(result + 7));
+    } else {
+        json_object_object_add(resp, "status", json_object_new_string("error"));
+        json_object_object_add(resp, "message", json_object_new_string("Unexpected output from script"));
+    }
+
+output:
+    printf("Content-Type: application/json\r\n\r\n");
+    printf("%s\n", json_object_to_json_string_ext(resp, JSON_C_TO_STRING_PLAIN));
+    json_object_put(req);
+    json_object_put(resp);
+}
 //POST
 void login_post(const char *path, const char *body) {
     if (!body) {
@@ -678,27 +1143,6 @@ void login_post(const char *path, const char *body) {
 
     json_object_put(input);
     json_object_put(resp);
-}
-//check token
-void check_auth_get(const char *path, const char *body) {
-    // 1. 从 Cookie 中提取 token
-    char *token = get_token_from_cookie();
-    
-    // 2. 验证 token 是否有效（存在 + 未过期）
-    if (!token || !is_valid_token(token)) {
-        free(token); // 注意：get_token_from_cookie 返回 malloc 内存
-        
-        // 3. 无效 → 返回 401 Unauthorized
-        printf("Status: 401 Unauthorized\r\n");
-        printf("Content-Type: application/json\r\n\r\n");
-        printf("{\"error\":\"Unauthorized\"}\n");
-        return;
-    }
-
-    // 4. 有效 → 返回 200 OK（空 JSON 即可）
-    free(token);
-    printf("Content-Type: application/json\r\n\r\n");
-    printf("{}\n");
 }
 
 void disk_upload_post(const char *path, const char *body) {
@@ -1083,57 +1527,6 @@ void photos_upload(const char *path, const char *body) {
         json_success("Photo uploaded successfully");
     }
 }
-/*
-void photo_note_post(const char *path, const char *body) {
-    (void)path;
-
-    char *token = get_token_from_cookie();
-    if (!token || !is_valid_token(token)) {
-        free(token);
-        send_error_401("Unauthorized");
-        return;
-    }
-    free(token);
-
-    // 用于存储解析出的原始数据（JSON中的原始内容）
-    char raw_filename[512] = {0}; // 增大缓冲区以容纳URL编码后的长字符串
-    char note[1024] = {0};
-
-    // 解析JSON
-    extract_json_string(body, "filename", raw_filename, sizeof(raw_filename));
-    extract_json_string(body, "note", note, sizeof(note));
-
-    // --- 关键修改：使用你提供的 url_decode ---
-    // 定义解码后的文件名缓冲区
-    char decoded_filename[256] = {0};
-    
-    // 调用你提供的函数进行解码
-    // raw_filename 是输入（如： %E9%AB%98%E5%B1%B1.png）
-    // decoded_filename 是输出（如： 高山.png）
-    photo_url_decode(raw_filename, decoded_filename);
-    //end_error_403("test url decode");
-    /*
-    // 安全校验（现在传入的是解码后的中文名，但你的函数允许非ASCII字符）
-    if (!photos_is_safe_filename(decoded_filename)) {
-        send_error_403("Invalid filename");
-        return;
-    }
-
-    // 构建路径并保存
-    char notepath[512];
-    snprintf(notepath, sizeof(notepath), "%s/%s.txt", PHOTOS_DIR, decoded_filename);
-
-    FILE *fp = fopen(notepath, "w");
-    if (!fp) {
-        send_error_500("Cannot save note");
-        return;
-    }
-    fprintf(fp, "%s", note);
-    fclose(fp);
-
-    json_success("Note saved");
-}
-*/
 void photo_note_post(const char *path, const char *body) {
     (void)path;
 
@@ -1199,6 +1592,176 @@ void photo_note_post(const char *path, const char *body) {
     fclose(fp);
 
     json_success("Note saved");
+}
+void family_members_post(const char *path, const char *body) {
+    (void)path;
+
+    json_object *req = json_tokener_parse(body);
+    send_json_headers();
+    if (!req) {
+        printf("{\"error\":\"Invalid JSON\"}\n");
+        return;
+    }
+    const char *name = json_object_get_string(json_object_object_get(req, "name"));
+    const char *wechat_id = json_object_get_string(json_object_object_get(req, "wechat_id"));
+    const char *birthday = json_object_get_string(json_object_object_get(req, "birthday"));
+    if (!name || !wechat_id || !birthday) {
+        json_object_put(req);
+        printf("{\"error\":\"Missing name/wechat_id/birthday\"}\n");
+        return;
+    }
+    json_object *root = load_family_data();
+    if (!root) {
+        json_object_put(req);
+        printf("{\"error\":\"Failed to load data\"}\n");
+        return;
+    }
+    json_object *members = json_object_object_get(root, "members");
+    int exists = 0;
+    for (int i = 0; i < json_object_array_length(members); i++) {
+        json_object *m = json_object_array_get_idx(members, i);
+        const char *n = json_object_get_string(json_object_object_get(m, "name"));
+        if (n && strcmp(n, name) == 0) {
+            exists = 1;
+            break;
+        }
+    }
+    if (exists) {
+        json_object_put(req);
+        json_object_put(root);
+        printf("{\"error\":\"Member already exists\"}\n");
+        return;
+    }
+    json_object *new_member = json_object_new_object();
+    json_object_object_add(new_member, "name", json_object_new_string(name));
+    json_object_object_add(new_member, "wechat_id", json_object_new_string(wechat_id));
+    json_object_object_add(new_member, "birthday", json_object_new_string(birthday));
+    json_object_object_add(new_member, "tasks", json_object_new_array());
+    json_object_array_add(members, new_member);
+    if (save_family_data(root) != 0) {
+        json_object_put(req);
+        json_object_put(root);
+        printf("{\"error\":\"Failed to save\"}\n");
+        return;
+    }
+    json_object_put(req);
+    json_object_put(root);
+    printf("{\"status\":\"success\"}\n");
+}
+void family_task_post(const char *path, const char *body) {
+    (void)path;
+
+    send_json_headers();
+
+    json_object *req = json_tokener_parse(body);
+    if (!req) {
+        printf("{\"error\":\"Invalid JSON\"}\n");
+        return;
+    }
+
+    const char *target = json_object_get_string(json_object_object_get(req, "target_member"));
+    const char *title = json_object_get_string(json_object_object_get(req, "title"));
+    const char *due_date = json_object_get_string(json_object_object_get(req, "due_date"));
+
+    if (!target || !title || !due_date) {
+        json_object_put(req);
+        printf("{\"error\":\"Missing target/title/due_date\"}\n");
+        return;
+    }
+
+    json_object *root = load_family_data();
+    if (!root) {
+        json_object_put(req);
+        printf("{\"error\":\"Failed to load data\"}\n");
+        return;
+    }
+
+    json_object *members = json_object_object_get(root, "members");
+    json_object *target_member = NULL;
+
+    for (int i = 0; i < json_object_array_length(members); i++) {
+        json_object *m = json_object_array_get_idx(members, i);
+        const char *n = json_object_get_string(json_object_object_get(m, "name"));
+        if (n && strcmp(n, target) == 0) {
+            target_member = m;
+            break;
+        }
+    }
+
+    if (!target_member) {
+        json_object_put(req);
+        json_object_put(root);
+        printf("{\"error\":\"Target member not found\"}\n");
+        return;
+    }
+
+    json_object *tasks = json_object_object_get(target_member, "tasks");
+    if (!tasks || !json_object_is_type(tasks, json_type_array)) {
+        tasks = json_object_new_array();
+        json_object_object_add(target_member, "tasks", tasks);
+    }
+
+    json_object *task = json_object_new_object();
+    json_object_object_add(task, "title", json_object_new_string(title));
+    json_object_object_add(task, "due_date", json_object_new_string(due_date));
+    json_object_object_add(task, "creator", json_object_new_string("anonymous"));
+    json_object_object_add(task, "notified", json_object_new_boolean(0)); // ← 关键！false
+    json_object_array_add(tasks, task);
+
+    if (save_family_data(root) != 0) {
+        json_object_put(req);
+        json_object_put(root);
+        printf("{\"error\":\"Failed to save task\"}\n");
+        return;
+    }
+
+    json_object_put(req);
+    json_object_put(root);
+    printf("{\"status\":\"success\"}\n");
+}
+void settings_change_password_post(const char *path, const char *body) {
+    (void)path;
+
+    if (!body || body[0] == '\0') {
+        send_json_headers();
+        printf("{\"error\":\"Empty request body\"}\n");
+        fflush(stdout);
+        return;
+    }
+
+    struct json_object *jobj = json_tokener_parse(body);
+    if (!jobj) {
+        send_json_headers();
+        printf("{\"error\":\"Invalid JSON\"}\n");
+        fflush(stdout);
+        return;
+    }
+
+    char username[128] = {0};
+    char password[128] = {0};
+
+    int ok = (extract_json_string(jobj, "username", username, sizeof(username)) == 0);
+    extract_json_string(jobj, "password", password, sizeof(password)); // 允许为空
+
+    json_object_put(jobj);
+
+    if (!ok || username[0] == '\0') {
+        send_json_headers();
+        printf("{\"error\":\"Username required\"}\n");
+        fflush(stdout);
+        return;
+    }
+
+    if (write_login_file(username, password) != 0) {
+        send_json_headers();
+        printf("{\"error\":\"Failed to save\"}\n");
+        fflush(stdout);
+        return;
+    }
+
+    send_json_headers();
+    printf("{\"status\":\"ok\"}\n");
+    fflush(stdout);
 }
 //DELETE
 void disk_delete_handler(const char *path, const char *body) {
@@ -1273,485 +1836,31 @@ void photos_delete(const char *path, const char *body) {
 
 
 
-void family_members_get(const char *path, const char *body) {
-    (void)path; (void)body;
-
-    json_object *root = load_family_data();
-    send_json_headers();
-    if (!root) {
-        printf("{\"error\":\"Internal error\"}\n");
-        return;
-    }
-    json_object *resp = json_object_new_object();
-    json_object_object_add(resp, "members",
-        json_object_get(json_object_object_get(root, "members")));
-    printf("%s\n", json_object_to_json_string_ext(resp, JSON_C_TO_STRING_PLAIN));
-    json_object_put(resp);
-    json_object_put(root);
-}
-
-void family_members_post(const char *path, const char *body) {
-    (void)path;
-
-    json_object *req = json_tokener_parse(body);
-    send_json_headers();
-    if (!req) {
-        printf("{\"error\":\"Invalid JSON\"}\n");
-        return;
-    }
-    const char *name = json_object_get_string(json_object_object_get(req, "name"));
-    const char *wechat_id = json_object_get_string(json_object_object_get(req, "wechat_id"));
-    const char *birthday = json_object_get_string(json_object_object_get(req, "birthday"));
-    if (!name || !wechat_id || !birthday) {
-        json_object_put(req);
-        printf("{\"error\":\"Missing name/wechat_id/birthday\"}\n");
-        return;
-    }
-    json_object *root = load_family_data();
-    if (!root) {
-        json_object_put(req);
-        printf("{\"error\":\"Failed to load data\"}\n");
-        return;
-    }
-    json_object *members = json_object_object_get(root, "members");
-    int exists = 0;
-    for (int i = 0; i < json_object_array_length(members); i++) {
-        json_object *m = json_object_array_get_idx(members, i);
-        const char *n = json_object_get_string(json_object_object_get(m, "name"));
-        if (n && strcmp(n, name) == 0) {
-            exists = 1;
-            break;
-        }
-    }
-    if (exists) {
-        json_object_put(req);
-        json_object_put(root);
-        printf("{\"error\":\"Member already exists\"}\n");
-        return;
-    }
-    json_object *new_member = json_object_new_object();
-    json_object_object_add(new_member, "name", json_object_new_string(name));
-    json_object_object_add(new_member, "wechat_id", json_object_new_string(wechat_id));
-    json_object_object_add(new_member, "birthday", json_object_new_string(birthday));
-    json_object_object_add(new_member, "tasks", json_object_new_array());
-    json_object_array_add(members, new_member);
-    if (save_family_data(root) != 0) {
-        json_object_put(req);
-        json_object_put(root);
-        printf("{\"error\":\"Failed to save\"}\n");
-        return;
-    }
-    json_object_put(req);
-    json_object_put(root);
-    printf("{\"status\":\"success\"}\n");
-}
-
-void family_task_post(const char *path, const char *body) {
-    (void)path;
-
-    send_json_headers();
-
-    json_object *req = json_tokener_parse(body);
-    if (!req) {
-        printf("{\"error\":\"Invalid JSON\"}\n");
-        return;
-    }
-
-    const char *target = json_object_get_string(json_object_object_get(req, "target_member"));
-    const char *title = json_object_get_string(json_object_object_get(req, "title"));
-    const char *due_date = json_object_get_string(json_object_object_get(req, "due_date"));
-
-    if (!target || !title || !due_date) {
-        json_object_put(req);
-        printf("{\"error\":\"Missing target/title/due_date\"}\n");
-        return;
-    }
-
-    json_object *root = load_family_data();
-    if (!root) {
-        json_object_put(req);
-        printf("{\"error\":\"Failed to load data\"}\n");
-        return;
-    }
-
-    json_object *members = json_object_object_get(root, "members");
-    json_object *target_member = NULL;
-
-    for (int i = 0; i < json_object_array_length(members); i++) {
-        json_object *m = json_object_array_get_idx(members, i);
-        const char *n = json_object_get_string(json_object_object_get(m, "name"));
-        if (n && strcmp(n, target) == 0) {
-            target_member = m;
-            break;
-        }
-    }
-
-    if (!target_member) {
-        json_object_put(req);
-        json_object_put(root);
-        printf("{\"error\":\"Target member not found\"}\n");
-        return;
-    }
 
-    json_object *tasks = json_object_object_get(target_member, "tasks");
-    if (!tasks || !json_object_is_type(tasks, json_type_array)) {
-        tasks = json_object_new_array();
-        json_object_object_add(target_member, "tasks", tasks);
-    }
-
-    json_object *task = json_object_new_object();
-    json_object_object_add(task, "title", json_object_new_string(title));
-    json_object_object_add(task, "due_date", json_object_new_string(due_date));
-    json_object_object_add(task, "creator", json_object_new_string("anonymous"));
-    json_object_object_add(task, "notified", json_object_new_boolean(0)); // ← 关键！false
-    json_object_array_add(tasks, task);
-
-    if (save_family_data(root) != 0) {
-        json_object_put(req);
-        json_object_put(root);
-        printf("{\"error\":\"Failed to save task\"}\n");
-        return;
-    }
-
-    json_object_put(req);
-    json_object_put(root);
-    printf("{\"status\":\"success\"}\n");
-}
-
-void family_my_tasks_get(const char *path, const char *body) {
-    (void)path;
-    (void)body;
-
-    send_json_headers();
-
-    json_object *root = load_family_data();
-    if (!root) {
-        printf("[]\n");
-        return;
-    }
-
-    time_t now = time(NULL);
-    json_object *result = json_object_new_array();
-
-    json_object *members = json_object_object_get(root, "members");
-    if (members && json_object_is_type(members, json_type_array)) {
-        for (int i = 0; i < json_object_array_length(members); i++) {
-            json_object *member = json_object_array_get_idx(members, i);
-            const char *member_name = json_object_get_string(
-                json_object_object_get(member, "name")
-            );
-            // 如果 name 不存在，跳过该成员
-            if (!member_name) continue;
-
-            json_object *tasks = json_object_object_get(member, "tasks");
-            if (tasks && json_object_is_type(tasks, json_type_array)) {
-                for (int j = 0; j < json_object_array_length(tasks); j++) {
-                    json_object *task = json_object_array_get_idx(tasks, j);
-                    const char *due_str = json_object_get_string(
-                        json_object_object_get(task, "due_date")
-                    );
-
-                    time_t due_time = parse_due_date(due_str);
-                    if (due_time == -1 || due_time <= now) {
-                        continue; // 跳过已过期或无效时间
-                    }
-
-                    // 创建新任务对象（避免修改原始数据）
-                    json_object *output_task = json_object_new_object();
-
-                    // 复制原任务所有字段
-                    json_object_object_foreach(task, key, val) {
-                        json_object_get(val); // 增加引用
-                        json_object_object_add(output_task, key, val);
-                    }
-
-                    // 注入 member_name
-                    json_object_object_add(output_task, "member_name",
-                                         json_object_new_string(member_name));
-
-                    json_object_array_add(result, output_task);
-                }
-            }
-        }
-    }
-
-    printf("%s\n", json_object_to_json_string_ext(result, JSON_C_TO_STRING_PLAIN));
-
-    json_object_put(result);
-    json_object_put(root);
-}
-
-
-
-
-
-
-
-
-
-
-void control_light_put(const char *path, const char *body) {
-    int state = parse_state_from_json(body);
-    if (state == -1) {
-        printf("Status: 400 Bad Request\r\n\r\n");
-        return;
-    }
-    const char* cmd = (state == 1) ? ZIGBEE_CMD_LIGHT_ON : ZIGBEE_CMD_LIGHT_OFF;
-    if (cgi_send_zigbee_cmd(cmd) == 0) {
-        printf("Status: 200 OK\r\nContent-Type: application/json\r\n\r\n{\"result\":\"success\"}");
-    } else {
-        printf("Status: 500 Internal Server Error\r\n\r\n");
-    }
-}
-
-void control_aircon_put(const char *path, const char *body) {
-    int state = parse_state_from_json(body);
-    if (state == -1) {
-        printf("Status: 400 Bad Request\r\n\r\n");
-        return;
-    }
-    const char* cmd = (state == 1) ? ZIGBEE_CMD_AIRCON_ON : ZIGBEE_CMD_AIRCON_OFF;
-    if (cgi_send_zigbee_cmd(cmd) == 0) {
-        printf("Status: 200 OK\r\nContent-Type: application/json\r\n\r\n{\"result\":\"success\"}");
-    } else {
-        printf("Status: 500 Internal Server Error\r\n\r\n");
-    }
-}
-
-void control_washing_machine_put(const char *path, const char *body) {
-    int state = parse_state_from_json(body);
-    if (state == -1) {
-        printf("Status: 400 Bad Request\r\n\r\n");
-        return;
-    }
-    const char* cmd = (state == 1) ? ZIGBEE_CMD_WASHING_ON : ZIGBEE_CMD_WASHING_OFF;
-    if (cgi_send_zigbee_cmd(cmd) == 0) {
-        printf("Status: 200 OK\r\nContent-Type: application/json\r\n\r\n{\"result\":\"success\"}");
-    } else {
-        printf("Status: 500 Internal Server Error\r\n\r\n");
-    }
-}
-
-void control_fan_put(const char *path, const char *body) {
-    int state = parse_state_from_json(body);
-    if (state == -1) {
-        printf("Status: 400 Bad Request\r\n\r\n");
-        return;
-    }
-    const char* cmd = (state == 1) ? ZIGBEE_CMD_FAN_ON : ZIGBEE_CMD_FAN_OFF;
-    if (cgi_send_zigbee_cmd(cmd) == 0) {
-        printf("Status: 200 OK\r\nContent-Type: application/json\r\n\r\n{\"result\":\"success\"}");
-    } else {
-        printf("Status: 500 Internal Server Error\r\n\r\n");
-    }
-}
-
-void control_door_put(const char *path, const char *body) {
-    int state = parse_state_from_json(body);
-    if (state == -1) {
-        printf("Status: 400 Bad Request\r\n\r\n");
-        return;
-    }
-    const char* cmd = (state == 1) ? ZIGBEE_CMD_DOOR_OPEN : ZIGBEE_CMD_DOOR_CLOSE;
-    if (cgi_send_zigbee_cmd(cmd) == 0) {
-        printf("Status: 200 OK\r\nContent-Type: application/json\r\n\r\n{\"result\":\"success\"}");
-    } else {
-        printf("Status: 500 Internal Server Error\r\n\r\n");
-    }
-}
-void control_light_get(const char *path, const char *body) {
-    int state = get_light_state();  // 从本地状态获取
-    printf("Content-Type: application/json\r\n\r\n");
-    printf("{\"state\": %d}", state);
-}
-
-void control_fan_get(const char *path, const char *body) {
-    int state = get_fan_state();
-    printf("Content-Type: application/json\r\n\r\n");
-    printf("{\"state\": %d}", state);
-}
-
-void control_aircon_get(const char *path, const char *body) {
-
-    int state = get_aircon_state(); // 从本地状态获取
-
-    printf("Content-Type: application/json\r\n\r\n");
-    printf("{\"state\": %d}", state);
-}
-
-void control_washing_machine_get(const char *path, const char *body) {
-
-    int state = get_washing_state(); // 从本地状态获取
-
-    printf("Content-Type: application/json\r\n\r\n");
-    printf("{\"state\": %d}", state);
-}
-
-void control_door_get(const char *path, const char *body) {
-
-    // 注意：门默认“锁定”对应 state=0（因为前端 door: true 表示锁定）
-    // 但为了统一语义，建议：state=1 表示“解锁”，state=0 表示“锁定”
-    int state = get_door_state(); // 从本地状态获取
-
-    printf("Content-Type: application/json\r\n\r\n");
-    printf("{\"state\": %d}", state);
-}
-
-
-
-
-
-
-void settings_change_password_get(const char *path, const char *body) {
-    (void)path; (void)body;
-
-    char username[128] = {0};
-    read_username(username, sizeof(username));
-
-    struct json_object *resp = json_object_new_object();
-    json_object_object_add(resp, "username", json_object_new_string(username));
-
-    send_json_headers();
-    printf("%s\n", json_object_to_json_string_ext(resp, JSON_C_TO_STRING_PLAIN));
-    fflush(stdout);
-
-    json_object_put(resp);
-}
-
-// --- POST /home/settings/change-password ---
-void settings_change_password_post(const char *path, const char *body) {
-    (void)path;
-
-    if (!body || body[0] == '\0') {
-        send_json_headers();
-        printf("{\"error\":\"Empty request body\"}\n");
-        fflush(stdout);
-        return;
-    }
-
-    struct json_object *jobj = json_tokener_parse(body);
-    if (!jobj) {
-        send_json_headers();
-        printf("{\"error\":\"Invalid JSON\"}\n");
-        fflush(stdout);
-        return;
-    }
-
-    char username[128] = {0};
-    char password[128] = {0};
-
-    int ok = (extract_json_string(jobj, "username", username, sizeof(username)) == 0);
-    extract_json_string(jobj, "password", password, sizeof(password)); // 允许为空
-
-    json_object_put(jobj);
-
-    if (!ok || username[0] == '\0') {
-        send_json_headers();
-        printf("{\"error\":\"Username required\"}\n");
-        fflush(stdout);
-        return;
-    }
-
-    if (write_login_file(username, password) != 0) {
-        send_json_headers();
-        printf("{\"error\":\"Failed to save\"}\n");
-        fflush(stdout);
-        return;
-    }
-
-    send_json_headers();
-    printf("{\"status\":\"ok\"}\n");
-    fflush(stdout);
-}
-
-// --- GET /home/settings/public ---
-void settings_public_get(const char *path, const char *body) {
-    (void)path; (void)body;
-
-    int enabled = is_ngrok_running();
-
-    struct json_object *resp = json_object_new_object();
-    json_object_object_add(resp, "enabled", json_object_new_boolean(enabled));
-
-    send_json_headers();
-    printf("%s\n", json_object_to_json_string_ext(resp, JSON_C_TO_STRING_PLAIN));
-    fflush(stdout);
-
-    json_object_put(resp);
-}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 // --- PUT /home/settings/public ---
-void settings_public_put(const char *path, const char *body) {
-    (void)path;
-
-    if (!body || body[0] == '\0') {
-        send_json_headers();
-        printf("{\"error\":\"Empty request body\"}\n");
-        fflush(stdout);
-        return;
-    }
-
-    struct json_object *jobj = json_tokener_parse(body);
-    if (!jobj) {
-        send_json_headers();
-        printf("{\"error\":\"Invalid JSON\"}\n");
-        fflush(stdout);
-        return;
-    }
-
-    int enabled = 0;
-    struct json_object *val;
-    if (json_object_object_get_ex(jobj, "enabled", &val)) {
-        if (json_object_is_type(val, json_type_boolean)) {
-            enabled = json_object_get_boolean(val);
-        }
-    }
-
-    json_object_put(jobj);
-
-    // 执行控制脚本
-    char cmd[256];
-    snprintf(cmd, sizeof(cmd), "%s %s", WEB_TUNNEL_SCRIPT_PATH, enabled ? "start" : "stop");
-
-    int ret = system(cmd);
-    fprintf(stderr, "DEBUG: cmd='%s'\n", cmd);
-    fprintf(stderr, "DEBUG: system() returned %d, WEXITSTATUS=%d\n", ret, WEXITSTATUS(ret));
-    fflush(stderr);
-    if (ret == -1 || WEXITSTATUS(ret) != 0) {
-        printf("Content-Type: application/json\r\n\r\n{\"error\":\"Tunnel control failed\"}\n");
-        fflush(stdout);
-        return;
-    }
-
-    // 构造响应
-    struct json_object *resp = json_object_new_object();
-    json_object_object_add(resp, "status", json_object_new_string("ok"));
-
-    // 仅在开启时读取公网 URL
-    if (enabled) {
-        char public_url[256] = "";
-        FILE *url_file = fopen(WEB_TUNNEL_URL_FILE, "r");
-        if (url_file) {
-            if (fgets(public_url, sizeof(public_url), url_file)) {
-                size_t len = strlen(public_url);
-                if (len > 0 && public_url[len - 1] == '\n') {
-                    public_url[len - 1] = '\0';
-                }
-                // ✅ 修复点：检查 ngrok-free. 而非 .ngrok-free.app
-                if (strstr(public_url, "https://") && strstr(public_url, "ngrok-free.")) {
-                    json_object_object_add(resp, "public_url", json_object_new_string(public_url));
-                }
-            }
-            fclose(url_file);
-        }
-    }
-
-    send_json_headers();
-    printf("%s\n", json_object_to_json_string_ext(resp, JSON_C_TO_STRING_PLAIN));
-    fflush(stdout);
-
-    json_object_put(resp);
-}
 
 
 
@@ -1760,167 +1869,8 @@ void settings_public_put(const char *path, const char *body) {
 
 
 
-void settings_wifi_get(const char *path, const char *body) {
-    (void)path; (void)body;
 
-    json_object *root = json_object_new_object();
-    char ssid[64] = {0};
-    int connected = 0;
 
-    // 尝试通过 wpa_cli 获取 SSID
-    FILE *fp = popen("wpa_cli -i wlan0 status 2>/dev/null | grep '^ssid=' | cut -d= -f2", "r");
-    if (fp && fgets(ssid, sizeof(ssid), fp)) {
-        char *nl = strchr(ssid, '\n');
-        if (nl) *nl = '\0';
-        connected = 1;
-    }
-    if (fp) pclose(fp);
-
-    if (!connected) {
-        // 备用：检查 wlan0 是否有非 127.0.0.1 的 inet 地址
-        FILE *ip_fp = popen("ip addr show wlan0 2>/dev/null | grep -E 'inet ([0-9]{1,3}\\.){3}[0-9]{1,3}' | grep -v '127.0.0.1' | wc -l", "r");
-        char buf[8] = "0";
-        if (ip_fp) {
-            fgets(buf, sizeof(buf), ip_fp);
-            pclose(ip_fp);
-        }
-        if (atoi(buf) > 0) {
-            strcpy(ssid, "(unknown)");
-            connected = 1;
-        }
-    }
-
-    if (connected) {
-        json_object_object_add(root, "status", json_object_new_string("connected"));
-        json_object_object_add(root, "ssid", json_object_new_string(ssid));
-    } else {
-        json_object_object_add(root, "status", json_object_new_string("disconnected"));
-        json_object_object_add(root, "ssid", NULL);
-    }
-
-    printf("Content-Type: application/json\r\n\r\n");
-    printf("%s\n", json_object_to_json_string_ext(root, JSON_C_TO_STRING_PLAIN));
-    json_object_put(root);
-}
 
 // PUT /settings/wifi —— 设置 Wi-Fi（启用/禁用）
-void settings_wifi_put(const char *path, const char *body) {
-    (void)path;
 
-    json_object *req = json_tokener_parse(body);
-    if (!req) {
-        printf("Content-Type: application/json\r\n\r\n");
-        printf("{\"status\":\"error\",\"message\":\"Invalid JSON\"}\n");
-        return;
-    }
-
-    json_object *j_enable = NULL;
-    int enable = 1; // 默认启用
-
-    if (json_object_object_get_ex(req, "enable", &j_enable) &&
-        json_object_is_type(j_enable, json_type_boolean)) {
-        enable = json_object_get_boolean(j_enable);
-    }
-
-    json_object *resp = json_object_new_object();
-
-    if (!enable) {
-        // ========== 停止 Wi-Fi ==========
-        int ret = system(WIFI_STOP_SCRIPT " >/dev/null 2>&1");
-        if (ret == 0) {
-            json_object_object_add(resp, "status", json_object_new_string("success"));
-            json_object_object_add(resp, "message", json_object_new_string("Wi-Fi disabled"));
-            cgi_send_zigbee_cmd(ZIGBEE_CMD_WIFI_OFF);
-        } else {
-            json_object_object_add(resp, "status", json_object_new_string("error"));
-            json_object_object_add(resp, "message", json_object_new_string("Failed to disable Wi-Fi"));
-        }
-        goto output;
-    }
-
-    // ========== 启用 Wi-Fi ==========
-    json_object *j_ssid = NULL, *j_password = NULL;
-    const char *ssid = NULL;
-    const char *password = ""; // 默认为空密码（支持开放网络）
-
-    // 检查 SSID（必须提供）
-    if (!json_object_object_get_ex(req, "ssid", &j_ssid) ||
-        !json_object_is_type(j_ssid, json_type_string)) {
-        json_object_object_add(resp, "status", json_object_new_string("error"));
-        json_object_object_add(resp, "message", json_object_new_string("SSID is required"));
-        goto output;
-    }
-    ssid = json_object_get_string(j_ssid);
-
-    // 检查 Password（可选）
-    if (json_object_object_get_ex(req, "password", &j_password)) {
-        if (!json_object_is_type(j_password, json_type_string)) {
-            json_object_object_add(resp, "status", json_object_new_string("error"));
-            json_object_object_add(resp, "message", json_object_new_string("Password must be a string"));
-            goto output;
-        }
-        password = json_object_get_string(j_password);
-    }
-
-    // 验证 SSID 长度：1-32 字符
-    size_t ssid_len = strlen(ssid);
-    if (ssid_len == 0 || ssid_len > 32) {
-        json_object_object_add(resp, "status", json_object_new_string("error"));
-        json_object_object_add(resp, "message", json_object_new_string("SSID must be 1-32 characters"));
-        goto output;
-    }
-
-    // 验证 Password 长度：仅当非空时要求 8-63 字符
-    if (password[0] != '\0') {
-        size_t pwd_len = strlen(password);
-        if (pwd_len < 8 || pwd_len > 63) {
-            json_object_object_add(resp, "status", json_object_new_string("error"));
-            json_object_object_add(resp, "message", json_object_new_string("Password must be 8-63 characters"));
-            goto output;
-        }
-    }
-
-    // 安全字符检查（防止 shell 注入）
-    // 注意：is_safe_string 的第二个参数含义需确认（通常 1=严格，0=宽松）
-    // 假设 is_safe_string(str, allow_empty) 或类似；若不支持空串，可加判断
-    if (!is_safe_string(ssid, 1)) {
-        json_object_object_add(resp, "status", json_object_new_string("error"));
-        json_object_object_add(resp, "message", json_object_new_string("Invalid characters in SSID"));
-        goto output;
-    }
-    if (password[0] != '\0' && !is_safe_string(password, 1)) {
-        json_object_object_add(resp, "status", json_object_new_string("error"));
-        json_object_object_add(resp, "message", json_object_new_string("Invalid characters in password"));
-        goto output;
-    }
-
-    // 构造命令：用单引号包裹参数，避免 shell 解析
-    char cmd[512];
-    snprintf(cmd, sizeof(cmd), "%s '%s' '%s'", WIFI_START_SCRIPT, ssid, password);
-
-    char result[256];
-    if (run_command_capture(cmd, result, sizeof(result)) != 0) {
-        json_object_object_add(resp, "status", json_object_new_string("error"));
-        json_object_object_add(resp, "message", json_object_new_string("Failed to execute Wi-Fi script"));
-        goto output;
-    }
-
-    // 解析脚本返回（匹配 SUCCESS:/ERROR: 格式）
-    if (strncmp(result, "SUCCESS:", 8) == 0) {
-        json_object_object_add(resp, "status", json_object_new_string("success"));
-        json_object_object_add(resp, "message", json_object_new_string(result + 9));
-        cgi_send_zigbee_cmd(ZIGBEE_CMD_WIFI_ON);
-    } else if (strncmp(result, "ERROR:", 6) == 0) {
-        json_object_object_add(resp, "status", json_object_new_string("error"));
-        json_object_object_add(resp, "message", json_object_new_string(result + 7));
-    } else {
-        json_object_object_add(resp, "status", json_object_new_string("error"));
-        json_object_object_add(resp, "message", json_object_new_string("Unexpected output from script"));
-    }
-
-output:
-    printf("Content-Type: application/json\r\n\r\n");
-    printf("%s\n", json_object_to_json_string_ext(resp, JSON_C_TO_STRING_PLAIN));
-    json_object_put(req);
-    json_object_put(resp);
-}

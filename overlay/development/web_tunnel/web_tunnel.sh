@@ -79,7 +79,6 @@ start() {
     while [ $i -le 30 ]; do
         if curl -s --connect-timeout 1 http://127.0.0.1:4040 >/dev/null 2>&1; then
             TUNNELS=$(curl -s http://127.0.0.1:4040/api/tunnels)
-            # 🔥 核心修复：直接提取包含 ngrok-free 的完整 URL
             PUBLIC_URL=$(echo "$TUNNELS" | grep -o 'https://[^"]*\.ngrok-free\.[^"]*' | head -n1)
             if [ -n "$PUBLIC_URL" ]; then
                 break
@@ -102,14 +101,12 @@ start() {
         exit 1
     fi
 }
-
 # ============ restart ==========
 restart() {
     stop
     sleep 2
     start
 }
-
 # ============ status ===========
 status() {
     if [ -f "$PID_FILE" ] && kill -0 "$(cat "$PID_FILE")" 2>/dev/null; then

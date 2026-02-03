@@ -45,5 +45,4 @@ void settings_change_password_post(const char *path, const char *body);
 void disk_delete_handler(const char *path, const char *body);
 void photos_delete(const char *path, const char *body);
 
-
 #endif

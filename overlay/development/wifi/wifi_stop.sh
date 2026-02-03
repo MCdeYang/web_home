@@ -1,12 +1,4 @@
 #!/bin/sh
-
-# --------------------------------------------------
-# Wi-Fi 停止脚本
-# 功能：断开当前 Wi-Fi 连接，释放 IP，关闭接口，关闭电源
-# 用法: /development/wifi/wifi_stop.sh
-# 返回: SUCCESS 或 ERROR 消息（供 CGI 解析）
-# --------------------------------------------------
-
 export PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
 
 CONF_FILE="/tmp/wpa_supplicant_dynamic.conf"
