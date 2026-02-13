@@ -1,0 +1,709 @@
+/* === Galaxy Jade & Gold Theme - 翡翠绿流金风格 === */
+/* 基于GitHub Galaxy设计系统 */
+
+:root {
+  /* === 核心色彩系统 === */
+  /* 深空背景 */
+  --galaxy-bg-deep: #010409;
+  --galaxy-bg-panel: #0d1117;
+  --galaxy-bg-card: rgba(22, 27, 34, 0.7);
+  --galaxy-bg-card-hover: rgba(22, 27, 34, 0.9);
+  
+  /* 翡翠绿 - 主色调 */
+  --jade-primary: #00d26a;
+  --jade-light: #3ddc84;
+  --jade-dark: #00a854;
+  --jade-glow: rgba(0, 210, 106, 0.6);
+  --jade-glow-soft: rgba(0, 210, 106, 0.2);
+  --jade-glow-dim: rgba(0, 210, 106, 0.1);
+  
+  /* 流金 - 辅色调 */
+  --gold-primary: #ffd700;
+  --gold-light: #ffeb3b;
+  --gold-dark: #d4af37;
+  --gold-glow: rgba(255, 215, 0, 0.6);
+  --gold-glow-soft: rgba(255, 215, 0, 0.2);
+  --gold-glow-dim: rgba(255, 215, 0, 0.1);
+  
+  /* 文字色彩 */
+  --text-primary: #f0f6fc;
+  --text-secondary: #c9d1d9;
+  --text-muted: #8b949e;
+  --text-dim: #6e7681;
+  
+  /* 玻璃态效果 */
+  --glass-bg: rgba(22, 27, 34, 0.6);
+  --glass-bg-light: rgba(255, 255, 255, 0.05);
+  --glass-border: rgba(240, 246, 252, 0.1);
+  --glass-border-hover: rgba(0, 210, 106, 0.4);
+  
+  /* 阴影系统 */
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 20px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 8px 40px rgba(0, 0, 0, 0.5);
+  --shadow-glow-jade: 0 0 30px var(--jade-glow-soft);
+  --shadow-glow-gold: 0 0 30px var(--gold-glow-soft);
+  
+  /* 圆角 */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 18px;
+  --radius-xl: 24px;
+  --radius-pill: 100px;
+  
+  /* 动画 */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --duration-fast: 150ms;
+  --duration-normal: 300ms;
+  --duration-slow: 500ms;
+  
+  /* 字体 */
+  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", "PingFang SC", "Microsoft YaHei", Helvetica, Arial, sans-serif;
+  --font-mono: "SF Mono", "Fira Code", "JetBrains Mono", monospace;
+}
+
+/* === 基础重置 === */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body.galaxy {
+  font-family: var(--font-sans);
+  background-color: var(--galaxy-bg-deep);
+  color: var(--text-primary);
+  min-height: 100vh;
+  overflow-x: hidden;
+  line-height: 1.6;
+  position: relative;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* === 4K星空背景效果 === */
+body.galaxy::before {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: 
+    /* 星云效果 - 翡翠绿 */
+    radial-gradient(ellipse 80vw 60vh at 20% 40%, var(--jade-glow-dim) 0%, transparent 50%),
+    radial-gradient(ellipse 60vw 50vh at 80% 20%, var(--jade-glow-dim) 0%, transparent 40%),
+    /* 星云效果 - 流金 */
+    radial-gradient(ellipse 50vw 40vh at 70% 80%, var(--gold-glow-dim) 0%, transparent 45%),
+    radial-gradient(ellipse 40vw 30vh at 30% 90%, var(--gold-glow-dim) 0%, transparent 35%),
+    /* 基础渐变 */
+    radial-gradient(ellipse 100vw 100vh at 50% 50%, var(--galaxy-bg-panel) 0%, var(--galaxy-bg-deep) 100%);
+  z-index: -2;
+  animation: nebulaFloat 20s ease-in-out infinite alternate;
+}
+
+/* 动态星空 */
+body.galaxy::after {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: 
+    /* 星星层1 - 小星星 */
+    radial-gradient(1px 1px at 5% 10%, rgba(255,255,255,0.9), transparent),
+    radial-gradient(1px 1px at 15% 25%, rgba(255,255,255,0.8), transparent),
+    radial-gradient(1px 1px at 25% 15%, rgba(255,255,255,0.7), transparent),
+    radial-gradient(1px 1px at 35% 45%, rgba(255,255,255,0.9), transparent),
+    radial-gradient(1px 1px at 45% 20%, rgba(255,255,255,0.6), transparent),
+    radial-gradient(1px 1px at 55% 55%, rgba(255,255,255,0.8), transparent),
+    radial-gradient(1px 1px at 65% 35%, rgba(255,255,255,0.7), transparent),
+    radial-gradient(1px 1px at 75% 65%, rgba(255,255,255,0.9), transparent),
+    radial-gradient(1px 1px at 85% 45%, rgba(255,255,255,0.6), transparent),
+    radial-gradient(1px 1px at 95% 75%, rgba(255,255,255,0.8), transparent),
+    /* 星星层2 - 稍大的星星 */
+    radial-gradient(2px 2px at 10% 60%, rgba(255,255,255,0.7), transparent),
+    radial-gradient(2px 2px at 30% 80%, rgba(255,255,255,0.5), transparent),
+    radial-gradient(2px 2px at 50% 70%, rgba(255,255,255,0.6), transparent),
+    radial-gradient(2px 2px at 70% 85%, rgba(255,255,255,0.7), transparent),
+    radial-gradient(2px 2px at 90% 30%, rgba(255,255,255,0.5), transparent),
+    /* 星星层3 - 闪烁的大星星 */
+    radial-gradient(3px 3px at 20% 90%, rgba(255,215,0,0.6), transparent),
+    radial-gradient(3px 3px at 60% 10%, rgba(0,210,106,0.5), transparent),
+    radial-gradient(3px 3px at 80% 50%, rgba(255,215,0,0.4), transparent);
+  background-size: 400px 400px, 400px 400px, 400px 400px, 400px 400px, 400px 400px,
+                   400px 400px, 400px 400px, 400px 400px, 400px 400px, 400px 400px,
+                   600px 600px, 600px 600px, 600px 600px, 600px 600px, 600px 600px,
+                   800px 800px, 800px 800px, 800px 800px;
+  z-index: -1;
+  animation: starsTwinkle 8s ease-in-out infinite alternate, starsMove 200s linear infinite;
+}
+
+@keyframes nebulaFloat {
+  0% { 
+    opacity: 0.6; 
+    transform: scale(1) rotate(0deg); 
+  }
+  100% { 
+    opacity: 0.9; 
+    transform: scale(1.05) rotate(2deg); 
+  }
+}
+
+@keyframes starsTwinkle {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 0.9; }
+}
+
+@keyframes starsMove {
+  from { background-position: 0 0, 0 0, 0 0, 0 0, 0 0, 0 0, 0 0, 0 0, 0 0, 0 0, 0 0, 0 0, 0 0, 0 0, 0 0, 0 0, 0 0, 0 0; }
+  to { background-position: 0 400px, 0 400px, 0 400px, 0 400px, 0 400px, 0 400px, 0 400px, 0 400px, 0 400px, 0 400px, 0 600px, 0 600px, 0 600px, 0 600px, 0 600px, 0 800px, 0 800px, 0 800px; }
+}
+
+/* === 粒子画布 === */
+#particles-canvas {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+  pointer-events: none;
+}
+
+/* === 布局容器 === */
+.galaxy-container {
+  position: relative;
+  z-index: 1;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 2rem;
+  min-height: 100vh;
+}
+
+/* === 顶部导航栏 === */
+.galaxy-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1.5rem;
+  margin-bottom: 2rem;
+  background: var(--glass-bg);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-pill);
+  box-shadow: var(--shadow-md);
+  animation: slideDown 0.6s var(--ease-out) both;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.galaxy-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-weight: 700;
+  font-size: 1.25rem;
+  color: var(--text-primary);
+  text-shadow: 0 0 20px var(--jade-glow-soft);
+}
+
+.galaxy-brand-icon {
+  width: 32px;
+  height: 32px;
+  fill: var(--jade-primary);
+  filter: drop-shadow(0 0 8px var(--jade-glow));
+}
+
+/* === 按钮系统 === */
+.galaxy-btn {
+  appearance: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.25rem;
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: var(--text-primary);
+  background: transparent;
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+  text-decoration: none;
+  transition: all var(--duration-normal) var(--ease-out);
+  position: relative;
+  overflow: hidden;
+}
+
+.galaxy-btn::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+  transition: left 0.5s ease;
+}
+
+.galaxy-btn:hover::before {
+  left: 100%;
+}
+
+.galaxy-btn:hover {
+  border-color: var(--jade-primary);
+  background: var(--glass-bg-light);
+  box-shadow: 0 0 20px var(--jade-glow-dim);
+  transform: translateY(-2px);
+}
+
+.galaxy-btn:active {
+  transform: translateY(0);
+}
+
+/* 主要按钮 - 翡翠绿 */
+.galaxy-btn-primary {
+  background: linear-gradient(135deg, rgba(0, 210, 106, 0.2), rgba(0, 210, 106, 0.05));
+  border-color: rgba(0, 210, 106, 0.5);
+  color: var(--jade-light);
+}
+
+.galaxy-btn-primary:hover {
+  background: linear-gradient(135deg, rgba(0, 210, 106, 0.3), rgba(0, 210, 106, 0.1));
+  border-color: var(--jade-primary);
+  box-shadow: 0 0 25px var(--jade-glow-soft), inset 0 0 10px var(--jade-glow-dim);
+  text-shadow: 0 0 8px var(--jade-glow);
+}
+
+/* 流金按钮 */
+.galaxy-btn-gold {
+  background: linear-gradient(135deg, rgba(255, 215, 0, 0.2), rgba(255, 215, 0, 0.05));
+  border-color: rgba(255, 215, 0, 0.5);
+  color: var(--gold-primary);
+}
+
+.galaxy-btn-gold:hover {
+  background: linear-gradient(135deg, rgba(255, 215, 0, 0.3), rgba(255, 215, 0, 0.1));
+  border-color: var(--gold-primary);
+  box-shadow: 0 0 25px var(--gold-glow-soft), inset 0 0 10px var(--gold-glow-dim);
+  text-shadow: 0 0 8px var(--gold-glow);
+}
+
+/* 返回主页按钮 */
+.galaxy-home-btn {
+  position: fixed;
+  top: 1.5rem;
+  left: 1.5rem;
+  z-index: 1000;
+  padding: 0.6rem 1rem;
+  background: var(--glass-bg);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+
+/* === 卡片系统 === */
+.galaxy-card {
+  background: linear-gradient(180deg, var(--galaxy-bg-card) 0%, rgba(22, 27, 34, 0.4) 100%);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-lg);
+  padding: 1.5rem;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  transition: all var(--duration-normal) var(--ease-out);
+  position: relative;
+  overflow: hidden;
+}
+
+.galaxy-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--jade-primary), transparent);
+  opacity: 0;
+  transition: opacity var(--duration-normal);
+}
+
+.galaxy-card:hover {
+  transform: translateY(-5px) scale(1.01);
+  border-color: var(--glass-border-hover);
+  box-shadow: var(--shadow-lg), var(--shadow-glow-jade);
+  background: linear-gradient(180deg, var(--galaxy-bg-card-hover) 0%, rgba(22, 27, 34, 0.6) 100%);
+}
+
+.galaxy-card:hover::before {
+  opacity: 0.5;
+}
+
+/* 流金边框卡片 */
+.galaxy-card-gold::before {
+  background: linear-gradient(90deg, transparent, var(--gold-primary), transparent);
+}
+
+.galaxy-card-gold:hover {
+  box-shadow: var(--shadow-lg), var(--shadow-glow-gold);
+  border-color: rgba(255, 215, 0, 0.4);
+}
+
+/* 卡片标题 */
+.galaxy-card-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.galaxy-card-subtitle {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+}
+
+/* === 网格布局 === */
+.galaxy-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.5rem;
+}
+
+.galaxy-grid-2 {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+.galaxy-grid-3 {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.galaxy-grid-4 {
+  grid-template-columns: repeat(4, 1fr);
+}
+
+@media (max-width: 1024px) {
+  .galaxy-grid-4 { grid-template-columns: repeat(3, 1fr); }
+}
+
+@media (max-width: 768px) {
+  .galaxy-grid-2,
+  .galaxy-grid-3,
+  .galaxy-grid-4 { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 480px) {
+  .galaxy-grid,
+  .galaxy-grid-2,
+  .galaxy-grid-3,
+  .galaxy-grid-4 { grid-template-columns: 1fr; }
+}
+
+/* === 时间显示 === */
+.galaxy-time {
+  font-size: 4rem;
+  font-weight: 800;
+  background: linear-gradient(180deg, var(--text-primary) 0%, var(--text-secondary) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  filter: drop-shadow(0 0 20px var(--jade-glow-soft));
+  line-height: 1;
+  letter-spacing: -2px;
+  animation: timeGlow 3s ease-in-out infinite alternate;
+}
+
+@keyframes timeGlow {
+  from { filter: drop-shadow(0 0 10px var(--jade-glow-dim)); }
+  to { filter: drop-shadow(0 0 25px var(--jade-glow-soft)); }
+}
+
+.galaxy-date {
+  font-size: 1.1rem;
+  color: var(--text-muted);
+  margin-top: 0.5rem;
+}
+
+/* === 信息展示 === */
+.galaxy-info-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  font-size: 1.25rem;
+  color: var(--text-secondary);
+  margin: 0.5rem 0;
+}
+
+.galaxy-info-icon {
+  width: 1.5em;
+  height: 1.5em;
+  fill: var(--jade-primary);
+  filter: drop-shadow(0 0 5px var(--jade-glow-soft));
+}
+
+/* === 开关控件 === */
+.galaxy-switch {
+  position: relative;
+  display: inline-block;
+  width: 56px;
+  height: 32px;
+}
+
+.galaxy-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.galaxy-switch-slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--glass-border);
+  border-radius: 32px;
+  transition: all var(--duration-normal);
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+.galaxy-switch-slider::before {
+  content: "";
+  position: absolute;
+  height: 24px;
+  width: 24px;
+  left: 3px;
+  bottom: 3px;
+  background: linear-gradient(180deg, #fff 0%, #e0e0e0 100%);
+  border-radius: 50%;
+  transition: all var(--duration-normal) var(--ease-spring);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+}
+
+.galaxy-switch input:checked + .galaxy-switch-slider {
+  background: linear-gradient(135deg, rgba(0, 210, 106, 0.3), rgba(0, 210, 106, 0.1));
+  border-color: var(--jade-primary);
+  box-shadow: 0 0 15px var(--jade-glow-soft), inset 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.galaxy-switch input:checked + .galaxy-switch-slider::before {
+  transform: translateX(24px);
+  box-shadow: 0 0 10px var(--jade-glow);
+}
+
+/* === 表单输入 === */
+.galaxy-input {
+  width: 100%;
+  padding: 0.875rem 1rem;
+  background: rgba(1, 4, 9, 0.6);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
+  font-size: 1rem;
+  transition: all var(--duration-normal);
+  outline: none;
+}
+
+.galaxy-input:focus {
+  border-color: var(--jade-primary);
+  box-shadow: 0 0 0 3px var(--jade-glow-dim), 0 0 15px var(--jade-glow-soft);
+  background: rgba(1, 4, 9, 0.8);
+}
+
+.galaxy-input::placeholder {
+  color: var(--text-dim);
+}
+
+/* === 登录面板 === */
+.galaxy-login-panel {
+  width: 100%;
+  max-width: 420px;
+  padding: 2.5rem;
+  background: linear-gradient(180deg, var(--galaxy-bg-card) 0%, rgba(22, 27, 34, 0.5) 100%);
+  border: 1px solid var(--glass-border);
+  border-top: 2px solid var(--jade-primary);
+  border-radius: var(--radius-xl);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  box-shadow: var(--shadow-lg), 0 0 40px var(--jade-glow-dim);
+  animation: floatIn 0.8s var(--ease-out) both;
+}
+
+@keyframes floatIn {
+  from {
+    opacity: 0;
+    transform: translateY(30px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.galaxy-login-title {
+  font-size: 1.75rem;
+  font-weight: 700;
+  text-align: center;
+  margin-bottom: 0.5rem;
+  background: linear-gradient(90deg, var(--jade-light), var(--gold-primary));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.galaxy-form-group {
+  margin-bottom: 1.25rem;
+}
+
+.galaxy-form-label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-size: 0.9rem;
+  color: var(--text-muted);
+}
+
+/* === 状态标签 === */
+.galaxy-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.35rem 0.75rem;
+  border-radius: var(--radius-pill);
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.galaxy-status-online {
+  background: rgba(0, 210, 106, 0.15);
+  color: var(--jade-light);
+  border: 1px solid rgba(0, 210, 106, 0.3);
+}
+
+.galaxy-status-offline {
+  background: rgba(255, 77, 79, 0.15);
+  color: #ff6b6b;
+  border: 1px solid rgba(255, 77, 79, 0.3);
+}
+
+/* === 动画工具类 === */
+.galaxy-fade-in {
+  animation: fadeIn 0.6s var(--ease-out) both;
+}
+
+.galaxy-slide-up {
+  animation: slideUp 0.6s var(--ease-out) both;
+}
+
+.galaxy-pulse {
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { 
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to { 
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% { 
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% { 
+    opacity: 0.8;
+    transform: scale(1.02);
+  }
+}
+
+/* === 滚动条 === */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--galaxy-bg-deep);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--glass-border);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--jade-primary);
+}
+
+/* === 图标 === */
+.galaxy-icon {
+  width: 24px;
+  height: 24px;
+  fill: currentColor;
+  transition: all var(--duration-normal);
+}
+
+.galaxy-card:hover .galaxy-icon {
+  fill: var(--jade-primary);
+  filter: drop-shadow(0 0 8px var(--jade-glow));
+  transform: scale(1.1);
+}
+
+/* === 响应式调整 === */
+@media (max-width: 768px) {
+  .galaxy-container {
+    padding: 1rem;
+  }
+  
+  .galaxy-header {
+    padding: 0.75rem 1rem;
+    margin-bottom: 1.5rem;
+  }
+  
+  .galaxy-time {
+    font-size: 3rem;
+  }
+  
+  .galaxy-login-panel {
+    padding: 1.5rem;
+    margin: 1rem;
+  }
+}
+
+/* === 减少动画偏好 === */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

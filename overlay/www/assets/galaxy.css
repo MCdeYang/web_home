@@ -1,0 +1,523 @@
+:root {
+  /* === Galaxy Jade & Gold Palette (GitHub Galaxy Style) === */
+  --bg-space: #010409;     /* Deep Space Black */
+  --bg-panel: #0d1117;     /* Panel Dark */
+  
+  --jade-primary: #3fb950; /* Neon Jade */
+  --jade-glow: rgba(63, 185, 80, 0.6);
+  --jade-dim: rgba(63, 185, 80, 0.1);
+  
+  --gold-accent: #d29922;  /* Stellar Gold */
+  --gold-glow: rgba(210, 153, 34, 0.6);
+  --gold-dim: rgba(210, 153, 34, 0.1);
+  
+  --text-main: #f0f6fc;
+  --text-muted: #8b949e;
+  
+  --glass-bg: rgba(22, 27, 34, 0.6);
+  --glass-border: rgba(240, 246, 252, 0.1);
+  
+  --radius-sm: 6px;
+  --radius-md: 12px;
+  --radius-pill: 100px;
+  
+  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  font-family: var(--font-sans);
+  background-color: var(--bg-space);
+  color: var(--text-main);
+  min-height: 100vh;
+  overflow-x: hidden;
+  line-height: 1.5;
+  position: relative;
+}
+
+/* === CSS Starfield & Nebula === */
+body::before {
+  content: "";
+  position: fixed;
+  top: 0; left: 0; width: 100%; height: 100%;
+  background: 
+    radial-gradient(circle at 15% 50%, var(--jade-dim) 0%, transparent 25%),
+    radial-gradient(circle at 85% 30%, var(--gold-dim) 0%, transparent 25%);
+  z-index: -2;
+  animation: nebulaPulse 10s ease-in-out infinite alternate;
+}
+
+/* Stars using radial gradients for performance instead of box-shadow */
+body::after {
+  content: "";
+  position: fixed;
+  top: 0; left: 0; width: 100%; height: 100%;
+  background-image: 
+    radial-gradient(1px 1px at 10% 10%, #fff, transparent),
+    radial-gradient(1px 1px at 20% 20%, #fff, transparent),
+    radial-gradient(1px 1px at 30% 50%, #fff, transparent),
+    radial-gradient(2px 2px at 40% 80%, #fff, transparent),
+    radial-gradient(1px 1px at 50% 30%, #fff, transparent),
+    radial-gradient(1px 1px at 60% 90%, #fff, transparent),
+    radial-gradient(2px 2px at 70% 40%, #fff, transparent),
+    radial-gradient(1px 1px at 80% 10%, #fff, transparent),
+    radial-gradient(1px 1px at 90% 60%, #fff, transparent);
+  background-size: 500px 500px;
+  opacity: 0.6;
+  z-index: -1;
+  animation: starsMove 100s linear infinite;
+}
+
+@keyframes nebulaPulse {
+  0% { opacity: 0.5; transform: scale(1); }
+  100% { opacity: 0.8; transform: scale(1.1); }
+}
+
+@keyframes starsMove {
+  from { background-position: 0 0; }
+  to { background-position: 0 1000px; }
+}
+
+/* === Layout === */
+.galaxy-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  position: relative;
+  z-index: 1;
+}
+
+/* === Header === */
+.header-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1.5rem;
+  margin-bottom: 3rem;
+  background: rgba(13, 17, 23, 0.6);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-pill);
+  box-shadow: 0 4px 30px rgba(0,0,0,0.5);
+}
+
+.brand {
+  font-weight: 700;
+  font-size: 1.2rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  color: #fff;
+  letter-spacing: -0.5px;
+  text-shadow: 0 0 15px var(--jade-glow);
+}
+
+/* === Galaxy Buttons === */
+.nav-btn, .btn-primary, .btn-full, .action-btn {
+  appearance: none;
+  background: transparent;
+  border: 1px solid var(--glass-border);
+  color: var(--text-main);
+  padding: 0.6rem 1.2rem;
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+  text-decoration: none;
+  font-size: 0.95rem;
+  font-weight: 500;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Shine Effect */
+.nav-btn::after, .btn-primary::after, .btn-full::after {
+  content: "";
+  position: absolute;
+  top: 0; left: -100%;
+  width: 100%; height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+  transition: 0.5s;
+}
+
+.nav-btn:hover::after, .btn-primary:hover::after, .btn-full:hover::after {
+  left: 100%;
+}
+
+.nav-btn:hover {
+  border-color: var(--text-main);
+  background: rgba(255,255,255,0.05);
+  box-shadow: 0 0 15px rgba(255,255,255,0.1);
+}
+
+/* Primary Action Button (Jade) */
+.btn-primary, .btn-full {
+  background: linear-gradient(180deg, rgba(63, 185, 80, 0.15), rgba(63, 185, 80, 0.05));
+  border-color: rgba(63, 185, 80, 0.4);
+}
+
+.btn-primary:hover, .btn-full:hover {
+  border-color: var(--jade-primary);
+  background: linear-gradient(180deg, rgba(63, 185, 80, 0.25), rgba(63, 185, 80, 0.1));
+  box-shadow: 0 0 20px var(--jade-glow), inset 0 0 10px var(--jade-dim);
+  text-shadow: 0 0 5px var(--jade-primary);
+  transform: translateY(-1px);
+}
+
+/* === Galaxy Cards === */
+.galaxy-card, .login-panel {
+  background: linear-gradient(180deg, rgba(22,27,34,0.7) 0%, rgba(22,27,34,0.4) 100%);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-md);
+  padding: 1.5rem;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  transition: all 0.4s ease;
+  position: relative;
+  box-shadow: 0 0 0 0 transparent;
+  display: flex;
+  flex-direction: column;
+  text-decoration: none;
+  color: var(--text-main);
+}
+
+/* Hover State: Glowing Border + Lift */
+.galaxy-card:hover {
+  transform: translateY(-5px) scale(1.01);
+  border-color: var(--jade-primary);
+  box-shadow: 0 10px 40px -10px rgba(0,0,0,0.8), 
+              0 0 20px -5px var(--jade-dim),
+              inset 0 0 1px var(--jade-primary);
+  background: linear-gradient(180deg, rgba(22,27,34,0.9) 0%, rgba(22,27,34,0.6) 100%);
+}
+
+.card-title {
+  font-size: 1.3rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.card-subtitle {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+}
+
+/* Icons */
+.icon {
+  width: 24px; height: 24px;
+  fill: currentColor;
+  filter: drop-shadow(0 0 2px rgba(255,255,255,0.3));
+}
+.galaxy-card:hover .icon {
+  fill: var(--jade-primary);
+  filter: drop-shadow(0 0 5px var(--jade-glow));
+}
+
+/* === Dashboard Grid === */
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 2rem;
+}
+.card-wide { grid-column: span 2; }
+.card-tall { grid-row: span 2; }
+
+/* Time Widget */
+.time-display {
+  font-size: 3.5rem;
+  font-weight: 800;
+  background: linear-gradient(180deg, #fff 0%, rgba(255,255,255,0.7) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 0 10px rgba(255,255,255,0.3));
+  line-height: 1;
+}
+
+/* === Login Page === */
+.login-container {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.login-panel {
+  width: 100%;
+  max-width: 400px;
+  border-top: 1px solid rgba(63, 185, 80, 0.3); /* Subtle Jade top border */
+}
+
+.form-group { margin-bottom: 1.25rem; }
+.form-label { display: block; margin-bottom: 0.5rem; font-size: 0.9rem; color: var(--text-muted); }
+.form-input {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  background: rgba(1, 4, 9, 0.5);
+  border: 1px solid #30363d;
+  border-radius: 6px;
+  color: var(--text-main);
+  font-size: 1rem;
+  outline: none;
+  transition: 0.3s;
+}
+.form-input:focus {
+  border-color: var(--jade-primary);
+  box-shadow: 0 0 0 3px var(--jade-dim);
+  background: rgba(1, 4, 9, 0.8);
+}
+
+/* === Control Page (3D Toggles - Refined) === */
+.control-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 1.5rem;
+}
+
+.toggle-switch {
+  width: 52px; height: 30px;
+  background: rgba(255,255,255,0.1);
+  border-radius: 15px;
+  position: relative;
+  transition: 0.3s;
+  cursor: pointer;
+  border: 1px solid rgba(255,255,255,0.1);
+  box-shadow: inset 0 2px 4px rgba(0,0,0,0.5);
+}
+
+.toggle-knob {
+  width: 24px; height: 24px;
+  background: #fff;
+  border-radius: 50%;
+  position: absolute;
+  top: 2px; left: 2px;
+  transition: 0.3s cubic-bezier(0.5, 1.5, 0.5, 1);
+  box-shadow: 0 2px 5px rgba(0,0,0,0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Switch Icon Overlay (Power Symbol) */
+.toggle-knob::after {
+  content: "";
+  width: 10px; height: 10px;
+  border: 2px solid #8b949e;
+  border-top: transparent;
+  border-radius: 50%;
+  position: absolute;
+  top: 6px;
+  transition: 0.3s;
+}
+.toggle-knob::before {
+  content: "";
+  width: 2px; height: 6px;
+  background: #8b949e;
+  position: absolute;
+  top: 4px;
+  transition: 0.3s;
+}
+
+.control-card.active {
+  border-color: var(--jade-primary);
+  background: linear-gradient(180deg, rgba(63, 185, 80, 0.1) 0%, rgba(22,27,34,0.6) 100%);
+  box-shadow: inset 0 0 20px var(--jade-dim);
+}
+.control-card.active .toggle-switch {
+  background: var(--jade-primary);
+  box-shadow: 0 0 10px var(--jade-glow);
+}
+.control-card.active .toggle-knob { left: 24px; box-shadow: -2px 2px 5px rgba(0,0,0,0.3); }
+.control-card.active .toggle-knob::after { border-color: var(--jade-primary); }
+.control-card.active .toggle-knob::before { background: var(--jade-primary); }
+
+/* === Advanced Icon Animations === */
+/* Base Icon Transition */
+.control-card .icon {
+  transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+  opacity: 0.6;
+  transform-origin: center;
+}
+.control-card.active .icon {
+  opacity: 1;
+  filter: drop-shadow(0 0 8px currentColor);
+  transform: scale(1.1);
+}
+
+/* Specific Device Animations */
+/* 1. Light: Glow Pulse */
+#light-card.active .icon {
+  animation: pulse-light 2s ease-in-out infinite;
+}
+@keyframes pulse-light {
+  0%, 100% { filter: drop-shadow(0 0 5px var(--jade-primary)); transform: scale(1.1); }
+  50% { filter: drop-shadow(0 0 15px var(--jade-glow)); transform: scale(1.2); }
+}
+
+/* 2. AC: Cold Breath */
+#ac-card.active .icon {
+  animation: breathe-cold 3s ease-in-out infinite;
+}
+@keyframes breathe-cold {
+  0%, 100% { filter: drop-shadow(0 0 5px var(--gold-accent)); transform: scale(1.1); }
+  50% { filter: drop-shadow(0 0 12px var(--gold-glow)); transform: scale(1.05) rotate(5deg); }
+}
+
+/* 3. Washer: Vibration */
+#washer-card.active .icon {
+  animation: shake 0.8s ease-in-out infinite;
+}
+@keyframes shake {
+  0% { transform: rotate(0deg) scale(1.1); }
+  25% { transform: rotate(-5deg) scale(1.1); }
+  75% { transform: rotate(5deg) scale(1.1); }
+  100% { transform: rotate(0deg) scale(1.1); }
+}
+
+/* 4. Fan: Spin */
+#fan-card.active .icon {
+  animation: spin 1.5s linear infinite;
+}
+@keyframes spin {
+  from { transform: rotate(0deg) scale(1.1); }
+  to { transform: rotate(360deg) scale(1.1); }
+}
+
+/* 5. Door: Pop */
+#door-card.active .icon {
+  animation: pop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+@keyframes pop {
+  0% { transform: scale(0.8); }
+  50% { transform: scale(1.3); }
+  100% { transform: scale(1.1); }
+}
+
+/* === Photos Page (3D Flip - Preserved) === */
+.photo-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 2rem;
+}
+
+.photo-card-3d {
+  background: transparent;
+  perspective: 1200px;
+  aspect-ratio: 1/1;
+  cursor: pointer;
+}
+
+.photo-inner {
+  position: relative;
+  width: 100%; height: 100%;
+  text-align: center;
+  transition: transform 0.8s cubic-bezier(0.34, 1.56, 0.64, 1); /* Bouncy flip */
+  transform-style: preserve-3d;
+}
+
+.photo-card-3d:hover .photo-inner {
+  transform: rotateY(180deg);
+}
+
+.photo-front, .photo-back {
+  position: absolute;
+  width: 100%; height: 100%;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  border: 1px solid var(--glass-border);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+}
+
+.photo-front img {
+  width: 100%; height: 100%;
+  object-fit: cover;
+  transition: 0.5s;
+}
+.photo-card-3d:hover .photo-front img { transform: scale(1.1); }
+
+.photo-back {
+  background: rgba(13, 17, 23, 0.9);
+  transform: rotateY(180deg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  border: 1px solid var(--gold-accent);
+  box-shadow: inset 0 0 30px rgba(210, 153, 34, 0.1);
+  backdrop-filter: blur(20px);
+}
+
+/* === System & Notes === */
+.system-chart-container {
+  width: 140px; height: 140px;
+  border-radius: 50%;
+  margin: 0 auto 1.5rem;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 20px rgba(0,0,0,0.3);
+}
+.system-chart-inner {
+  width: 110px; height: 110px;
+  background: var(--bg-panel);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 1.5rem;
+  color: var(--text-main);
+  box-shadow: inset 0 0 10px rgba(0,0,0,0.5);
+}
+
+.file-grid, .notes-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 1.5rem;
+}
+.file-card {
+  text-align: center;
+  cursor: pointer;
+  border: 1px solid transparent;
+}
+.file-card:hover {
+  border-color: var(--jade-primary);
+  background: rgba(63, 185, 80, 0.05);
+}
+.file-icon { font-size: 3rem; margin-bottom: 0.8rem; display: block; }
+.file-name { font-size: 0.9rem; font-weight: 500; }
+
+.note-card {
+  background: linear-gradient(135deg, rgba(210, 153, 34, 0.05), transparent);
+  border-left: 3px solid var(--gold-accent);
+}
+.note-card:hover {
+  box-shadow: 0 5px 20px rgba(210, 153, 34, 0.1);
+}
+
+/* === Utility === */
+.text-jade { color: var(--jade-primary); text-shadow: 0 0 10px var(--jade-glow); }
+.text-gold { color: var(--gold-accent); text-shadow: 0 0 10px var(--gold-glow); }
+.text-center { text-align: center; }
+.mb-1 { margin-bottom: 0.5rem; }
+.mt-2 { margin-top: 1rem; }

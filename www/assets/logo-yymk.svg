@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 120" role="img" aria-labelledby="title desc">
+  <title id="title">YYMK</title>
+  <desc id="desc">YYMK wordmark logo</desc>
+  <defs>
+    <linearGradient id="g" x1="40" y1="20" x2="320" y2="100" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#7c5cff"/>
+      <stop offset="0.55" stop-color="#20d3ff"/>
+      <stop offset="1" stop-color="#ff4d6d"/>
+    </linearGradient>
+    <filter id="glow" x="-30%" y="-40%" width="160%" height="180%">
+      <feGaussianBlur stdDeviation="6" result="b"/>
+      <feColorMatrix in="b" type="matrix"
+        values="1 0 0 0 0
+                0 1 0 0 0
+                0 0 1 0 0
+                0 0 0 0.35 0" result="c"/>
+      <feMerge>
+        <feMergeNode in="c"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <rect x="0" y="0" width="360" height="120" fill="none"/>
+
+  <g fill="none" stroke="url(#g)" stroke-width="12" stroke-linecap="round" stroke-linejoin="round" filter="url(#glow)">
+    <path d="M40 26 L70 58 L100 26 M70 58 L70 96"/>
+    <path d="M120 26 L150 58 L180 26 M150 58 L150 96"/>
+    <path d="M205 96 V26 L235 60 L265 26 V96"/>
+    <path d="M300 26 V96 M300 60 L332 26 M300 60 L336 96"/>
+  </g>
+</svg>

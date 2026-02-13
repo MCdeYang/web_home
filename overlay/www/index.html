@@ -4,236 +4,505 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>家庭智能终端</title>
-  <link rel="stylesheet" href="/assets/ui.css">
-  <link rel="stylesheet" href="/assets/style.css">
-  <!-- 防止未登录用户看到页面内容 -->
+  <link rel="stylesheet" href="/assets/galaxy-theme.css">
   <style>
+    /* 主页特定样式 */
+    .main-content {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: calc(100vh - 200px);
+      text-align: center;
+      padding: 2rem 0;
+    }
+
+    .hero-section {
+      margin-bottom: 3rem;
+      animation: fadeIn 0.8s var(--ease-out) both;
+    }
+
+    .hero-time {
+      font-size: 5rem;
+      font-weight: 800;
+      background: linear-gradient(180deg, #fff 0%, rgba(255,255,255,0.7) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      filter: drop-shadow(0 0 30px var(--jade-glow-soft));
+      line-height: 1;
+      letter-spacing: -3px;
+      animation: timePulse 4s ease-in-out infinite alternate;
+    }
+
+    @keyframes timePulse {
+      0% { filter: drop-shadow(0 0 15px var(--jade-glow-dim)); }
+      100% { filter: drop-shadow(0 0 35px var(--jade-glow)); }
+    }
+
+    .hero-info {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 1rem;
+      margin-top: 1.5rem;
+      font-size: 1rem;
+      color: var(--text-secondary);
+    }
+
+    .hero-info-item {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem 1rem;
+      background: var(--glass-bg);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius-pill);
+      backdrop-filter: blur(10px);
+    }
+
+    .hero-info-item svg {
+      width: 18px;
+      height: 18px;
+      fill: var(--jade-primary);
+    }
+
+    /* 功能卡片网格 */
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.5rem;
+      width: 100%;
+      max-width: 900px;
+      animation: slideUp 0.8s var(--ease-out) 0.2s both;
+    }
+
+    .feature-card {
+      background: linear-gradient(180deg, rgba(22,27,34,0.8) 0%, rgba(22,27,34,0.5) 100%);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius-lg);
+      padding: 2rem 1.5rem;
+      text-align: center;
+      text-decoration: none;
+      color: var(--text-primary);
+      transition: all 0.4s var(--ease-out);
+      position: relative;
+      overflow: hidden;
+      backdrop-filter: blur(12px);
+    }
+
+    .feature-card::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--jade-primary), transparent);
+      opacity: 0;
+      transition: opacity 0.4s;
+    }
+
+    .feature-card::after {
+      content: "";
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: radial-gradient(circle, var(--jade-glow-dim) 0%, transparent 70%);
+      opacity: 0;
+      transition: opacity 0.4s;
+      pointer-events: none;
+    }
+
+    .feature-card:hover {
+      transform: translateY(-8px) scale(1.02);
+      border-color: rgba(0, 210, 106, 0.4);
+      box-shadow: 0 20px 50px rgba(0,0,0,0.5), 0 0 30px var(--jade-glow-dim);
+    }
+
+    .feature-card:hover::before,
+    .feature-card:hover::after {
+      opacity: 1;
+    }
+
+    .feature-icon {
+      width: 48px;
+      height: 48px;
+      margin: 0 auto 1rem;
+      fill: var(--text-secondary);
+      transition: all 0.4s;
+    }
+
+    .feature-card:hover .feature-icon {
+      fill: var(--jade-primary);
+      filter: drop-shadow(0 0 15px var(--jade-glow));
+      transform: scale(1.15);
+    }
+
+    .feature-title {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin-bottom: 0.25rem;
+    }
+
+    .feature-desc {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+
+    /* 认证遮罩 */
     #auth-guard {
       position: fixed;
-      top: 0; left: 0;
-      width: 100%; height: 100%;
-      background: #0a0a0a;
-      color: #eee;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: var(--galaxy-bg-deep);
       display: flex;
+      flex-direction: column;
       justify-content: center;
       align-items: center;
       z-index: 99999;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      font-size: 18px;
+      gap: 1rem;
     }
-    /* 初始隐藏真实内容 */
-    #app-content { display: none; }
+
+    .auth-spinner {
+      width: 50px;
+      height: 50px;
+      border: 3px solid var(--glass-border);
+      border-top-color: var(--jade-primary);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* 响应式 */
+    @media (max-width: 768px) {
+      .features-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1rem;
+      }
+      
+      .hero-time {
+        font-size: 3.5rem;
+      }
+      
+      .hero-info {
+        gap: 0.75rem;
+        font-size: 0.85rem;
+      }
+      
+      .feature-card {
+        padding: 1.5rem 1rem;
+      }
+      
+      .feature-icon {
+        width: 36px;
+        height: 36px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .features-grid {
+        grid-template-columns: 1fr;
+      }
+      
+      .hero-time {
+        font-size: 2.8rem;
+      }
+    }
   </style>
 </head>
-<body class="ui">
-  <!-- 🔒 认证遮罩（默认显示） -->
+<body class="galaxy">
+  <!-- 认证遮罩 -->
   <div id="auth-guard">
-    验证登录中，请稍候...
+    <div class="auth-spinner"></div>
+    <span style="color: var(--text-muted);">验证登录中...</span>
   </div>
 
-  <!-- 🖼️ 真实页面内容（初始隐藏） -->
-  <div id="app-content">
-    <div class="bg"></div>
-    <div class="overlay"></div>
-    <canvas id="particles"></canvas>
-    <img class="ui-brand" src="/assets/logo-yymk.svg" alt="YYMK" />
+  <!-- 主内容 -->
+  <div id="app-content" style="display: none;">
+    <canvas id="particles-canvas"></canvas>
+    
+    <div class="galaxy-container">
+      <!-- 顶部栏 -->
+      <header class="galaxy-header">
+        <div class="galaxy-brand">
+          <svg class="galaxy-brand-icon" viewBox="0 0 24 24">
+            <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+          </svg>
+          <span>家庭智能终端</span>
+        </div>
+        <a href="/settings.html" class="galaxy-btn">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 15.5A3.5 3.5 0 0 1 8.5 12 3.5 3.5 0 0 1 12 8.5a3.5 3.5 0 0 1 3.5 3.5 3.5 3.5 0 0 1-3.5 3.5m7.43-2.53c.04-.32.07-.64.07-.97 0-.33-.03-.66-.07-1l2.11-1.63c.19-.15.24-.42.12-.64l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.49 1c-.52-.4-1.08-.73-1.69-.98l-.38-2.65C14.46 2.18 14.25 2 14 2h-4c-.25 0-.46.18-.5.42l-.36 2.65c-.61.25-1.17.59-1.62.94l-2.39-.96c-.23-.09-.49 0-.59.22l-2 3.46c-.13.22-.07.47.12.61l2.11 1.63c-.04.34-.07.67-.07 1 0 .33.03.66.07.97l-2.11 1.63c-.19.15-.24.42-.12.64l1.92 3.32c.12.22.39.3.61.22l2.39-.96c.52.38 1.03.7 1.62.94l.36 2.54c.04.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.23.09.49 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.63z"/>
+          </svg>
+          <span>设置</span>
+        </a>
+      </header>
 
-    <div class="container ui-animate-in">
-      <div class="time" id="time">--:--</div>
-      <div class="temp"><svg class="ui-icon-color" aria-hidden="true"><use href="/assets/icons-color.svg#icon-temp"/></svg><span id="temperature">室温：23°C</span></div>
-      
-      <!-- ✅ 修改：动态天气行 -->
-      <div class="weather" id="weather">
-        <svg id="weather-icon" class="ui-icon-color" aria-hidden="true"><use href="/assets/icons-color.svg#icon-weather"/></svg>
-        <span id="weather-text">加载中...</span>
-      </div>
-      
-      <!-- 6个功能入口 -->
-      <div class="buttons">
-        <a href="/disk.html" class="btn"><svg class="ui-icon-color" aria-hidden="true"><use href="/assets/icons-color.svg#icon-disk"/></svg><span>私人网盘</span></a>
-        <a href="/control.html" class="btn"><svg class="ui-icon-color" aria-hidden="true"><use href="/assets/icons-color.svg#icon-control"/></svg><span>家居控制</span></a>
-        <a href="/notes.html" class="btn"><svg class="ui-icon-color" aria-hidden="true"><use href="/assets/icons-color.svg#icon-notes"/></svg><span>家庭备忘录</span></a>
-        <a href="/photos.html" class="btn"><svg class="ui-icon-color" aria-hidden="true"><use href="/assets/icons-color.svg#icon-photos"/></svg><span>家庭相册</span></a>
-        <a href="/system.html" class="btn"><svg class="ui-icon-color" aria-hidden="true"><use href="/assets/icons-color.svg#icon-system"/></svg><span>系统数据</span></a>
-        <a href="/settings.html" class="btn"><svg class="ui-icon-color" aria-hidden="true"><use href="/assets/icons-color.svg#icon-settings"/></svg><span>设置</span></a>
-      </div>
+      <!-- 主内容区 -->
+      <main class="main-content">
+        <section class="hero-section">
+          <div class="hero-time" id="time">--:--</div>
+          <div class="hero-info">
+            <div class="hero-info-item">
+              <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+              <span id="date">--月--日 星期-</span>
+            </div>
+            <div class="hero-info-item">
+              <svg viewBox="0 0 24 24"><path d="M12 2c-5.33 4.55-8 8.48-8 11.8 0 4.98 3.8 8.2 8 8.2s8-3.22 8-8.2c0-3.32-2.67-7.25-8-11.8zm0 18c-3.15 0-6-2.38-6-6.2 0-2.34 1.78-5.06 6-8.54 4.22 3.48 6 6.2 6 8.54 0 3.82-2.85 6.2-6 6.2z"/></svg>
+              <span id="temperature">室温：--°C · 湿度：--%</span>
+            </div>
+            <div class="hero-info-item">
+              <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>
+              <span id="weather-text">天气加载中...</span>
+            </div>
+          </div>
+        </section>
+
+        <!-- 功能入口 -->
+        <section class="features-grid">
+          <a href="/disk.html" class="feature-card">
+            <svg class="feature-icon" viewBox="0 0 24 24">
+              <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 2h2v2h-2V5zm0 4h2v2h-2V9zm0 4h2v2h-2v-2zM5 15h4v2H5v-2zm0-4h4v2H5V9zm0-4h4v2H5V5zm14 10h-4v-2h4v2zm0-4h-4V9h4v2zm0-4h-4V5h4v2z"/>
+            </svg>
+            <div class="feature-title">私人网盘</div>
+            <div class="feature-desc">文件存储管理</div>
+          </a>
+
+          <a href="/control.html" class="feature-card">
+            <svg class="feature-icon" viewBox="0 0 24 24">
+              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z"/>
+            </svg>
+            <div class="feature-title">家居控制</div>
+            <div class="feature-desc">智能设备管理</div>
+          </a>
+
+          <a href="/notes.html" class="feature-card">
+            <svg class="feature-icon" viewBox="0 0 24 24">
+              <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/>
+            </svg>
+            <div class="feature-title">家庭备忘录</div>
+            <div class="feature-desc">任务提醒管理</div>
+          </a>
+
+          <a href="/photos.html" class="feature-card">
+            <svg class="feature-icon" viewBox="0 0 24 24">
+              <path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/>
+            </svg>
+            <div class="feature-title">家庭相册</div>
+            <div class="feature-desc">照片存储浏览</div>
+          </a>
+
+          <a href="/system.html" class="feature-card">
+            <svg class="feature-icon" viewBox="0 0 24 24">
+              <path d="M20 18c1.1 0 1.99-.9 1.99-2L22 5c0-1.1-.9-2-2-2H4c-1.1 0-2 .9-2 2v11c0 1.1.9 2 2 2H0c0 1.1.9 2 2 2h20c1.1 0 2-.9 2-2h-4zM4 5h16v11H4V5z"/>
+            </svg>
+            <div class="feature-title">系统数据</div>
+            <div class="feature-desc">实时监控信息</div>
+          </a>
+
+          <a href="/settings.html" class="feature-card">
+            <svg class="feature-icon" viewBox="0 0 24 24">
+              <path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.38-2.65c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22l-2 3.46c-.13.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.19.15-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/>
+            </svg>
+            <div class="feature-title">系统设置</div>
+            <div class="feature-desc">配置管理中心</div>
+          </a>
+        </section>
+      </main>
     </div>
   </div>
 
-  <!-- 🔐 登录状态检测（关键：放在内容之后、动画之前） -->
-    <script>
-    // === 温湿度轮询 ===
-    async function fetchAndRenderTemperature() {
-      const tempEl = document.getElementById('temperature');
-      try {
-        const res = await fetch('/home/temperature');
-        if (!res.ok) throw new Error('Network error');
-
-        const data = await res.json();
-
-        // 检查是否有有效数据
-        if (data.humidity != null && data.temperature != null) {
-          const hum = parseFloat(data.humidity).toFixed(1);
-          const temp = parseFloat(data.temperature).toFixed(1);
-          tempEl.textContent = `室温：${temp}°C · 湿度：${hum}%`;
-        } else if (data.error) {
-          tempEl.textContent = `${data.error}`;
-        } else {
-          tempEl.textContent = '数据异常';
-        }
-      } catch (err) {
-        console.error('Temperature fetch failed:', err);
-        tempEl.textContent = '加载失败';
-      }
-    }
-
-    async function fetchAndRenderWeather() {
-      const weatherTextEl = document.getElementById('weather-text');
-      const weatherIconEl = document.getElementById('weather-icon');
-      const weatherIconUse = weatherIconEl ? weatherIconEl.querySelector('use') : null;
-
-      try {
-        const res = await fetch('/home/weather');
-        if (!res.ok) throw new Error('Network error');
-
-        const data = await res.json();
-
-        if (data.code !== '200') {
-          weatherTextEl.textContent = '天气数据异常';
-          if (weatherIconUse) weatherIconUse.setAttribute('href', '/assets/icons-color.svg#icon-weather');
-          return;
-        }
-
-        const weather = data.weather || '未知';
-        const temp = data.temperature || '--';
-        const humidity = data.humidity || '--';
-        const feelsLike = data.feels_like || '--';
-        const windDir = data.wind_dir || '';
-        const windScale = data.wind_scale ? `${data.wind_scale}级` : '';
-
-        let desc = `${weather} · ${temp}°C`;
-        if (feelsLike !== '--') desc += ` · 体感 ${feelsLike}°C`;
-        if (humidity !== '--') desc += ` · 湿度 ${humidity}%`;
-        if (windDir || windScale) desc += ` · ${windDir} ${windScale}`;
-
-        weatherTextEl.textContent = desc;
-        if (weatherIconUse) weatherIconUse.setAttribute('href', '/assets/icons-color.svg#icon-weather');
-
-      } catch (err) {
-        console.error('Weather fetch failed:', err);
-        weatherTextEl.textContent = '天气加载失败';
-        if (weatherIconUse) weatherIconUse.setAttribute('href', '/assets/icons-color.svg#icon-weather');
-      }
-    }
-
-    // === 认证 & 初始化 ===
-    (async () => {
-      try {
-        const res = await fetch('/home/check-auth');
-        if (res.status === 401) {
-          window.location.replace('/login.html');
-          return;
-        }
-
-        let data;
-        try {
-          data = await res.json();
-        } catch (e) {
-          data = {};
-        }
-
-        if (data.error && data.error.includes('Unauthorized')) {
-          window.location.replace('/login.html');
-          return;
-        }
-
-        // 隐藏遮罩，显示内容
-        document.getElementById('auth-guard').style.display = 'none';
-        document.getElementById('app-content').style.display = 'block';
-
-        // ✅ 启动温湿度轮询（立即 + 每30秒）
-        fetchAndRenderTemperature();
-        setInterval(fetchAndRenderTemperature, 30 * 1000);
-
-        // 启动天气轮询（立即 + 每5分钟）
-        fetchAndRenderWeather();
-        setInterval(fetchAndRenderWeather, 5 * 60 * 1000);
-
-        // 初始化时间 & 粒子动画
-        initApp();
-
-      } catch (err) {
-        window.location.replace('/login.html');
-      }
-    })();
-
-    // === 时间 & 粒子动画（保持不变）===
-    function initApp() {
-      // === 实时时间 ===
-      function updateTime() {
-        const now = new Date();
-        document.getElementById('time').textContent =
-          now.toLocaleTimeString('zh-CN', { hour12: false });
-      }
-      setInterval(updateTime, 1000);
-      updateTime();
-
-      // === 粒子动画（阳光尘埃）===
-      const canvas = document.getElementById('particles');
+  <script>
+    // === 粒子背景动画 ===
+    function initParticles() {
+      const canvas = document.getElementById('particles-canvas');
+      if (!canvas) return;
+      
       const ctx = canvas.getContext('2d');
-
-      function resizeCanvas() {
+      let particles = [];
+      let animationId;
+      
+      function resize() {
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight;
       }
-      resizeCanvas();
-      window.addEventListener('resize', resizeCanvas);
-
-      const particles = [];
-      const particleCount = Math.min(100, Math.floor((canvas.width * canvas.height) / 6000));
-
-      class Dust {
+      
+      resize();
+      window.addEventListener('resize', resize);
+      
+      class Particle {
         constructor() {
+          this.reset();
+        }
+        
+        reset() {
           this.x = Math.random() * canvas.width;
           this.y = Math.random() * canvas.height;
           this.size = Math.random() * 2 + 0.5;
-          this.speedY = Math.random() * 0.3 + 0.1;
-          this.opacity = Math.random() * 0.4 + 0.1;
-          this.tilt = (Math.random() - 0.5) * 0.4;
+          this.speedX = (Math.random() - 0.5) * 0.3;
+          this.speedY = (Math.random() - 0.5) * 0.3;
+          this.opacity = Math.random() * 0.5 + 0.2;
+          this.color = Math.random() > 0.5 ? '0, 210, 106' : '255, 215, 0';
         }
+        
         update() {
+          this.x += this.speedX;
           this.y += this.speedY;
-          this.x += this.tilt;
-          if (this.y > canvas.height || this.x < -10 || this.x > canvas.width + 10) {
+          
+          if (this.x < 0 || this.x > canvas.width || this.y < 0 || this.y > canvas.height) {
             this.reset();
           }
         }
-        reset() {
-          this.y = -10;
-          this.x = Math.random() * canvas.width;
-        }
+        
         draw() {
-          ctx.fillStyle = `rgba(255, 248, 230, ${this.opacity})`;
           ctx.beginPath();
           ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+          ctx.fillStyle = `rgba(${this.color}, ${this.opacity})`;
           ctx.fill();
         }
       }
-
+      
+      // 创建粒子
+      const particleCount = Math.min(80, Math.floor((canvas.width * canvas.height) / 15000));
       for (let i = 0; i < particleCount; i++) {
-        particles.push(new Dust());
+        particles.push(new Particle());
       }
-
+      
+      // 连线
+      function drawConnections() {
+        for (let i = 0; i < particles.length; i++) {
+          for (let j = i + 1; j < particles.length; j++) {
+            const dx = particles[i].x - particles[j].x;
+            const dy = particles[i].y - particles[j].y;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+            
+            if (distance < 120) {
+              ctx.beginPath();
+              ctx.strokeStyle = `rgba(0, 210, 106, ${0.1 * (1 - distance / 120)})`;
+              ctx.lineWidth = 0.5;
+              ctx.moveTo(particles[i].x, particles[i].y);
+              ctx.lineTo(particles[j].x, particles[j].y);
+              ctx.stroke();
+            }
+          }
+        }
+      }
+      
       function animate() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
+        
         particles.forEach(p => {
           p.update();
           p.draw();
         });
-        requestAnimationFrame(animate);
+        
+        drawConnections();
+        animationId = requestAnimationFrame(animate);
       }
+      
       animate();
+      
+      // 清理函数
+      return () => {
+        cancelAnimationFrame(animationId);
+        window.removeEventListener('resize', resize);
+      };
     }
+
+    // === 时间更新 ===
+    function updateTime() {
+      const now = new Date();
+      const timeStr = now.toLocaleTimeString('zh-CN', { hour12: false });
+      document.getElementById('time').textContent = timeStr;
+      
+      const dateStr = now.toLocaleDateString('zh-CN', { 
+        month: 'long', 
+        day: 'numeric', 
+        weekday: 'long' 
+      });
+      document.getElementById('date').textContent = dateStr;
+    }
+
+    // === 温湿度获取 ===
+    async function fetchTemperature() {
+      try {
+        const res = await fetch('/home/temperature');
+        if (!res.ok) throw new Error('Network error');
+        const data = await res.json();
+        
+        if (data.temperature != null && data.humidity != null) {
+          const temp = parseFloat(data.temperature).toFixed(1);
+          const hum = parseFloat(data.humidity).toFixed(1);
+          document.getElementById('temperature').textContent = `室温：${temp}°C · 湿度：${hum}%`;
+        }
+      } catch (err) {
+        console.error('Temperature fetch failed:', err);
+      }
+    }
+
+    // === 天气获取 ===
+    async function fetchWeather() {
+      try {
+        const res = await fetch('/home/weather');
+        if (!res.ok) throw new Error('Network error');
+        const data = await res.json();
+        
+        if (data.code === '200') {
+          const weather = data.weather || '未知';
+          const temp = data.temperature || '--';
+          document.getElementById('weather-text').textContent = `${weather} · ${temp}°C`;
+        }
+      } catch (err) {
+        console.error('Weather fetch failed:', err);
+      }
+    }
+
+    // === 认证检查 ===
+    async function checkAuth() {
+      try {
+        const res = await fetch('/home/check-auth');
+        if (res.status === 401) {
+          window.location.replace('/login.html');
+          return false;
+        }
+        return true;
+      } catch (err) {
+        window.location.replace('/login.html');
+        return false;
+      }
+    }
+
+    // === 初始化 ===
+    (async () => {
+      const isAuth = await checkAuth();
+      if (!isAuth) return;
+      
+      // 隐藏遮罩，显示内容
+      document.getElementById('auth-guard').style.display = 'none';
+      document.getElementById('app-content').style.display = 'block';
+      
+      // 初始化粒子
+      initParticles();
+      
+      // 时间更新
+      updateTime();
+      setInterval(updateTime, 1000);
+      
+      // 数据获取
+      fetchTemperature();
+      setInterval(fetchTemperature, 30 * 1000);
+      
+      fetchWeather();
+      setInterval(fetchWeather, 5 * 60 * 1000);
+    })();
   </script>
 </body>
 </html>

@@ -1,0 +1,201 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body {
+  height: 100%;
+}
+
+body {
+  overflow-x: hidden;
+  overflow-y: auto;
+  font-family: "PingFang SC", "Microsoft YaHei", "Segoe UI", sans-serif;
+  background: transparent;
+  color: var(--ui-text);
+  height: 100vh;
+  line-height: 1.4;
+}
+
+/* 背景图：从 /assets/ 目录加载 */
+.bg {
+  display: none;
+}
+
+/* 柔光遮罩层：提升文字可读性 */
+.overlay {
+  display: none;
+}
+
+/* 粒子动画画布 */
+#particles {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: -1;
+}
+
+/* 主容器：居中布局 */
+.container {
+  position: relative;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: min(980px, calc(100vw - 40px));
+  min-height: calc(100vh - 40px);
+  margin: 20px auto;
+  padding: 26px 22px;
+  text-align: center;
+}
+
+body.ui .container {
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+/* 时间显示 */
+.time {
+  font-size: 5.5rem;
+  font-weight: 500;
+  color: var(--ui-text);
+  margin-bottom: 15px;
+  text-shadow: 0 10px 28px rgba(15, 23, 42, 0.14);
+}
+
+/* 温度显示 */
+.temp {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  font-size: 2.8rem;
+  margin: 12px 0;
+  color: var(--ui-text-2);
+}
+
+/* 天气信息 */
+.weather {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  font-size: 2rem;
+  color: var(--ui-text-2);
+  margin-bottom: 40px;
+}
+
+/* 按钮网格容器 */
+.buttons {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 25px;
+  max-width: 650px;
+  width: 100%;
+}
+
+/* 功能按钮尺寸（样式由 ui.css 统一提供） */
+.buttons .btn {
+  padding: 24px 10px 24px 14px;
+  font-size: 1.9rem;
+}
+
+/* 响应式适配 */
+@media (max-width: 768px) {
+  .time {
+    font-size: 4rem;
+  }
+  .temp {
+    font-size: 2.2rem;
+  }
+  .weather {
+    font-size: 1.7rem;
+  }
+  .buttons .btn {
+    font-size: 1.5rem;
+    padding: 18px 5px;
+  }
+}
+
+@media (max-width: 520px) {
+  .container {
+    width: calc(100vw - 24px);
+    margin: 12px auto;
+    padding: 72px 12px 18px;
+    min-height: auto;
+    justify-content: flex-start;
+  }
+  .buttons {
+    grid-template-columns: 1fr;
+    max-width: 520px;
+    gap: 14px;
+  }
+  .time {
+    font-size: 3.2rem;
+  }
+  .temp {
+    font-size: 1.35rem;
+  }
+  .weather {
+    font-size: 1.15rem;
+    margin-bottom: 18px;
+  }
+  #app-content {
+    margin-top: 0;
+  }
+}
+
+@media (max-width: 380px) {
+  .time {
+    font-size: 2.8rem;
+  }
+  .buttons .btn {
+    font-size: 1.15rem;
+    padding: 14px 12px;
+  }
+}
+
+/* 平板及以上设备：3列布局（可选增强） */
+@media (min-width: 769px) {
+  .buttons {
+    grid-template-columns: repeat(3, 1fr);
+    max-width: 800px;
+  }
+}
+
+/* 认证保护样式 */
+#auth-guard {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background: #0a0a0a;
+  color: #eee;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 99999;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-size: 18px;
+}
+
+/* 初始隐藏真实内容 */
+#app-content { 
+  display: none; 
+  /* 整体上移一点 */
+  margin-top: -20px;
+}
+
+/* 天气图标样式 */
+.weather-icon {
+  display: inline-block;
+  font-size: 24px;
+  margin-right: 6px;
+  vertical-align: middle;
+}

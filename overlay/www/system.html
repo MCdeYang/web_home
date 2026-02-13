@@ -4,25 +4,160 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>系统数据</title>
-  <!-- 引入分离的 CSS -->
-  <link rel="stylesheet" href="/assets/ui.css">
-  <link rel="stylesheet" href="/assets/system.css">
-</head>
-<body class="ui">
-  <a href="/index.html" class="btn btn--ghost ui-home-btn" aria-label="返回主页"><svg class="ui-icon-color" aria-hidden="true"><use href="/assets/icons-color.svg#icon-home"/></svg><span>返回主页</span></a>
-  <div class="container ui-animate-in">
-    <h1><svg class="ui-icon-color" aria-hidden="true"><use href="/assets/icons-color.svg#icon-system"/></svg><span>系统实时数据</span></h1>
+  <link rel="stylesheet" href="/assets/galaxy-theme.css">
+  <style>
+    .system-page { padding: 2rem 0; }
+    
+    .page-header {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+    
+    .page-title {
+      font-size: 2rem;
+      font-weight: 700;
+      background: linear-gradient(90deg, var(--jade-light), var(--gold-primary));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
 
-    <div id="content">
+    .system-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1.5rem;
+      max-width: 1000px;
+      margin: 0 auto;
+    }
+
+    .system-card {
+      background: linear-gradient(180deg, rgba(22,27,34,0.8) 0%, rgba(22,27,34,0.5) 100%);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius-lg);
+      padding: 1.5rem;
+      text-align: center;
+      backdrop-filter: blur(12px);
+      transition: all 0.3s;
+    }
+
+    .system-card:hover {
+      transform: translateY(-4px);
+      border-color: var(--jade-primary);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.4), 0 0 20px var(--jade-glow-dim);
+    }
+
+    .system-icon {
+      width: 48px;
+      height: 48px;
+      margin: 0 auto 1rem;
+      fill: var(--jade-primary);
+      filter: drop-shadow(0 0 10px var(--jade-glow));
+    }
+
+    .system-label {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      margin-bottom: 0.5rem;
+    }
+
+    .system-value {
+      font-size: 1.75rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      font-family: var(--font-mono);
+    }
+
+    .system-value.small {
+      font-size: 1.25rem;
+    }
+
+    .progress-ring {
+      width: 120px;
+      height: 120px;
+      margin: 0 auto 1rem;
+      position: relative;
+    }
+
+    .progress-ring svg {
+      transform: rotate(-90deg);
+    }
+
+    .progress-ring-bg {
+      fill: none;
+      stroke: rgba(255,255,255,0.1);
+      stroke-width: 8;
+    }
+
+    .progress-ring-fill {
+      fill: none;
+      stroke: var(--jade-primary);
+      stroke-width: 8;
+      stroke-linecap: round;
+      transition: stroke-dashoffset 0.5s ease;
+      filter: drop-shadow(0 0 5px var(--jade-glow));
+    }
+
+    .progress-text {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    .last-update {
+      text-align: center;
+      margin-top: 2rem;
+      color: var(--text-muted);
+      font-size: 0.9rem;
+    }
+
+    .loading {
+      text-align: center;
+      padding: 3rem;
+      color: var(--text-muted);
+      grid-column: 1 / -1;
+    }
+
+    @media (max-width: 768px) {
+      .system-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+      
+      .page-title {
+        font-size: 1.5rem;
+      }
+      
+      .system-value {
+        font-size: 1.25rem;
+      }
+    }
+  </style>
+</head>
+<body class="galaxy">
+  <a href="/index.html" class="galaxy-btn galaxy-home-btn">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+      <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
+    </svg>
+    <span>返回主页</span>
+  </a>
+
+  <div class="galaxy-container system-page">
+    <div class="page-header">
+      <h1 class="page-title">系统实时数据</h1>
+    </div>
+
+    <div class="system-grid" id="content">
       <div class="loading">正在加载系统数据...</div>
     </div>
 
     <div id="last-update" class="last-update"></div>
-
   </div>
 
-  <!-- 🔒 登录状态检测（新增） -->
   <script>
+    // 认证检查
     (async () => {
       try {
         const res = await fetch('/home/check-auth');
@@ -30,16 +165,45 @@
           window.location.replace('/login.html');
           return;
         }
-        // 已认证：继续执行后续脚本
       } catch (err) {
         window.location.replace('/login.html');
         return;
       }
     })();
-  </script>
 
-  <!-- 原有数据加载逻辑（保持不变） -->
-  <script>
+    function createProgressRing(percentage, label, value) {
+      const radius = 52;
+      const circumference = 2 * Math.PI * radius;
+      const offset = circumference - (percentage / 100) * circumference;
+      
+      return `
+        <div class="system-card">
+          <div class="progress-ring">
+            <svg width="120" height="120">
+              <circle class="progress-ring-bg" cx="60" cy="60" r="${radius}"/>
+              <circle class="progress-ring-fill" cx="60" cy="60" r="${radius}" 
+                      stroke-dasharray="${circumference}" stroke-dashoffset="${offset}"/>
+            </svg>
+            <div class="progress-text">${percentage}%</div>
+          </div>
+          <div class="system-label">${label}</div>
+          <div class="system-value small">${value}</div>
+        </div>
+      `;
+    }
+
+    function createInfoCard(icon, label, value) {
+      return `
+        <div class="system-card">
+          <svg class="system-icon" viewBox="0 0 24 24">
+            <path d="${icon}"/>
+          </svg>
+          <div class="system-label">${label}</div>
+          <div class="system-value">${value}</div>
+        </div>
+      `;
+    }
+
     function fetchData() {
       const content = document.getElementById('content');
       const lastUpdate = document.getElementById('last-update');
@@ -52,37 +216,73 @@
         .then(data => {
           let html = '';
 
+          // CPU 负载
           if (data.load_percent !== undefined) {
-            html += `<div class="row"><span class="label">CPU 负载</span><span class="value">${data.load_percent.toFixed(1)}%</span></div>`;
-          }
-          if (data.uptime_minutes !== undefined) {
-            html += `<div class="row"><span class="label">运行时间</span><span class="value">${data.uptime_minutes} 分钟</span></div>`;
-          }
-          if (data.memory_percent !== undefined) {
-            html += `<div class="row"><span class="label">内存使用</span><span class="value">${data.memory_used_mb} MB / ${data.memory_total_mb} MB (${data.memory_percent}%)</span></div>`;
-          }
-          if (data.ip) {
-            html += `<div class="row"><span class="label">IP 地址</span><span class="value">${data.ip}</span></div>`;
-          }
-          if (data.cpu_temp_c !== undefined) {
-            html += `<div class="row"><span class="label">CPU 温度</span><span class="value">${data.cpu_temp_c}°C</span></div>`;
-          }
-          if (data.disk_percent !== undefined) {
-            html += `<div class="row"><span class="label">磁盘使用</span><span class="value">${data.disk_used_gb} GB / ${data.disk_total_gb} GB (${data.disk_percent}%)</span></div>`;
+            html += createProgressRing(
+              Math.round(data.load_percent),
+              'CPU 负载',
+              `${data.load_percent.toFixed(1)}%`
+            );
           }
 
-          content.innerHTML = html || '<div class="error">暂无数据</div>';
+          // 内存使用
+          if (data.memory_percent !== undefined) {
+            html += createProgressRing(
+              Math.round(data.memory_percent),
+              '内存使用',
+              `${data.memory_used_mb} / ${data.memory_total_mb} MB`
+            );
+          }
+
+          // 磁盘使用
+          if (data.disk_percent !== undefined) {
+            html += createProgressRing(
+              Math.round(data.disk_percent),
+              '磁盘使用',
+              `${data.disk_used_gb} / ${data.disk_total_gb} GB`
+            );
+          }
+
+          // 运行时间
+          if (data.uptime_minutes !== undefined) {
+            const hours = Math.floor(data.uptime_minutes / 60);
+            const mins = data.uptime_minutes % 60;
+            html += createInfoCard(
+              'M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z',
+              '运行时间',
+              `${hours}小时${mins}分`
+            );
+          }
+
+          // IP 地址
+          if (data.ip) {
+            html += createInfoCard(
+              'M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z',
+              'IP 地址',
+              data.ip
+            );
+          }
+
+          // CPU 温度
+          if (data.cpu_temp_c !== undefined) {
+            html += createInfoCard(
+              'M15 13V5c0-1.66-1.34-3-3-3S9 3.34 9 5v8c-1.21.91-2 2.37-2 4 0 2.76 2.24 5 5 5s5-2.24 5-5c0-1.63-.79-3.09-2-4zm-4-2V5c0-.55.45-1 1-1s1 .45 1 1v1h-1v1h1v2h-1v1h1v1h-2z',
+              'CPU 温度',
+              `${data.cpu_temp_c}°C`
+            );
+          }
+
+          content.innerHTML = html || '<div class="loading">暂无数据</div>';
           lastUpdate.textContent = '最后更新：' + new Date().toLocaleTimeString();
         })
         .catch(err => {
           console.error('获取数据失败:', err);
-          content.innerHTML = `<div class="error">❌ 加载失败：${err.message}</div>`;
-          lastUpdate.textContent = '';
+          content.innerHTML = `<div class="loading" style="color: #ff6464;">加载失败：${err.message}</div>`;
         });
     }
 
     fetchData();
-    setInterval(fetchData, 10000); // 每10秒刷新
+    setInterval(fetchData, 10000);
   </script>
 </body>
 </html>

@@ -3,23 +3,229 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>我的私人网盘</title>
-  <link rel="stylesheet" href="/assets/ui.css">
-  <link rel="stylesheet" href="/assets/disk.css">
+  <title>私人网盘</title>
+  <link rel="stylesheet" href="/assets/galaxy-theme.css">
+  <style>
+    .disk-page { padding: 2rem 0; }
+    
+    .page-header {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+    
+    .page-title {
+      font-size: 2rem;
+      font-weight: 700;
+      background: linear-gradient(90deg, var(--jade-light), var(--gold-primary));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .path-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 1rem;
+      padding: 1rem 1.5rem;
+      background: var(--glass-bg);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius-lg);
+      margin-bottom: 1.5rem;
+      backdrop-filter: blur(12px);
+    }
+
+    .path-display {
+      font-family: var(--font-mono);
+      color: var(--jade-light);
+      font-size: 0.95rem;
+    }
+
+    .path-actions {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    #file-upload { display: none; }
+
+    .file-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+      gap: 1rem;
+    }
+
+    .file-item {
+      background: linear-gradient(180deg, rgba(22,27,34,0.7) 0%, rgba(22,27,34,0.4) 100%);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius-md);
+      padding: 1.25rem 1rem;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.3s var(--ease-out);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .file-item:hover {
+      transform: translateY(-4px);
+      border-color: var(--jade-primary);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.4), 0 0 20px var(--jade-glow-dim);
+    }
+
+    .file-item.dir {
+      border-color: rgba(255, 215, 0, 0.3);
+    }
+
+    .file-item.dir:hover {
+      border-color: var(--gold-primary);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.4), 0 0 20px var(--gold-glow-dim);
+    }
+
+    .file-icon {
+      font-size: 2.5rem;
+      margin-bottom: 0.75rem;
+      display: block;
+      transition: transform 0.3s;
+    }
+
+    .file-item:hover .file-icon {
+      transform: scale(1.1);
+    }
+
+    .file-name {
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      word-break: break-all;
+      line-height: 1.3;
+      margin-bottom: 0.5rem;
+    }
+
+    .file-meta {
+      font-size: 0.75rem;
+      color: var(--text-dim);
+    }
+
+    .file-actions {
+      display: flex;
+      justify-content: center;
+      gap: 0.25rem;
+      margin-top: 0.5rem;
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+
+    .file-item:hover .file-actions {
+      opacity: 1;
+    }
+
+    .file-action-btn {
+      padding: 0.25rem 0.5rem;
+      font-size: 0.75rem;
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius-sm);
+      background: transparent;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .file-action-btn:hover {
+      border-color: var(--jade-primary);
+      color: var(--jade-light);
+      background: rgba(0, 210, 106, 0.1);
+    }
+
+    .file-action-btn.delete:hover {
+      border-color: #ff6464;
+      color: #ff6464;
+      background: rgba(255, 100, 100, 0.1);
+    }
+
+    .toast {
+      position: fixed;
+      bottom: 2rem;
+      left: 50%;
+      transform: translateX(-50%) translateY(100px);
+      padding: 1rem 2rem;
+      background: var(--glass-bg);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius-pill);
+      color: var(--text-primary);
+      font-size: 0.95rem;
+      opacity: 0;
+      transition: all 0.3s var(--ease-out);
+      z-index: 1000;
+      backdrop-filter: blur(12px);
+    }
+
+    .toast.show {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+    }
+
+    .toast.error {
+      border-color: rgba(255, 100, 100, 0.5);
+      box-shadow: 0 0 20px rgba(255, 100, 100, 0.2);
+    }
+
+    @media (max-width: 768px) {
+      .file-grid {
+        grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+      }
+      
+      .path-bar {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      
+      .page-title {
+        font-size: 1.5rem;
+      }
+    }
+  </style>
 </head>
-<body class="ui">
-  <button class="btn btn--ghost ui-home-btn" id="home" aria-label="返回主页"><svg class="ui-icon-color" aria-hidden="true"><use href="/assets/icons-color.svg#icon-home"/></svg><span>返回主页</span></button>
-  <div class="header ui-animate-in">
-    <div class="path-display" id="current-path">/</div>
-    <div class="controls">
-      <button class="refresh-btn" id="refresh"><svg class="ui-icon-color" aria-hidden="true"><use href="/assets/icons-color.svg#icon-refresh"/></svg><span>刷新</span></button>
-      <button class="upload-btn" id="upload-trigger"><svg class="ui-icon-color" aria-hidden="true"><use href="/assets/icons-color.svg#icon-upload"/></svg><span>上传文件</span></button>
-      <input type="file" id="file-upload" multiple />
-      <button id="new-folder"><svg class="ui-icon-color" aria-hidden="true"><use href="/assets/icons-color.svg#icon-disk"/></svg><span>新建文件夹</span></button>
+<body class="galaxy">
+  <a href="/index.html" class="galaxy-btn galaxy-home-btn">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+      <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
+    </svg>
+    <span>返回主页</span>
+  </a>
+
+  <div class="galaxy-container disk-page">
+    <div class="page-header">
+      <h1 class="page-title">私人网盘</h1>
     </div>
+
+    <div class="path-bar">
+      <div class="path-display" id="current-path">/</div>
+      <div class="path-actions">
+        <button class="galaxy-btn" id="refresh">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/>
+          </svg>
+          刷新
+        </button>
+        <button class="galaxy-btn galaxy-btn-primary" id="upload-trigger">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M9 16h6v-6h4l-7-7-7 7h4zm-4 2h14v2H5z"/>
+          </svg>
+          上传
+        </button>
+        <input type="file" id="file-upload" multiple />
+        <button class="galaxy-btn galaxy-btn-gold" id="new-folder">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M20 6h-8l-2-2H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm0 12H4V8h16v10z"/>
+          </svg>
+          新建文件夹
+        </button>
+      </div>
+    </div>
+
+    <div class="file-grid" id="file-list"></div>
   </div>
 
-  <div class="file-list" id="file-list"></div>
   <div class="toast" id="toast"></div>
 
   <script>
@@ -28,7 +234,7 @@
     function showToast(message, isError = false) {
       const toast = document.getElementById('toast');
       toast.textContent = message;
-      toast.style.backgroundColor = isError ? 'rgba(255,0,0,0.85)' : 'rgba(0,0,0,0.85)';
+      toast.className = 'toast' + (isError ? ' error' : '');
       toast.classList.add('show');
 
       setTimeout(() => {
@@ -36,10 +242,9 @@
       }, 3000);
     }
 
-    // ===== 修复后的重命名功能 =====
     async function renameItem(oldName) {
       const newName = prompt('请输入新名称：', oldName);
-      if (!newName) return; // 用户点击取消
+      if (!newName) return;
 
       const trimmed = newName.trim();
       if (trimmed === '') {
@@ -69,12 +274,11 @@
         }
 
         showToast('重命名成功');
-        loadCurrentDir(); // 刷新当前目录
+        loadCurrentDir();
       } catch (err) {
         showToast('错误: ' + err.message, true);
       }
     }
-    // ===== 结束 =====
 
     function isImageFile(name) {
       const ext = name.split('.').pop().toLowerCase();
@@ -83,9 +287,7 @@
 
     function isPreviewableInline(name) {
       const ext = name.split('.').pop().toLowerCase();
-      return [
-        'pdf', 'txt', 'mp4', 'webm', 'ogg', 'mp3', 'wav', 'flac'
-      ].includes(ext);
+      return ['pdf', 'txt', 'mp4', 'webm', 'ogg', 'mp3', 'wav', 'flac'].includes(ext);
     }
 
     function getFileIcon(name, isDir) {
@@ -93,39 +295,18 @@
       
       const ext = name.split('.').pop().toLowerCase();
       const iconMap = {
-        'pdf': '📘', 'doc': '📘', 'docx': '📘',
+        'pdf': '📄', 'doc': '📝', 'docx': '📝',
         'xls': '📊', 'xlsx': '📊', 'csv': '📊',
         'ppt': '📽️', 'pptx': '📽️',
-        'txt': '📄', 'md': '📄', 'log': '📄', 'rtf': '📄',
-        'js': '📜', 'ts': '📜', 'jsx': '⚛️', 'tsx': '⚛️',
-        'py': '🐍', 'java': '☕', 'c': '⚙️', 'cpp': '⚙️', 'h': 'HeaderCode',
-        'html': '🌐', 'htm': '🌐', 'css': '🎨', 'scss': '🎨',
-        'json': '🔧', 'xml': '📐', 'yaml': '📋', 'yml': '📋',
+        'txt': '📃', 'md': '📃', 'log': '📃',
+        'js': '📜', 'ts': '📜', 'py': '🐍', 'java': '☕',
+        'html': '🌐', 'htm': '🌐', 'css': '🎨',
+        'json': '⚙️', 'xml': '📐', 'yaml': '📋',
         'jpg': '🖼️', 'jpeg': '🖼️', 'png': '🖼️', 'gif': '🎬',
-        'bmp': '🖼️', 'svg': '📐', 'webp': '🖼️', 'ico': '🖼️',
-        'mp3': '🎵', 'wav': '🎵', 'ogg': '🎵', 'flac': '🎵',
-        'mp4': '🎥', 'avi': '🎥', 'mkv': '🎥', 'mov': '🎥', 'wmv': '🎥',
-        'zip': '📦', 'rar': '📦', '7z': '📦', 'tar': '📦', 'gz': '📦',
-        'exe': '⚙️', 'msi': '⚙️', 'bat': '💻', 'sh': '🐧', 'app': '🍎',
-        'iso': '💿', 'dmg': '🍎', 'apk': '📱'
+        'mp3': '🎵', 'mp4': '🎬', 'zip': '📦', 'rar': '📦'
       };
       
       return iconMap[ext] || '📄';
-    }
-
-    async function checkAuth() {
-      try {
-        const res = await fetch('/home/check-auth', { credentials: 'include' });
-        if (!res.ok) {
-          window.location.href = '/login.html';
-          return false;
-        }
-        return true;
-      } catch (err) {
-        console.error('Auth check failed:', err);
-        window.location.href = '/login.html';
-        return false;
-      }
     }
 
     async function uploadFile(file, targetPath) {
@@ -190,9 +371,7 @@
       const fullPath = currentPath === '/' ? `/${name}` : `${currentPath}/${name}`;
       const url = `/home/disk/download?path=${encodeURIComponent(fullPath)}`;
 
-      if (isImageFile(name)) {
-        previewImage(url, name);
-      } else if (isPreviewableInline(name)) {
+      if (isImageFile(name) || isPreviewableInline(name)) {
         window.open(url, '_blank');
       } else {
         const a = document.createElement('a');
@@ -202,40 +381,6 @@
         a.click();
         document.body.removeChild(a);
       }
-    }
-
-    function previewImage(imageUrl, filename) {
-      const modal = document.createElement('div');
-      modal.className = 'preview-modal';
-
-      const container = document.createElement('div');
-      container.className = 'preview-container';
-
-      const img = document.createElement('img');
-      img.src = imageUrl;
-      img.alt = filename;
-
-      const caption = document.createElement('div');
-      caption.className = 'preview-caption';
-      caption.textContent = filename;
-
-      img.onload = () => img.classList.add('loaded');
-      img.onerror = () => {
-        img.src = '';
-        img.alt = '❌ 图片加载失败';
-        img.style.color = 'white';
-        img.style.fontSize = '18px';
-        img.classList.add('loaded');
-      };
-
-      container.appendChild(img);
-      container.appendChild(caption);
-      modal.appendChild(container);
-
-      modal.onclick = () => document.body.removeChild(modal);
-      img.onclick = (e) => e.stopPropagation();
-
-      document.body.appendChild(modal);
     }
 
     async function loadDir(path) {
@@ -272,10 +417,9 @@
         const upItem = document.createElement('div');
         upItem.className = 'file-item dir';
         upItem.innerHTML = `
-          <div class="file-icon">📁</div>
-          <div class="file-info">
-            <div class="file-name">..</div>
-          </div>
+          <span class="file-icon">📂</span>
+          <div class="file-name">..</div>
+          <div class="file-meta">返回上级</div>
         `;
         upItem.onclick = () => {
           const parts = currentPath.split('/').filter(p => p);
@@ -286,76 +430,45 @@
         list.appendChild(upItem);
       }
 
-      files.forEach((file, index) => {
+      files.forEach((file) => {
         const item = document.createElement('div');
         item.className = `file-item ${file.is_dir ? 'dir' : ''}`;
-        item.style.setProperty('--index', index);
 
         const icon = getFileIcon(file.name, file.is_dir);
-        const isImage = isImageFile(file.name);
-        const isPreviewable = isPreviewableInline(file.name);
-        const actionText = (isImage || isPreviewable) ? '预览' : '下载';
-
-        // ===== 修改：增加重命名按钮 =====
-        let actionBtn = '';
-
-        if (!file.is_dir) {
-          actionBtn = `<button class="action-btn" onclick="event.stopPropagation();openFile('${file.name}')">${actionText}</button>`;
-        }
-
-        // 所有项都支持重命名
-        actionBtn += '<button class="action-btn rename-btn">重命名</button>';
-        actionBtn += '<button class="action-btn delete-btn">删除</button>';
-        // ===== 结束修改 =====
 
         item.innerHTML = `
-          <div class="file-icon">${icon}</div>
-          <div class="file-info">
-            <div class="file-name">${file.name}</div>
-            <div class="file-meta">
-              ${file.is_dir ? '文件夹' : formatBytes(file.size)}
-              • ${formatDate(file.mtime)}
-            </div>
+          <span class="file-icon">${icon}</span>
+          <div class="file-name">${file.name}</div>
+          <div class="file-meta">${file.is_dir ? '文件夹' : formatBytes(file.size)} · ${formatDate(file.mtime)}</div>
+          <div class="file-actions">
+            ${!file.is_dir ? `<button class="file-action-btn" onclick="event.stopPropagation();openFile('${file.name}')">打开</button>` : ''}
+            <button class="file-action-btn" onclick="event.stopPropagation();renameItem('${file.name.replace(/'/g, "\\'")}')">重命名</button>
+            <button class="file-action-btn delete" onclick="event.stopPropagation();deleteFile('${file.name.replace(/'/g, "\\'")}')">删除</button>
           </div>
-          <div>${file.is_dir ? '<button class="action-btn delete-btn">删除</button>' : actionBtn}</div>
         `;
 
         if (file.is_dir) {
           item.onclick = () => {
-            currentPath = currentPath === '/' 
-              ? `/${file.name}` 
-              : `${currentPath}/${file.name}`;
+            currentPath = currentPath === '/' ? `/${file.name}` : `${currentPath}/${file.name}`;
             loadCurrentDir();
           };
         } else {
           item.onclick = () => openFile(file.name);
         }
 
-        // ===== 新增：绑定重命名事件 =====
-        const renameBtn = item.querySelector('.rename-btn');
-        if (renameBtn) {
-          renameBtn.onclick = (e) => {
-            e.stopPropagation();
-            renameItem(file.name);
-          };
-        }
-        // ===== 结束新增 =====
-
-        item.querySelector('.delete-btn').onclick = async (e) => {
-          e.stopPropagation();
-          if (confirm(`确定删除 "${file.name}"？`)) {
-            try {
-              await deleteItem(file.name);
-              showToast('已删除');
-              loadCurrentDir();
-            } catch (err) {
-              showToast('删除失败: ' + err.message, true);
-            }
-          }
-        };
-
         list.appendChild(item);
       });
+    }
+
+    async function deleteFile(name) {
+      if (!confirm(`确定删除 "${name}" 吗？`)) return;
+      try {
+        await deleteItem(name);
+        showToast('已删除');
+        loadCurrentDir();
+      } catch (err) {
+        showToast('删除失败: ' + err.message, true);
+      }
     }
 
     async function loadCurrentDir() {
@@ -368,16 +481,8 @@
       }
     }
 
-    document.addEventListener('DOMContentLoaded', async () => {
-      if (!await checkAuth()) return;
-
-      document.getElementById('home').onclick = () => {
-        window.location.href = '/index.html';
-      };
-
-      document.getElementById('refresh').onclick = () => {
-        loadCurrentDir();
-      };
+    document.addEventListener('DOMContentLoaded', () => {
+      document.getElementById('refresh').onclick = () => loadCurrentDir();
 
       document.getElementById('upload-trigger').onclick = () => {
         document.getElementById('file-upload').click();
@@ -417,6 +522,7 @@
 
     window.openFile = openFile;
     window.renameItem = renameItem;
+    window.deleteFile = deleteFile;
   </script>
 </body>
 </html>

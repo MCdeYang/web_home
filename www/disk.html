@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>我的私人网盘</title>
+  <link rel="stylesheet" href="/assets/ui.css">
+  <link rel="stylesheet" href="/assets/disk.css">
+</head>
+<body class="ui">
+  <button class="btn btn--ghost ui-home-btn" id="home" aria-label="返回主页"><svg class="ui-icon-color" aria-hidden="true"><use href="/assets/icons-color.svg#icon-home"/></svg><span>返回主页</span></button>
+  <div class="header ui-animate-in">
+    <div class="path-display" id="current-path">/</div>
+    <div class="controls">
+      <button class="refresh-btn" id="refresh"><svg class="ui-icon-color" aria-hidden="true"><use href="/assets/icons-color.svg#icon-refresh"/></svg><span>刷新</span></button>
+      <button class="upload-btn" id="upload-trigger"><svg class="ui-icon-color" aria-hidden="true"><use href="/assets/icons-color.svg#icon-upload"/></svg><span>上传文件</span></button>
+      <input type="file" id="file-upload" multiple />
+      <button id="new-folder"><svg class="ui-icon-color" aria-hidden="true"><use href="/assets/icons-color.svg#icon-disk"/></svg><span>新建文件夹</span></button>
+    </div>
+  </div>
+
+  <div class="file-list" id="file-list"></div>
+  <div class="toast" id="toast"></div>
+
+  <script>
+    let currentPath = '/';
+
+    function showToast(message, isError = false) {
+      const toast = document.getElementById('toast');
+      toast.textContent = message;
+      toast.style.backgroundColor = isError ? 'rgba(255,0,0,0.85)' : 'rgba(0,0,0,0.85)';
+      toast.classList.add('show');
+
+      setTimeout(() => {
+        toast.classList.remove('show');
+      }, 3000);
+    }
+
+    // ===== 修复后的重命名功能 =====
+    async function renameItem(oldName) {
+      const newName = prompt('请输入新名称：', oldName);
+      if (!newName) return; // 用户点击取消
+
+      const trimmed = newName.trim();
+      if (trimmed === '') {
+        showToast('名称不能为空', true);
+        return;
+      }
+      if (trimmed === oldName) {
+        showToast('新名称不能与原名称相同', true);
+        return;
+      }
+
+      try {
+        const res = await fetch('/home/disk/rename', {
+          method: 'POST',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            path: currentPath,
+            old_name: oldName,
+            new_name: trimmed
+          })
+        });
+
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}));
+          throw new Error(err.message || '重命名失败');
+        }
+
+        showToast('重命名成功');
+        loadCurrentDir(); // 刷新当前目录
+      } catch (err) {
+        showToast('错误: ' + err.message, true);
+      }
+    }
+    // ===== 结束 =====
+
+    function isImageFile(name) {
+      const ext = name.split('.').pop().toLowerCase();
+      return ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp', 'svg'].includes(ext);
+    }
+
+    function isPreviewableInline(name) {
+      const ext = name.split('.').pop().toLowerCase();
+      return [
+        'pdf', 'txt', 'mp4', 'webm', 'ogg', 'mp3', 'wav', 'flac'
+      ].includes(ext);
+    }
+
+    function getFileIcon(name, isDir) {
+      if (isDir) return '📁';
+      
+      const ext = name.split('.').pop().toLowerCase();
+      const iconMap = {
+        'pdf': '📘', 'doc': '📘', 'docx': '📘',
+        'xls': '📊', 'xlsx': '📊', 'csv': '📊',
+        'ppt': '📽️', 'pptx': '📽️',
+        'txt': '📄', 'md': '📄', 'log': '📄', 'rtf': '📄',
+        'js': '📜', 'ts': '📜', 'jsx': '⚛️', 'tsx': '⚛️',
+        'py': '🐍', 'java': '☕', 'c': '⚙️', 'cpp': '⚙️', 'h': 'HeaderCode',
+        'html': '🌐', 'htm': '🌐', 'css': '🎨', 'scss': '🎨',
+        'json': '🔧', 'xml': '📐', 'yaml': '📋', 'yml': '📋',
+        'jpg': '🖼️', 'jpeg': '🖼️', 'png': '🖼️', 'gif': '🎬',
+        'bmp': '🖼️', 'svg': '📐', 'webp': '🖼️', 'ico': '🖼️',
+        'mp3': '🎵', 'wav': '🎵', 'ogg': '🎵', 'flac': '🎵',
+        'mp4': '🎥', 'avi': '🎥', 'mkv': '🎥', 'mov': '🎥', 'wmv': '🎥',
+        'zip': '📦', 'rar': '📦', '7z': '📦', 'tar': '📦', 'gz': '📦',
+        'exe': '⚙️', 'msi': '⚙️', 'bat': '💻', 'sh': '🐧', 'app': '🍎',
+        'iso': '💿', 'dmg': '🍎', 'apk': '📱'
+      };
+      
+      return iconMap[ext] || '📄';
+    }
+
+    async function checkAuth() {
+      try {
+        const res = await fetch('/home/check-auth', { credentials: 'include' });
+        if (!res.ok) {
+          window.location.href = '/login.html';
+          return false;
+        }
+        return true;
+      } catch (err) {
+        console.error('Auth check failed:', err);
+        window.location.href = '/login.html';
+        return false;
+      }
+    }
+
+    async function uploadFile(file, targetPath) {
+      if (targetPath === '') targetPath = '/';
+      if (!targetPath.startsWith('/')) targetPath = '/' + targetPath;
+
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const url = `/home/disk/upload?path=${encodeURIComponent(targetPath)}`;
+      const res = await fetch(url, {
+        method: 'POST',
+        credentials: 'include',
+        body: formData
+      });
+
+      if (!res.ok) {
+        let errMsg = `HTTP ${res.status}`;
+        try {
+          const json = await res.json();
+          errMsg += ': ' + (json.message || json.error || 'Upload failed');
+        } catch (e) {
+          const text = await res.text().catch(() => '');
+          if (text) errMsg += ': ' + text.substring(0, 100);
+        }
+        throw new Error(errMsg);
+      }
+    }
+
+    async function createFolder(name) {
+      const params = new URLSearchParams();
+      params.append('name', name.trim());
+      if (currentPath !== '/') {
+        const relPath = currentPath.startsWith('/') ? currentPath.substring(1) : currentPath;
+        params.append('path', relPath);
+      }
+
+      const res = await fetch('/home/disk/mkdir', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: params.toString()
+      });
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.message || '创建失败');
+      }
+    }
+
+    async function deleteItem(name) {
+      const fullPath = currentPath === '/' ? `/${name}` : `${currentPath}/${name}`;
+      const url = `/home/disk/delete?path=${encodeURIComponent(fullPath)}`;
+      const res = await fetch(url, {
+        method: 'DELETE',
+        credentials: 'include'
+      });
+      if (!res.ok) throw new Error('删除失败');
+    }
+
+    function openFile(name) {
+      const fullPath = currentPath === '/' ? `/${name}` : `${currentPath}/${name}`;
+      const url = `/home/disk/download?path=${encodeURIComponent(fullPath)}`;
+
+      if (isImageFile(name)) {
+        previewImage(url, name);
+      } else if (isPreviewableInline(name)) {
+        window.open(url, '_blank');
+      } else {
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = name;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+      }
+    }
+
+    function previewImage(imageUrl, filename) {
+      const modal = document.createElement('div');
+      modal.className = 'preview-modal';
+
+      const container = document.createElement('div');
+      container.className = 'preview-container';
+
+      const img = document.createElement('img');
+      img.src = imageUrl;
+      img.alt = filename;
+
+      const caption = document.createElement('div');
+      caption.className = 'preview-caption';
+      caption.textContent = filename;
+
+      img.onload = () => img.classList.add('loaded');
+      img.onerror = () => {
+        img.src = '';
+        img.alt = '❌ 图片加载失败';
+        img.style.color = 'white';
+        img.style.fontSize = '18px';
+        img.classList.add('loaded');
+      };
+
+      container.appendChild(img);
+      container.appendChild(caption);
+      modal.appendChild(container);
+
+      modal.onclick = () => document.body.removeChild(modal);
+      img.onclick = (e) => e.stopPropagation();
+
+      document.body.appendChild(modal);
+    }
+
+    async function loadDir(path) {
+      const url = `/home/disk/list?path=${encodeURIComponent(path)}`;
+      const res = await fetch(url, { credentials: 'include' });
+      if (!res.ok) throw new Error('加载目录失败');
+      const data = await res.json();
+      return data.files || [];
+    }
+
+    function formatBytes(bytes) {
+      if (bytes === 0) return '0 B';
+      const k = 1024;
+      const sizes = ['B', 'KB', 'MB', 'GB'];
+      const i = Math.floor(Math.log(bytes) / Math.log(k));
+      return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    }
+
+    function formatDate(timestamp) {
+      const date = new Date(timestamp * 1000);
+      const now = new Date();
+      const diff = now - date;
+      if (diff < 24 * 60 * 60 * 1000) {
+        return date.toLocaleTimeString('zh-CN');
+      }
+      return date.toLocaleDateString('zh-CN');
+    }
+
+    async function renderFiles(files) {
+      const list = document.getElementById('file-list');
+      list.innerHTML = '';
+
+      if (currentPath !== '/') {
+        const upItem = document.createElement('div');
+        upItem.className = 'file-item dir';
+        upItem.innerHTML = `
+          <div class="file-icon">📁</div>
+          <div class="file-info">
+            <div class="file-name">..</div>
+          </div>
+        `;
+        upItem.onclick = () => {
+          const parts = currentPath.split('/').filter(p => p);
+          parts.pop();
+          currentPath = parts.length ? '/' + parts.join('/') : '/';
+          loadCurrentDir();
+        };
+        list.appendChild(upItem);
+      }
+
+      files.forEach((file, index) => {
+        const item = document.createElement('div');
+        item.className = `file-item ${file.is_dir ? 'dir' : ''}`;
+        item.style.setProperty('--index', index);
+
+        const icon = getFileIcon(file.name, file.is_dir);
+        const isImage = isImageFile(file.name);
+        const isPreviewable = isPreviewableInline(file.name);
+        const actionText = (isImage || isPreviewable) ? '预览' : '下载';
+
+        // ===== 修改：增加重命名按钮 =====
+        let actionBtn = '';
+
+        if (!file.is_dir) {
+          actionBtn = `<button class="action-btn" onclick="event.stopPropagation();openFile('${file.name}')">${actionText}</button>`;
+        }
+
+        // 所有项都支持重命名
+        actionBtn += '<button class="action-btn rename-btn">重命名</button>';
+        actionBtn += '<button class="action-btn delete-btn">删除</button>';
+        // ===== 结束修改 =====
+
+        item.innerHTML = `
+          <div class="file-icon">${icon}</div>
+          <div class="file-info">
+            <div class="file-name">${file.name}</div>
+            <div class="file-meta">
+              ${file.is_dir ? '文件夹' : formatBytes(file.size)}
+              • ${formatDate(file.mtime)}
+            </div>
+          </div>
+          <div>${file.is_dir ? '<button class="action-btn delete-btn">删除</button>' : actionBtn}</div>
+        `;
+
+        if (file.is_dir) {
+          item.onclick = () => {
+            currentPath = currentPath === '/' 
+              ? `/${file.name}` 
+              : `${currentPath}/${file.name}`;
+            loadCurrentDir();
+          };
+        } else {
+          item.onclick = () => openFile(file.name);
+        }
+
+        // ===== 新增：绑定重命名事件 =====
+        const renameBtn = item.querySelector('.rename-btn');
+        if (renameBtn) {
+          renameBtn.onclick = (e) => {
+            e.stopPropagation();
+            renameItem(file.name);
+          };
+        }
+        // ===== 结束新增 =====
+
+        item.querySelector('.delete-btn').onclick = async (e) => {
+          e.stopPropagation();
+          if (confirm(`确定删除 "${file.name}"？`)) {
+            try {
+              await deleteItem(file.name);
+              showToast('已删除');
+              loadCurrentDir();
+            } catch (err) {
+              showToast('删除失败: ' + err.message, true);
+            }
+          }
+        };
+
+        list.appendChild(item);
+      });
+    }
+
+    async function loadCurrentDir() {
+      document.getElementById('current-path').textContent = currentPath;
+      try {
+        const files = await loadDir(currentPath);
+        renderFiles(files);
+      } catch (err) {
+        showToast('加载失败: ' + err.message, true);
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      if (!await checkAuth()) return;
+
+      document.getElementById('home').onclick = () => {
+        window.location.href = '/index.html';
+      };
+
+      document.getElementById('refresh').onclick = () => {
+        loadCurrentDir();
+      };
+
+      document.getElementById('upload-trigger').onclick = () => {
+        document.getElementById('file-upload').click();
+      };
+
+      document.getElementById('file-upload').addEventListener('change', async (e) => {
+        const files = e.target.files;
+        if (!files.length) return;
+
+        for (let file of files) {
+          try {
+            await uploadFile(file, currentPath);
+          } catch (err) {
+            showToast(`上传 "${file.name}" 失败: ${err.message}`, true);
+            return;
+          }
+        }
+        showToast('上传完成');
+        loadCurrentDir();
+        e.target.value = '';
+      });
+
+      document.getElementById('new-folder').onclick = async () => {
+        const name = prompt('请输入文件夹名称：');
+        if (!name || name.trim() === '') return;
+        try {
+          await createFolder(name);
+          showToast('文件夹创建成功');
+          loadCurrentDir();
+        } catch (err) {
+          showToast('创建失败: ' + err.message, true);
+        }
+      };
+
+      loadCurrentDir();
+    });
+
+    window.openFile = openFile;
+    window.renameItem = renameItem;
+  </script>
+</body>
+</html>

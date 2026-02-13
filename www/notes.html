@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>家庭备忘录</title>
+  <link rel="stylesheet" href="/assets/ui.css" />
+  <link rel="stylesheet" href="/assets/notes.css" />
+</head>
+<body class="ui">
+  <a href="/index.html" class="btn btn--ghost ui-home-btn" aria-label="返回主页"><svg class="ui-icon-color" aria-hidden="true"><use href="/assets/icons-color.svg#icon-home"/></svg><span>返回主页</span></a>
+  <div class="header">
+    <h1>家庭备忘录</h1>
+  </div>
+
+  <main class="container ui-animate-in">
+    <!-- 成员管理区 -->
+    <section class="card">
+      <h2>家庭成员</h2>
+      <div id="members-list"></div>
+      <button id="add-member-btn" class="btn-primary">+ 添加成员</button>
+    </section>
+
+    <!-- 添加任务区 -->
+    <section class="card">
+      <h2>创建新任务</h2>
+      <form id="task-form">
+        <label>
+          目标成员:
+          <select id="target-member" required></select>
+        </label>
+        <label>
+          事务内容:
+          <input type="text" id="task-title" placeholder="例如：买牛奶" required />
+        </label>
+        <label>
+          提醒时间:
+          <input type="datetime-local" id="task-due" required />
+        </label>
+        <button type="submit" class="btn-success">添加任务</button>
+      </form>
+    </section>
+
+    <!-- 我的任务 -->
+    <section class="card">
+      <h2>待办事务</h2>
+      <div id="my-tasks-list">
+        <p>加载中...</p>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    // ======================
+    // 工具函数
+    // ======================
+    function formatDateForInput(dateStr) {
+      // 将 "2026-01-25 10:30" 转为 "2026-01-25T10:30"
+      return dateStr.replace(' ', 'T');
+    }
+
+    function showMsg(msg, type = 'info') {
+      alert(msg); // 简化版，可替换为 toast
+    }
+
+    // ======================
+    // 渲染成员列表
+    // ======================
+    async function renderMembers() {
+      try {
+        const res = await fetch('/home/family/members');
+        if (!res.ok) throw new Error('获取成员失败');
+        const data = await res.json();
+
+        const listEl = document.getElementById('members-list');
+        const selectEl = document.getElementById('target-member');
+
+        listEl.innerHTML = '';
+        selectEl.innerHTML = '';
+
+        data.members.forEach(member => {
+          // 成员卡片
+          const div = document.createElement('div');
+          div.className = 'member-item';
+          div.innerHTML = `
+            <strong> ${member.name}</strong><br>
+            生日:  ${member.birthday}<br>
+            微信ID:  ${member.wechat_id.substring(0,6)}... 
+          `;
+          listEl.appendChild(div);
+
+          // 下拉选项
+          const opt = document.createElement('option');
+          opt.value = member.name;
+          opt.textContent = member.name;
+          selectEl.appendChild(opt);
+        });
+      } catch (err) {
+        console.error(err);
+        document.getElementById('members-list').innerHTML = '<p style="color:red;">加载失败</p>';
+      }
+    }
+
+    // ======================
+    // 渲染我的任务（仅此函数被修改）
+    // ======================
+    async function renderMyTasks() {
+      try {
+        const res = await fetch('/home/family/members');
+        if (!res.ok) throw new Error('获取成员失败');
+        const data = await res.json();
+
+        const container = document.getElementById('my-tasks-list');
+        let allTasks = [];
+
+        if (data.members && Array.isArray(data.members)) {
+          data.members.forEach(member => {
+            if (member.tasks && Array.isArray(member.tasks)) {
+              member.tasks.forEach(task => {
+                // 简单判断是否过期（前端判断，避免依赖后端时间逻辑）
+                const now = new Date();
+                const due = new Date(task.due_date.replace(' ', 'T')); // 转为 ISO 格式
+                if (due > now) {
+                  // 关键：记录成员名，而不是用 task.creator
+                  allTasks.push({
+                    title: task.title,
+                    due_date: task.due_date,
+                    owner: member.name
+                  });
+                }
+              });
+            }
+          });
+        }
+
+        if (allTasks.length === 0) {
+          container.innerHTML = '<p>暂无待办任务</p>';
+          return;
+        }
+
+        let html = '';
+        allTasks.forEach(task => {
+          html += `
+            <div class="task-item">
+              <strong>待办事务：${task.title}</strong><br>
+              <small>发送时间:  ${task.due_date} | 成员:  ${task.owner}</small>
+            </div>
+          `;
+        });
+        container.innerHTML = html;
+      } catch (err) {
+        console.error('加载任务失败:', err);
+        document.getElementById('my-tasks-list').innerHTML = `<p style="color:red;">加载失败:  $ {err.message}</p>`;
+      }
+    }
+
+    // ======================
+    // 事件绑定
+    // ======================
+    document.addEventListener('DOMContentLoaded', () => {
+      // 加载数据
+      renderMembers();
+      renderMyTasks();
+
+      // 添加成员（简化：弹窗输入）
+      document.getElementById('add-member-btn').addEventListener('click', () => {
+        const name = prompt('姓名:');
+        const wechat = prompt('微信推送ID (Server酱SCKEY):');
+        const birthday = prompt('生日 (MM-DD, 如 06-01):');
+        if (!name || !wechat || !birthday) return;
+
+        fetch('/home/family/members', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, wechat_id: wechat, birthday })
+        }).then(res => {
+          if (res.ok) {
+            showMsg('成员添加成功');
+            renderMembers();
+          } else {
+            showMsg('添加失败');
+          }
+        });
+      });
+
+      // 添加任务
+      document.getElementById('task-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const target = document.getElementById('target-member').value;
+        const title = document.getElementById('task-title').value;
+        const due = document.getElementById('task-due').value;
+
+        const res = await fetch('/home/family/task', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            target_member: target,
+            title: title,
+            due_date: due.replace('T', ' ') // 转回 "YYYY-MM-DD HH:MM"
+          })
+        });
+
+        if (res.ok) {
+          showMsg('任务已添加');
+          document.getElementById('task-form').reset();
+          renderMyTasks(); // 刷新（如果自己是目标）
+        } else {
+          showMsg('添加失败');
+        }
+      });
+    });
+  </script>
+</body>
+</html>

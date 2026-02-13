@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>家庭智能终端</title>
+  <link rel="stylesheet" href="/assets/ui.css">
+  <link rel="stylesheet" href="/assets/style.css">
+  <!-- 防止未登录用户看到页面内容 -->
+  <style>
+    #auth-guard {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: #0a0a0a;
+      color: #eee;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 99999;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      font-size: 18px;
+    }
+    /* 初始隐藏真实内容 */
+    #app-content { display: none; }
+  </style>
+</head>
+<body class="ui">
+  <!-- 🔒 认证遮罩（默认显示） -->
+  <div id="auth-guard">
+    验证登录中，请稍候...
+  </div>
+
+  <!-- 🖼️ 真实页面内容（初始隐藏） -->
+  <div id="app-content">
+    <div class="bg"></div>
+    <div class="overlay"></div>
+    <canvas id="particles"></canvas>
+    <img class="ui-brand" src="/assets/logo-yymk.svg" alt="YYMK" />
+
+    <div class="container ui-animate-in">
+      <div class="time" id="time">--:--</div>
+      <div class="temp"><svg class="ui-icon-color" aria-hidden="true"><use href="/assets/icons-color.svg#icon-temp"/></svg><span id="temperature">室温：23°C</span></div>
+      
+      <!-- ✅ 修改：动态天气行 -->
+      <div class="weather" id="weather">
+        <svg id="weather-icon" class="ui-icon-color" aria-hidden="true"><use href="/assets/icons-color.svg#icon-weather"/></svg>
+        <span id="weather-text">加载中...</span>
+      </div>
+      
+      <!-- 6个功能入口 -->
+      <div class="buttons">
+        <a href="/disk.html" class="btn"><svg class="ui-icon-color" aria-hidden="true"><use href="/assets/icons-color.svg#icon-disk"/></svg><span>私人网盘</span></a>
+        <a href="/control.html" class="btn"><svg class="ui-icon-color" aria-hidden="true"><use href="/assets/icons-color.svg#icon-control"/></svg><span>家居控制</span></a>
+        <a href="/notes.html" class="btn"><svg class="ui-icon-color" aria-hidden="true"><use href="/assets/icons-color.svg#icon-notes"/></svg><span>家庭备忘录</span></a>
+        <a href="/photos.html" class="btn"><svg class="ui-icon-color" aria-hidden="true"><use href="/assets/icons-color.svg#icon-photos"/></svg><span>家庭相册</span></a>
+        <a href="/system.html" class="btn"><svg class="ui-icon-color" aria-hidden="true"><use href="/assets/icons-color.svg#icon-system"/></svg><span>系统数据</span></a>
+        <a href="/settings.html" class="btn"><svg class="ui-icon-color" aria-hidden="true"><use href="/assets/icons-color.svg#icon-settings"/></svg><span>设置</span></a>
+      </div>
+    </div>
+  </div>
+
+  <!-- 🔐 登录状态检测（关键：放在内容之后、动画之前） -->
+    <script>
+    // === 温湿度轮询 ===
+    async function fetchAndRenderTemperature() {
+      const tempEl = document.getElementById('temperature');
+      try {
+        const res = await fetch('/home/temperature');
+        if (!res.ok) throw new Error('Network error');
+
+        const data = await res.json();
+
+        // 检查是否有有效数据
+        if (data.humidity != null && data.temperature != null) {
+          const hum = parseFloat(data.humidity).toFixed(1);
+          const temp = parseFloat(data.temperature).toFixed(1);
+          tempEl.textContent = `室温：${temp}°C · 湿度：${hum}%`;
+        } else if (data.error) {
+          tempEl.textContent = `${data.error}`;
+        } else {
+          tempEl.textContent = '数据异常';
+        }
+      } catch (err) {
+        console.error('Temperature fetch failed:', err);
+        tempEl.textContent = '加载失败';
+      }
+    }
+
+    async function fetchAndRenderWeather() {
+      const weatherTextEl = document.getElementById('weather-text');
+      const weatherIconEl = document.getElementById('weather-icon');
+      const weatherIconUse = weatherIconEl ? weatherIconEl.querySelector('use') : null;
+
+      try {
+        const res = await fetch('/home/weather');
+        if (!res.ok) throw new Error('Network error');
+
+        const data = await res.json();
+
+        if (data.code !== '200') {
+          weatherTextEl.textContent = '天气数据异常';
+          if (weatherIconUse) weatherIconUse.setAttribute('href', '/assets/icons-color.svg#icon-weather');
+          return;
+        }
+
+        const weather = data.weather || '未知';
+        const temp = data.temperature || '--';
+        const humidity = data.humidity || '--';
+        const feelsLike = data.feels_like || '--';
+        const windDir = data.wind_dir || '';
+        const windScale = data.wind_scale ? `${data.wind_scale}级` : '';
+
+        let desc = `${weather} · ${temp}°C`;
+        if (feelsLike !== '--') desc += ` · 体感 ${feelsLike}°C`;
+        if (humidity !== '--') desc += ` · 湿度 ${humidity}%`;
+        if (windDir || windScale) desc += ` · ${windDir} ${windScale}`;
+
+        weatherTextEl.textContent = desc;
+        if (weatherIconUse) weatherIconUse.setAttribute('href', '/assets/icons-color.svg#icon-weather');
+
+      } catch (err) {
+        console.error('Weather fetch failed:', err);
+        weatherTextEl.textContent = '天气加载失败';
+        if (weatherIconUse) weatherIconUse.setAttribute('href', '/assets/icons-color.svg#icon-weather');
+      }
+    }
+
+    // === 认证 & 初始化 ===
+    (async () => {
+      try {
+        const res = await fetch('/home/check-auth');
+        if (res.status === 401) {
+          window.location.replace('/login.html');
+          return;
+        }
+
+        let data;
+        try {
+          data = await res.json();
+        } catch (e) {
+          data = {};
+        }
+
+        if (data.error && data.error.includes('Unauthorized')) {
+          window.location.replace('/login.html');
+          return;
+        }
+
+        // 隐藏遮罩，显示内容
+        document.getElementById('auth-guard').style.display = 'none';
+        document.getElementById('app-content').style.display = 'block';
+
+        // ✅ 启动温湿度轮询（立即 + 每30秒）
+        fetchAndRenderTemperature();
+        setInterval(fetchAndRenderTemperature, 30 * 1000);
+
+        // 启动天气轮询（立即 + 每5分钟）
+        fetchAndRenderWeather();
+        setInterval(fetchAndRenderWeather, 5 * 60 * 1000);
+
+        // 初始化时间 & 粒子动画
+        initApp();
+
+      } catch (err) {
+        window.location.replace('/login.html');
+      }
+    })();
+
+    // === 时间 & 粒子动画（保持不变）===
+    function initApp() {
+      // === 实时时间 ===
+      function updateTime() {
+        const now = new Date();
+        document.getElementById('time').textContent =
+          now.toLocaleTimeString('zh-CN', { hour12: false });
+      }
+      setInterval(updateTime, 1000);
+      updateTime();
+
+      // === 粒子动画（阳光尘埃）===
+      const canvas = document.getElementById('particles');
+      const ctx = canvas.getContext('2d');
+
+      function resizeCanvas() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+      }
+      resizeCanvas();
+      window.addEventListener('resize', resizeCanvas);
+
+      const particles = [];
+      const particleCount = Math.min(100, Math.floor((canvas.width * canvas.height) / 6000));
+
+      class Dust {
+        constructor() {
+          this.x = Math.random() * canvas.width;
+          this.y = Math.random() * canvas.height;
+          this.size = Math.random() * 2 + 0.5;
+          this.speedY = Math.random() * 0.3 + 0.1;
+          this.opacity = Math.random() * 0.4 + 0.1;
+          this.tilt = (Math.random() - 0.5) * 0.4;
+        }
+        update() {
+          this.y += this.speedY;
+          this.x += this.tilt;
+          if (this.y > canvas.height || this.x < -10 || this.x > canvas.width + 10) {
+            this.reset();
+          }
+        }
+        reset() {
+          this.y = -10;
+          this.x = Math.random() * canvas.width;
+        }
+        draw() {
+          ctx.fillStyle = `rgba(255, 248, 230, ${this.opacity})`;
+          ctx.beginPath();
+          ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+
+      for (let i = 0; i < particleCount; i++) {
+        particles.push(new Dust());
+      }
+
+      function animate() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        particles.forEach(p => {
+          p.update();
+          p.draw();
+        });
+        requestAnimationFrame(animate);
+      }
+      animate();
+    }
+  </script>
+</body>
+</html>

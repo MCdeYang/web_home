@@ -4,21 +4,212 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>家庭相册</title>
-  <link rel="stylesheet" href="/assets/ui.css">
-  <link rel="stylesheet" href="/assets/photos.css">
-</head>
-<body class="ui">
-  <a href="/index.html" class="btn btn--ghost ui-home-btn" aria-label="返回主页"><svg class="ui-icon-color" aria-hidden="true"><use href="/assets/icons-color.svg#icon-home"/></svg><span>返回主页</span></a>
-  <div class="container ui-animate-in">
-    <h1><svg class="ui-icon-color" aria-hidden="true"><use href="/assets/icons-color.svg#icon-photos"/></svg><span>家庭相册</span></h1>
+  <link rel="stylesheet" href="/assets/galaxy-theme.css">
+  <style>
+    .photos-page { padding: 2rem 0; }
+    
+    .page-header {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+    
+    .page-title {
+      font-size: 2rem;
+      font-weight: 700;
+      background: linear-gradient(90deg, var(--jade-light), var(--gold-primary));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
 
-    <div class="controls">
-      <button class="btn refresh-btn" onclick="loadPhotos()"><svg class="ui-icon-color" aria-hidden="true"><use href="/assets/icons-color.svg#icon-refresh"/></svg><span>刷新相册</span></button>
+    .controls-bar {
+      display: flex;
+      justify-content: center;
+      gap: 1rem;
+      margin-bottom: 2rem;
+      flex-wrap: wrap;
+    }
+
+    .upload-area {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    #file-input {
+      display: none;
+    }
+
+    .file-label {
+      padding: 0.75rem 1.25rem;
+      background: var(--glass-bg);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius-pill);
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .file-label:hover {
+      border-color: var(--jade-primary);
+      color: var(--jade-light);
+    }
+
+    /* 相册网格 - 保持翻转效果 */
+    .gallery {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+      gap: 2rem;
+      perspective: 1200px;
+    }
+
+    .photo-card {
+      background: transparent;
+      aspect-ratio: 1/1;
+      cursor: pointer;
+      perspective: 1200px;
+    }
+
+    .photo-inner {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      text-align: center;
+      transition: transform 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
+      transform-style: preserve-3d;
+    }
+
+    .photo-card:hover .photo-inner {
+      transform: rotateY(180deg);
+    }
+
+    .photo-front, .photo-back {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      -webkit-backface-visibility: hidden;
+      backface-visibility: hidden;
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      border: 1px solid var(--glass-border);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    }
+
+    .photo-front img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform 0.5s;
+    }
+
+    .photo-card:hover .photo-front img {
+      transform: scale(1.1);
+    }
+
+    .photo-back {
+      background: linear-gradient(180deg, rgba(22,27,34,0.95) 0%, rgba(22,27,34,0.8) 100%);
+      transform: rotateY(180deg);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 1rem;
+      padding: 1.5rem;
+      border: 1px solid var(--gold-primary);
+      box-shadow: inset 0 0 30px var(--gold-glow-dim);
+      backdrop-filter: blur(20px);
+    }
+
+    .photo-filename {
+      font-size: 0.9rem;
+      color: var(--text-secondary);
+      word-break: break-all;
+    }
+
+    .photo-note {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      font-style: italic;
+    }
+
+    .photo-actions {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    .photo-btn {
+      padding: 0.5rem 1rem;
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius-md);
+      background: transparent;
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: all 0.3s;
+      font-size: 0.85rem;
+    }
+
+    .photo-btn:hover {
+      border-color: var(--jade-primary);
+      color: var(--jade-light);
+      background: rgba(0, 210, 106, 0.1);
+    }
+
+    .photo-btn.delete:hover {
+      border-color: #ff6464;
+      color: #ff6464;
+      background: rgba(255, 100, 100, 0.1);
+    }
+
+    .loading, .empty {
+      text-align: center;
+      padding: 3rem;
+      color: var(--text-muted);
+      grid-column: 1 / -1;
+    }
+
+    @media (max-width: 768px) {
+      .gallery {
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+        gap: 1rem;
+      }
+      
+      .page-title {
+        font-size: 1.5rem;
+      }
+    }
+  </style>
+</head>
+<body class="galaxy">
+  <a href="/index.html" class="galaxy-btn galaxy-home-btn">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+      <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
+    </svg>
+    <span>返回主页</span>
+  </a>
+
+  <div class="galaxy-container photos-page">
+    <div class="page-header">
+      <h1 class="page-title">家庭相册</h1>
     </div>
 
-    <div class="upload-area">
-      <input type="file" id="file-input" accept="image/*" multiple />
-      <button class="btn upload-btn" onclick="uploadFiles()"><svg class="ui-icon-color" aria-hidden="true"><use href="/assets/icons-color.svg#icon-upload"/></svg><span>上传照片</span></button>
+    <div class="controls-bar">
+      <button class="galaxy-btn galaxy-btn-primary" onclick="loadPhotos()">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/>
+        </svg>
+        刷新相册
+      </button>
+      
+      <div class="upload-area">
+        <input type="file" id="file-input" accept="image/*" multiple />
+        <label for="file-input" class="file-label">选择照片</label>
+        <button class="galaxy-btn galaxy-btn-gold" onclick="uploadFiles()">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M9 16h6v-6h4l-7-7-7 7h4zm-4 2h14v2H5z"/>
+          </svg>
+          上传
+        </button>
+      </div>
     </div>
 
     <div class="gallery" id="gallery">
@@ -49,7 +240,7 @@
         renderGallery();
       } catch (err) {
         console.error(err);
-        document.getElementById('gallery').innerHTML = '<p class="error">❌ 加载失败</p>';
+        document.getElementById('gallery').innerHTML = '<p class="empty">加载失败</p>';
       }
     }
 
@@ -71,14 +262,14 @@
               <img src="/home/photo?name=${encodeURIComponent(filename)}&t=${Date.now()}" 
                   alt="${filename}" 
                   loading="lazy"
-                  onerror="this.closest('.photo-card').classList.add('broken')">
+                  onerror="this.closest('.photo-card').style.display='none'">
             </div>
             <div class="photo-back">
-              <div class="filename"> ${filename}</div>
-              ${note ? `<div class="photo-note"> ${note}</div>` : ''}
-              <div class="back-buttons">
-                <button class="edit-btn" onclick="event.stopPropagation(); editNote('${filename.replace(/'/g, "\\\\'")}');">✏️ 编辑</button>
-                <button class="delete-btn" onclick="event.stopPropagation(); deletePhoto('${filename.replace(/'/g, "\\\\'")}');">🗑️ 删除</button>
+              <div class="photo-filename">${filename}</div>
+              ${note ? `<div class="photo-note">${note}</div>` : ''}
+              <div class="photo-actions">
+                <button class="photo-btn" onclick="event.stopPropagation(); editNote('${filename.replace(/'/g, "\\'")}');">编辑</button>
+                <button class="photo-btn delete" onclick="event.stopPropagation(); deletePhoto('${filename.replace(/'/g, "\\'")}');">删除</button>
               </div>
             </div>
           </div>
@@ -104,7 +295,7 @@
           photoNotes[filename] = note;
           renderGallery();
         } else {
-          alert('❌ 保存失败');
+          alert('保存失败');
         }
       } catch (err) {
         alert('网络错误');
@@ -125,12 +316,12 @@
       try {
         const res = await fetch('/home/photos', { method: 'POST', body: formData });
         if (res.ok) {
-          alert('✅ 上传成功！');
+          alert('上传成功！');
           input.value = '';
           loadPhotos();
         } else {
           const err = await res.json().catch(() => ({}));
-          alert(`❌ 上传失败: ${err.error || '未知错误'}`);
+          alert(`上传失败: ${err.error || '未知错误'}`);
         }
       } catch (err) {
         alert('网络错误');
