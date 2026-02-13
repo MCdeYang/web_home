@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>系统数据</title>
   <link rel="stylesheet" href="/assets/galaxy-theme.css">
+  <script src="/assets/theme-switcher.js"></script>
   <style>
     .system-page { padding: 2rem 0; }
     
@@ -16,7 +17,7 @@
     .page-title {
       font-size: 2rem;
       font-weight: 700;
-      background: linear-gradient(90deg, var(--jade-light), var(--gold-primary));
+      background: linear-gradient(90deg, var(--accent-color, var(--jade-light)), var(--gold-primary, #ffd700));
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       background-clip: text;
@@ -42,16 +43,16 @@
 
     .system-card:hover {
       transform: translateY(-4px);
-      border-color: var(--jade-primary);
-      box-shadow: 0 10px 30px rgba(0,0,0,0.4), 0 0 20px var(--jade-glow-dim);
+      border-color: var(--accent-color, var(--jade-primary));
+      box-shadow: 0 10px 30px rgba(0,0,0,0.4), 0 0 20px var(--accent-glow, var(--jade-glow-dim));
     }
 
     .system-icon {
       width: 48px;
       height: 48px;
       margin: 0 auto 1rem;
-      fill: var(--jade-primary);
-      filter: drop-shadow(0 0 10px var(--jade-glow));
+      fill: var(--accent-color, var(--jade-primary));
+      filter: drop-shadow(0 0 10px var(--accent-glow, var(--jade-glow)));
     }
 
     .system-label {
@@ -90,11 +91,11 @@
 
     .progress-ring-fill {
       fill: none;
-      stroke: var(--jade-primary);
+      stroke: var(--accent-color, var(--jade-primary));
       stroke-width: 8;
       stroke-linecap: round;
       transition: stroke-dashoffset 0.5s ease;
-      filter: drop-shadow(0 0 5px var(--jade-glow));
+      filter: drop-shadow(0 0 5px var(--accent-glow, var(--jade-glow)));
     }
 
     .progress-text {

@@ -1,0 +1,914 @@
+/* === Chinese Knot Theme - 中国结风格 === */
+/* 中国红为主，金色为辅，传统喜庆风格 */
+
+:root {
+  /* 中国红配色 */
+  --china-red: #c41e3a;
+  --china-red-dark: #8b0000;
+  --china-red-light: #dc143c;
+  --china-red-pale: rgba(196, 30, 58, 0.1);
+  
+  /* 金色配色 */
+  --gold-primary: #ffd700;
+  --gold-light: #ffed4e;
+  --gold-dark: #daa520;
+  --gold-pale: rgba(255, 215, 0, 0.15);
+  
+  /* 背景色 */
+  --bg-deep: #1a0505;
+  --bg-card: rgba(139, 0, 0, 0.3);
+  
+  /* 文字色 */
+  --text-bright: #ffffff;
+  --text-primary: #fff5f5;
+  --text-secondary: #f0d0d0;
+  --text-muted: #c08080;
+  
+  /* 边框和阴影 */
+  --border-color: rgba(255, 215, 0, 0.3);
+  --border-gold: rgba(255, 215, 0, 0.5);
+  
+  --shadow-sm: 0 2px 8px rgba(0,0,0,0.4);
+  --shadow-md: 0 4px 16px rgba(0,0,0,0.5);
+  --shadow-lg: 0 8px 32px rgba(0,0,0,0.6);
+  --shadow-gold: 0 0 20px rgba(255, 215, 0, 0.3);
+  
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body.chinese-knot {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif;
+  background: linear-gradient(135deg, var(--bg-deep) 0%, #2d0808 50%, var(--bg-deep) 100%);
+  color: var(--text-primary);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* 中国结装饰背景 */
+body.chinese-knot::before {
+  content: "";
+  position: fixed;
+  top: 0; left: 0; width: 100%; height: 100%;
+  background: 
+    /* 祥云纹理 */
+    radial-gradient(ellipse 100px 50px at 10% 20%, rgba(255,215,0,0.05) 0%, transparent 70%),
+    radial-gradient(ellipse 120px 60px at 90% 30%, rgba(255,215,0,0.04) 0%, transparent 70%),
+    radial-gradient(ellipse 80px 40px at 20% 70%, rgba(255,215,0,0.03) 0%, transparent 70%),
+    radial-gradient(ellipse 150px 75px at 80% 80%, rgba(255,215,0,0.05) 0%, transparent 70%),
+    /* 中国结图案暗示 */
+    repeating-linear-gradient(45deg, transparent, transparent 35px, rgba(196,30,58,0.02) 35px, rgba(196,30,58,0.02) 70px),
+    repeating-linear-gradient(-45deg, transparent, transparent 35px, rgba(255,215,0,0.01) 35px, rgba(255,215,0,0.01) 70px);
+  z-index: -1;
+}
+
+/* 中国结装饰 - 主页 */
+.chinese-knot .hero-section {
+  position: relative;
+}
+
+/* 左侧中国结 */
+.chinese-knot .hero-section::before {
+  content: "";
+  position: absolute;
+  left: -80px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 60px;
+  height: 120px;
+  background: 
+    /* 中国结主体 - 菱形编织图案 */
+    linear-gradient(45deg, transparent 40%, var(--gold-primary) 40%, var(--gold-primary) 60%, transparent 60%),
+    linear-gradient(-45deg, transparent 40%, var(--gold-primary) 40%, var(--gold-primary) 60%, transparent 60%),
+    /* 中心结 */
+    radial-gradient(circle at 50% 50%, var(--china-red) 0%, var(--china-red) 25%, transparent 25%),
+    /* 外框 */
+    linear-gradient(0deg, var(--gold-primary) 0%, var(--gold-primary) 100%);
+  background-size: 
+    30px 30px,
+    30px 30px,
+    100% 100%,
+    4px 100%;
+  background-position: 
+    center,
+    center,
+    center,
+    left;
+  background-repeat: no-repeat;
+  border-radius: 4px;
+  filter: drop-shadow(0 0 10px rgba(255,215,0,0.5));
+  animation: knotSwing 3s ease-in-out infinite;
+}
+
+/* 右侧中国结 */
+.chinese-knot .hero-section::after {
+  content: "";
+  position: absolute;
+  right: -80px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 60px;
+  height: 120px;
+  background: 
+    /* 中国结主体 - 菱形编织图案 */
+    linear-gradient(45deg, transparent 40%, var(--gold-primary) 40%, var(--gold-primary) 60%, transparent 60%),
+    linear-gradient(-45deg, transparent 40%, var(--gold-primary) 40%, var(--gold-primary) 60%, transparent 60%),
+    /* 中心结 */
+    radial-gradient(circle at 50% 50%, var(--china-red) 0%, var(--china-red) 25%, transparent 25%),
+    /* 外框 */
+    linear-gradient(0deg, var(--gold-primary) 0%, var(--gold-primary) 100%);
+  background-size: 
+    30px 30px,
+    30px 30px,
+    100% 100%,
+    4px 100%;
+  background-position: 
+    center,
+    center,
+    center,
+    right;
+  background-repeat: no-repeat;
+  border-radius: 4px;
+  filter: drop-shadow(0 0 10px rgba(255,215,0,0.5));
+  animation: knotSwing 3s ease-in-out infinite reverse;
+}
+
+@keyframes knotSwing {
+  0%, 100% { transform: translateY(-50%) rotate(-2deg); }
+  50% { transform: translateY(-50%) rotate(2deg); }
+}
+
+/* === 布局容器 === */
+.chinese-knot .knot-container,
+.chinese-knot .galaxy-container {
+  min-height: 100vh;
+  padding: 1.5rem;
+}
+
+/* === 顶部栏 === */
+.chinese-knot .galaxy-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.5rem;
+  margin-bottom: 2rem;
+  background: var(--bg-card);
+  border: 2px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md), inset 0 0 20px rgba(255,215,0,0.05);
+}
+
+.chinese-knot .galaxy-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-weight: 700;
+  font-size: 1.25rem;
+  color: var(--gold-primary);
+  text-shadow: 0 0 10px rgba(255,215,0,0.3);
+}
+
+.chinese-knot .galaxy-brand-icon {
+  width: 36px;
+  height: 36px;
+  fill: var(--gold-primary);
+  filter: drop-shadow(0 0 8px rgba(255,215,0,0.5));
+}
+
+/* === 主页样式 === */
+.chinese-knot .main-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: calc(100vh - 150px);
+  text-align: center;
+  padding: 2rem 0;
+}
+
+.chinese-knot .hero-section {
+  margin-bottom: 3rem;
+}
+
+.chinese-knot .hero-time {
+  font-size: 5rem;
+  font-weight: 700;
+  color: var(--gold-primary);
+  text-shadow: 
+    0 0 20px rgba(255,215,0,0.5),
+    0 0 40px rgba(255,215,0,0.3),
+    2px 2px 4px rgba(0,0,0,0.5);
+  line-height: 1;
+  letter-spacing: 4px;
+}
+
+.chinese-knot .hero-info {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.chinese-knot .hero-info-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.25rem;
+  background: var(--bg-card);
+  border: 2px solid var(--border-color);
+  border-radius: var(--radius-md);
+  font-size: 0.95rem;
+  color: var(--text-secondary);
+  box-shadow: var(--shadow-sm);
+}
+
+.chinese-knot .hero-info-item svg {
+  width: 20px;
+  height: 20px;
+  fill: var(--gold-primary);
+}
+
+/* 功能网格 */
+.chinese-knot .features-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.5rem;
+  width: 100%;
+  max-width: 900px;
+}
+
+.chinese-knot .feature-card {
+  background: var(--bg-card);
+  border: 2px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: 2rem 1.5rem;
+  text-align: center;
+  text-decoration: none;
+  color: var(--text-primary);
+  transition: all 0.4s;
+  position: relative;
+  overflow: hidden;
+  box-shadow: var(--shadow-md);
+}
+
+/* 中国结装饰角 */
+.chinese-knot .feature-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, transparent, var(--gold-primary), transparent);
+}
+
+.chinese-knot .feature-card::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, transparent, var(--gold-primary), transparent);
+}
+
+.chinese-knot .feature-card:hover {
+  transform: translateY(-8px);
+  border-color: var(--gold-primary);
+  box-shadow: var(--shadow-lg), var(--shadow-gold);
+}
+
+.chinese-knot .feature-icon {
+  width: 48px;
+  height: 48px;
+  margin: 0 auto 1rem;
+  fill: var(--gold-primary);
+  filter: drop-shadow(0 0 8px rgba(255,215,0,0.4));
+  transition: all 0.4s;
+}
+
+.chinese-knot .feature-card:hover .feature-icon {
+  transform: scale(1.1);
+  filter: drop-shadow(0 0 15px rgba(255,215,0,0.6));
+}
+
+.chinese-knot .feature-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text-bright);
+  margin-bottom: 0.5rem;
+}
+
+.chinese-knot .feature-desc {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+/* === 按钮系统 === */
+.chinese-knot .knot-btn,
+.chinese-knot .galaxy-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.875rem 1.5rem;
+  font-weight: 600;
+  color: var(--text-bright);
+  background: var(--china-red);
+  border: 2px solid var(--gold-primary);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all 0.3s;
+  box-shadow: var(--shadow-sm);
+}
+
+.chinese-knot .knot-btn:hover,
+.chinese-knot .galaxy-btn:hover {
+  background: var(--china-red-light);
+  box-shadow: var(--shadow-gold);
+  transform: translateY(-2px);
+}
+
+.chinese-knot .knot-btn-primary,
+.chinese-knot .galaxy-btn-primary,
+.chinese-knot .knot-btn-gold,
+.chinese-knot .galaxy-btn-gold {
+  background: linear-gradient(135deg, var(--gold-primary), var(--gold-dark));
+  color: var(--china-red-dark);
+  border-color: var(--gold-light);
+}
+
+.chinese-knot .knot-btn-primary:hover,
+.chinese-knot .galaxy-btn-primary:hover {
+  box-shadow: 0 0 30px rgba(255,215,0,0.5);
+}
+
+.chinese-knot .knot-home-btn,
+.chinese-knot .galaxy-home-btn {
+  position: fixed;
+  top: 1.5rem;
+  left: 1.5rem;
+  z-index: 1000;
+}
+
+/* === 卡片系统 === */
+.chinese-knot .knot-card,
+.chinese-knot .galaxy-card {
+  background: var(--bg-card);
+  border: 2px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: 1.5rem;
+  transition: all 0.3s;
+  box-shadow: var(--shadow-md);
+}
+
+.chinese-knot .knot-card:hover,
+.chinese-knot .galaxy-card:hover {
+  border-color: var(--gold-primary);
+  box-shadow: var(--shadow-lg), var(--shadow-gold);
+}
+
+.chinese-knot .knot-card-title,
+.chinese-knot .galaxy-card-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--gold-primary);
+  margin-bottom: 1rem;
+  text-shadow: 0 0 10px rgba(255,215,0,0.2);
+}
+
+/* === 功能页面 === */
+.chinese-knot .control-page,
+.chinese-knot .disk-page,
+.chinese-knot .photos-page,
+.chinese-knot .notes-page,
+.chinese-knot .system-page,
+.chinese-knot .settings-page {
+  padding: 1rem 0;
+}
+
+.chinese-knot .page-header {
+  text-align: center;
+  margin-bottom: 2rem;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid var(--border-color);
+}
+
+.chinese-knot .page-title {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--gold-primary);
+  text-shadow: 0 0 15px rgba(255,215,0,0.3);
+}
+
+/* 设备网格 */
+.chinese-knot .devices-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1.5rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.chinese-knot .device-card {
+  background: var(--bg-card);
+  border: 2px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  transition: all 0.3s;
+  box-shadow: var(--shadow-md);
+}
+
+.chinese-knot .device-card:hover {
+  border-color: var(--gold-primary);
+}
+
+.chinese-knot .device-card.active {
+  border-color: var(--gold-primary);
+  box-shadow: var(--shadow-gold);
+}
+
+.chinese-knot .device-icon-wrapper {
+  width: 56px;
+  height: 56px;
+  border-radius: var(--radius-md);
+  background: var(--china-red-pale);
+  border: 2px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.chinese-knot .device-card.active .device-icon-wrapper {
+  background: var(--gold-pale);
+  border-color: var(--gold-primary);
+  box-shadow: var(--shadow-gold);
+}
+
+.chinese-knot .device-icon {
+  width: 28px;
+  height: 28px;
+  fill: var(--gold-primary);
+}
+
+.chinese-knot .device-info {
+  flex: 1;
+}
+
+.chinese-knot .device-info h3 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text-bright);
+  margin-bottom: 0.25rem;
+}
+
+.chinese-knot .device-status {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+}
+
+/* 开关 */
+.chinese-knot .switch {
+  position: relative;
+  display: inline-block;
+  width: 56px;
+  height: 30px;
+}
+
+.chinese-knot .switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.chinese-knot .switch-slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(192, 128, 128, 0.3);
+  border: 1px solid var(--border-color);
+  border-radius: 30px;
+  transition: 0.3s;
+}
+
+.chinese-knot .switch-slider::before {
+  content: "";
+  position: absolute;
+  height: 24px;
+  width: 24px;
+  left: 2px;
+  bottom: 2px;
+  background: var(--text-secondary);
+  border-radius: 50%;
+  transition: 0.3s;
+}
+
+.chinese-knot .switch input:checked + .switch-slider {
+  background: var(--gold-pale);
+  border-color: var(--gold-primary);
+}
+
+.chinese-knot .switch input:checked + .switch-slider::before {
+  transform: translateX(26px);
+  background: var(--gold-primary);
+}
+
+/* 文件网格 */
+.chinese-knot .file-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 1rem;
+}
+
+.chinese-knot .file-item {
+  background: var(--bg-card);
+  border: 2px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 1.25rem 1rem;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s;
+  box-shadow: var(--shadow-sm);
+}
+
+.chinese-knot .file-item:hover {
+  transform: translateY(-4px);
+  border-color: var(--gold-primary);
+  box-shadow: var(--shadow-gold);
+}
+
+/* 相册 */
+.chinese-knot .gallery {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 2rem;
+}
+
+.chinese-knot .photo-card {
+  aspect-ratio: 1/1;
+  cursor: pointer;
+  perspective: 1200px;
+}
+
+.chinese-knot .photo-inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transition: transform 0.8s ease;
+  transform-style: preserve-3d;
+}
+
+.chinese-knot .photo-card:hover .photo-inner {
+  transform: rotateY(180deg);
+}
+
+.chinese-knot .photo-front,
+.chinese-knot .photo-back {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  backface-visibility: hidden;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  border: 2px solid var(--border-color);
+  box-shadow: var(--shadow-md);
+}
+
+.chinese-knot .photo-front img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.chinese-knot .photo-back {
+  background: linear-gradient(135deg, var(--china-red), var(--china-red-dark));
+  transform: rotateY(180deg);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  padding: 1.5rem;
+  border-color: var(--gold-primary);
+  box-shadow: var(--shadow-gold);
+}
+
+/* 设置页面 */
+.chinese-knot .settings-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+  gap: 1.5rem;
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+.chinese-knot .settings-card {
+  background: var(--bg-card);
+  border: 2px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: 1.5rem;
+  box-shadow: var(--shadow-md);
+}
+
+.chinese-knot .settings-card h2 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--gold-primary);
+  margin-bottom: 1.5rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 2px solid var(--border-color);
+  text-shadow: 0 0 10px rgba(255,215,0,0.2);
+}
+
+.chinese-knot .form-group {
+  margin-bottom: 1.25rem;
+}
+
+.chinese-knot .form-group label {
+  display: block;
+  margin-bottom: 0.5rem;
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+}
+
+.chinese-knot .form-group input,
+.chinese-knot .form-group select {
+  width: 100%;
+  padding: 0.875rem 1rem;
+  background: rgba(0, 0, 0, 0.3);
+  border: 2px solid var(--border-color);
+  border-radius: var(--radius-md);
+  color: var(--text-bright);
+  font-size: 1rem;
+  outline: none;
+  transition: all 0.3s;
+}
+
+.chinese-knot .form-group input:focus,
+.chinese-knot .form-group select:focus {
+  border-color: var(--gold-primary);
+  box-shadow: 0 0 0 3px var(--gold-pale);
+}
+
+.chinese-knot .form-actions {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.chinese-knot .status-display {
+  padding: 0.875rem 1.25rem;
+  margin-bottom: 1rem;
+  background: var(--gold-pale);
+  border: 2px solid var(--gold-primary);
+  border-radius: var(--radius-md);
+  color: var(--gold-primary);
+  font-size: 1rem;
+  font-weight: 600;
+  text-align: center;
+  box-shadow: var(--shadow-gold);
+}
+
+.chinese-knot .status-display.offline {
+  background: rgba(200, 50, 50, 0.2);
+  border-color: #ff4444;
+  color: #ff6666;
+}
+
+/* 主题选择器 */
+.chinese-knot .theme-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+}
+
+.chinese-knot .theme-option {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  background: rgba(0, 0, 0, 0.3);
+  border: 2px solid var(--border-color);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.chinese-knot .theme-option:hover {
+  border-color: var(--gold-primary);
+  box-shadow: var(--shadow-gold);
+}
+
+.chinese-knot .theme-option.active {
+  border-color: var(--gold-primary);
+  background: var(--gold-pale);
+  box-shadow: var(--shadow-gold);
+}
+
+/* 备忘录页面特定样式 */
+.chinese-knot .note-card h2 svg {
+  fill: var(--gold-primary);
+}
+
+.chinese-knot .member-item:hover {
+  border-color: var(--gold-primary);
+  background: var(--gold-pale);
+}
+
+.chinese-knot .task-item {
+  border-left-color: var(--gold-primary);
+}
+
+.chinese-knot .task-item:hover {
+  background: var(--gold-pale);
+}
+
+/* === 新增动态元素 === */
+
+/* 灯笼摇摆效果 */
+.chinese-knot .lantern {
+  position: fixed;
+  width: 40px;
+  height: 60px;
+  z-index: -1;
+  animation: lanternSwing 4s ease-in-out infinite;
+}
+
+.chinese-knot .lantern::before {
+  content: "";
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background: 
+    /* 灯笼主体 */
+    radial-gradient(ellipse 20px 30px at 50% 50%, var(--china-red) 0%, var(--china-red-dark) 100%);
+  border-radius: 50%;
+  border: 2px solid var(--gold-primary);
+  box-shadow: 
+    0 0 20px rgba(255, 215, 0, 0.4),
+    inset 0 0 10px rgba(0, 0, 0, 0.3);
+}
+
+.chinese-knot .lantern::after {
+  content: "";
+  position: absolute;
+  top: -15px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 2px;
+  height: 15px;
+  background: var(--gold-primary);
+}
+
+.chinese-knot .lantern:nth-child(1) {
+  top: 5%;
+  left: 5%;
+  animation-delay: 0s;
+}
+
+.chinese-knot .lantern:nth-child(2) {
+  top: 8%;
+  right: 5%;
+  animation-delay: 1s;
+}
+
+@keyframes lanternSwing {
+  0%, 100% { transform: rotate(-3deg); }
+  50% { transform: rotate(3deg); }
+}
+
+/* 烟花绽放效果 */
+.chinese-knot .firework {
+  position: fixed;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  z-index: -1;
+}
+
+.chinese-knot .firework:nth-child(1) {
+  top: 20%;
+  left: 20%;
+  animation: fireworkBurst 5s ease-out infinite;
+}
+
+.chinese-knot .firework:nth-child(2) {
+  top: 30%;
+  right: 25%;
+  animation: fireworkBurst 6s ease-out infinite;
+  animation-delay: 2s;
+}
+
+@keyframes fireworkBurst {
+  0% {
+    box-shadow: 0 0 0 0 rgba(255, 215, 0, 0.8);
+    opacity: 1;
+  }
+  20% {
+    box-shadow: 
+      0 -20px 0 2px rgba(255, 215, 0, 0.6),
+      0 20px 0 2px rgba(255, 215, 0, 0.6),
+      -20px 0 0 2px rgba(255, 215, 0, 0.6),
+      20px 0 0 2px rgba(255, 215, 0, 0.6),
+      -14px -14px 0 2px rgba(196, 30, 58, 0.6),
+      14px -14px 0 2px rgba(196, 30, 58, 0.6),
+      -14px 14px 0 2px rgba(196, 30, 58, 0.6),
+      14px 14px 0 2px rgba(196, 30, 58, 0.6);
+  }
+  40% {
+    box-shadow: 
+      0 -40px 0 0 rgba(255, 215, 0, 0.3),
+      0 40px 0 0 rgba(255, 215, 0, 0.3),
+      -40px 0 0 0 rgba(255, 215, 0, 0.3),
+      40px 0 0 0 rgba(255, 215, 0, 0.3),
+      -28px -28px 0 0 rgba(196, 30, 58, 0.3),
+      28px -28px 0 0 rgba(196, 30, 58, 0.3),
+      -28px 28px 0 0 rgba(196, 30, 58, 0.3),
+      28px 28px 0 0 rgba(196, 30, 58, 0.3);
+    opacity: 0.5;
+  }
+  100% {
+    box-shadow: 0 0 0 0 transparent;
+    opacity: 0;
+  }
+}
+
+/* 祥云飘动效果 */
+body.chinese-knot::after {
+  content: "";
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 150px;
+  background: 
+    /* 祥云1 */
+    radial-gradient(ellipse 80px 40px at 10% 80%, rgba(255, 215, 0, 0.15) 0%, transparent 70%),
+    radial-gradient(ellipse 100px 50px at 30% 90%, rgba(255, 215, 0, 0.12) 0%, transparent 70%),
+    radial-gradient(ellipse 60px 30px at 50% 85%, rgba(255, 215, 0, 0.1) 0%, transparent 70%),
+    radial-gradient(ellipse 90px 45px at 70% 95%, rgba(255, 215, 0, 0.13) 0%, transparent 70%),
+    radial-gradient(ellipse 70px 35px at 90% 80%, rgba(255, 215, 0, 0.11) 0%, transparent 70%);
+  animation: cloudFloat 15s ease-in-out infinite;
+  z-index: -2;
+  pointer-events: none;
+}
+
+@keyframes cloudFloat {
+  0%, 100% {
+    transform: translateX(0);
+  }
+  50% {
+    transform: translateX(30px);
+  }
+}
+
+/* 响应式 */
+@media (max-width: 768px) {
+  .chinese-knot .hero-time { font-size: 3rem; }
+  .chinese-knot .features-grid { grid-template-columns: repeat(2, 1fr); gap: 1rem; }
+  .chinese-knot .settings-grid { grid-template-columns: 1fr; }
+  .chinese-knot .theme-grid { grid-template-columns: 1fr; }
+  .chinese-knot .devices-grid { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 480px) {
+  .chinese-knot .hero-time { font-size: 2.5rem; }
+  .chinese-knot .features-grid { grid-template-columns: 1fr; }
+}
+
+/* === System页面专用样式 */
+.chinese-knot .system-page {
+  --accent-color: var(--gold-primary);
+  --accent-glow: rgba(255, 215, 0, 0.3);
+}
+
+.chinese-knot .system-page .page-title {
+  background: linear-gradient(90deg, var(--gold-light), var(--gold-primary));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.chinese-knot .system-page .system-card:hover {
+  border-color: var(--gold-primary);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.4), 0 0 20px rgba(255, 215, 0, 0.3);
+}
+
+.chinese-knot .system-page .system-icon {
+  fill: var(--gold-primary);
+  filter: drop-shadow(0 0 10px rgba(255, 215, 0, 0.3));
+}
+
+.chinese-knot .system-page .progress-ring-fill {
+  stroke: var(--gold-primary);
+  filter: drop-shadow(0 0 5px rgba(255, 215, 0, 0.3));
+}

@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>家庭备忘录</title>
   <link rel="stylesheet" href="/assets/galaxy-theme.css">
+  <script src="/assets/theme-switcher.js"></script>
   <style>
     .notes-page { padding: 2rem 0; }
     
@@ -16,10 +17,8 @@
     .page-title {
       font-size: 2rem;
       font-weight: 700;
-      background: linear-gradient(90deg, var(--jade-light), var(--gold-primary));
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
+      /* 使用主题变量，各主题会覆盖 */
+      color: var(--text-primary);
     }
 
     .notes-grid {
@@ -31,8 +30,8 @@
     }
 
     .note-card {
-      background: linear-gradient(180deg, rgba(22,27,34,0.8) 0%, rgba(22,27,34,0.5) 100%);
-      border: 1px solid var(--glass-border);
+      background: var(--card-bg, rgba(22,27,34,0.8));
+      border: 1px solid var(--card-border, var(--glass-border));
       border-radius: var(--radius-lg);
       padding: 1.5rem;
       backdrop-filter: blur(12px);
@@ -51,7 +50,7 @@
     .note-card h2 svg {
       width: 24px;
       height: 24px;
-      fill: var(--jade-primary);
+      fill: var(--accent-color, var(--gold-primary));
     }
 
     .form-group {
@@ -69,8 +68,8 @@
     .form-group select {
       width: 100%;
       padding: 0.75rem 1rem;
-      background: rgba(1, 4, 9, 0.6);
-      border: 1px solid var(--glass-border);
+      background: var(--input-bg, rgba(1, 4, 9, 0.6));
+      border: 1px solid var(--input-border, var(--glass-border));
       border-radius: var(--radius-md);
       color: var(--text-primary);
       font-size: 1rem;
@@ -80,8 +79,8 @@
 
     .form-group input:focus,
     .form-group select:focus {
-      border-color: var(--jade-primary);
-      box-shadow: 0 0 0 3px var(--jade-glow-dim);
+      border-color: var(--accent-color, var(--gold-primary));
+      box-shadow: 0 0 0 3px var(--accent-glow, rgba(255,215,0,0.1));
     }
 
     .member-list {
@@ -92,15 +91,15 @@
 
     .member-item {
       padding: 1rem;
-      background: rgba(255,255,255,0.03);
-      border: 1px solid var(--glass-border);
+      background: var(--item-bg, rgba(255,255,255,0.03));
+      border: 1px solid var(--item-border, var(--glass-border));
       border-radius: var(--radius-md);
       transition: all 0.3s;
     }
 
     .member-item:hover {
-      border-color: var(--jade-primary);
-      background: rgba(0, 210, 106, 0.05);
+      border-color: var(--accent-color, var(--gold-primary));
+      background: var(--item-hover-bg, rgba(255,215,0,0.05));
     }
 
     .member-name {
@@ -124,14 +123,14 @@
 
     .task-item {
       padding: 1rem;
-      background: rgba(255,255,255,0.03);
-      border-left: 3px solid var(--gold-primary);
+      background: var(--item-bg, rgba(255,255,255,0.03));
+      border-left: 3px solid var(--accent-color, var(--gold-primary));
       border-radius: 0 var(--radius-md) var(--radius-md) 0;
       transition: all 0.3s;
     }
 
     .task-item:hover {
-      background: rgba(255, 215, 0, 0.05);
+      background: var(--item-hover-bg, rgba(255,215,0,0.05));
     }
 
     .task-title {

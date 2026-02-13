@@ -1,0 +1,965 @@
+/* === Moonlight Theme - 月光写实风格 === */
+/* 真实月球表面背景，地球悬挂，太空沉浸感 */
+
+:root {
+  --moon-surface: #c0c0c0;
+  --moon-surface-dark: #a0a0a0;
+  --moon-surface-light: #e0e0e0;
+  --moon-crater: #808080;
+  --moon-crater-dark: #606060;
+  
+  --space-black: #050508;
+  --space-deep: #0a0a10;
+  
+  /* 银色配色系统 */
+  --silver-primary: #c0c0c0;
+  --silver-light: #e8e8e8;
+  --silver-dark: #a0a0a0;
+  --silver-glow: rgba(192, 192, 192, 0.3);
+  
+  /* 少量太阳金色 */
+  --sun-gold: #ffd700;
+  --sun-gold-light: #ffed4e;
+  --sun-gold-dark: #daa520;
+  --sun-glow: rgba(255, 215, 0, 0.3);
+  
+  --earth-blue: #1e3a5f;
+  --earth-glow: rgba(100, 150, 255, 0.3);
+  
+  --star-white: #ffffff;
+  --star-dim: #cccccc;
+  
+  --text-bright: #ffffff;
+  --text-primary: #f0f0f0;
+  --text-secondary: #c0c0c0;
+  --text-muted: #808080;
+  
+  --card-bg: rgba(20, 20, 25, 0.7);
+  --card-border: rgba(255, 255, 255, 0.15);
+  
+  --shadow-sm: 0 2px 8px rgba(0,0,0,0.5);
+  --shadow-md: 0 4px 20px rgba(0,0,0,0.6);
+  --shadow-lg: 0 8px 40px rgba(0,0,0,0.7);
+  
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body.moonlight {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  background: var(--space-black);
+  color: var(--text-primary);
+  min-height: 100vh;
+  overflow-x: hidden;
+  line-height: 1.6;
+}
+
+/* === 真实月球表面背景 === */
+body.moonlight::before {
+  content: "";
+  position: fixed;
+  top: 0; left: 0; width: 100%; height: 100%;
+  background: 
+    /* 月球表面基础纹理 - 灰度噪点效果 */
+    repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(160,160,160,0.03) 2px,
+      rgba(160,160,160,0.03) 4px
+    ),
+    repeating-linear-gradient(
+      90deg,
+      transparent,
+      transparent 2px,
+      rgba(140,140,140,0.02) 2px,
+      rgba(140,140,140,0.02) 4px
+    ),
+    /* 大陨石坑 */
+    radial-gradient(ellipse 300px 200px at 20% 30%, rgba(100,100,100,0.4) 0%, transparent 50%),
+    radial-gradient(ellipse 250px 180px at 80% 20%, rgba(90,90,90,0.35) 0%, transparent 45%),
+    radial-gradient(ellipse 400px 300px at 70% 70%, rgba(80,80,80,0.3) 0%, transparent 40%),
+    radial-gradient(ellipse 200px 150px at 30% 80%, rgba(110,110,110,0.35) 0%, transparent 45%),
+    radial-gradient(ellipse 350px 250px at 90% 85%, rgba(85,85,85,0.3) 0%, transparent 40%),
+    /* 中陨石坑 */
+    radial-gradient(ellipse 120px 80px at 45% 45%, rgba(120,120,120,0.25) 0%, transparent 40%),
+    radial-gradient(ellipse 150px 100px at 15% 60%, rgba(100,100,100,0.3) 0%, transparent 35%),
+    radial-gradient(ellipse 100px 70px at 85% 50%, rgba(115,115,115,0.25) 0%, transparent 40%),
+    radial-gradient(ellipse 180px 120px at 55% 90%, rgba(95,95,95,0.3) 0%, transparent 35%),
+    /* 小陨石坑 */
+    radial-gradient(circle 60px at 35% 15%, rgba(130,130,130,0.2) 0%, transparent 50%),
+    radial-gradient(circle 40px at 65% 35%, rgba(120,120,120,0.25) 0%, transparent 45%),
+    radial-gradient(circle 80px at 85% 65%, rgba(110,110,110,0.2) 0%, transparent 50%),
+    radial-gradient(circle 50px at 10% 45%, rgba(125,125,125,0.25) 0%, transparent 40%),
+    radial-gradient(circle 70px at 50% 75%, rgba(105,105,105,0.2) 0%, transparent 45%),
+    radial-gradient(circle 45px at 95% 40%, rgba(115,115,115,0.2) 0%, transparent 40%),
+    /* 月壤基础色 */
+    radial-gradient(ellipse at 30% 20%, rgba(192,192,192,0.15) 0%, transparent 50%),
+    radial-gradient(ellipse at 70% 80%, rgba(160,160,160,0.1) 0%, transparent 50%),
+    /* 深空到月球表面渐变 */
+    linear-gradient(180deg, 
+      rgba(5,5,8,1) 0%, 
+      rgba(10,10,15,0.95) 20%,
+      rgba(15,15,20,0.9) 40%,
+      rgba(20,20,25,0.85) 60%,
+      rgba(25,25,30,0.8) 80%,
+      rgba(30,30,35,0.75) 100%
+    );
+  z-index: -2;
+}
+
+/* 地球悬挂效果 - 带星环 */
+body.moonlight::after {
+  content: "";
+  position: fixed;
+  top: 15%;
+  right: 5%;
+  width: 150px;
+  height: 150px;
+  background: 
+    /* 地球大气层 */
+    radial-gradient(circle at 30% 30%, rgba(100,150,255,0.3) 0%, transparent 50%),
+    /* 地球海洋 */
+    radial-gradient(circle at 40% 40%, rgba(30,80,150,0.8) 0%, rgba(20,60,120,0.9) 40%, rgba(10,40,80,1) 100%),
+    /* 地球陆地 */
+    radial-gradient(ellipse 30px 20px at 35% 35%, rgba(50,120,50,0.6) 0%, transparent 70%),
+    radial-gradient(ellipse 40px 25px at 55% 45%, rgba(40,100,40,0.5) 0%, transparent 70%),
+    radial-gradient(ellipse 25px 30px at 45% 60%, rgba(45,110,45,0.55) 0%, transparent 70%),
+    /* 云层 */
+    radial-gradient(ellipse 50px 20px at 40% 30%, rgba(255,255,255,0.3) 0%, transparent 60%),
+    radial-gradient(ellipse 40px 15px at 60% 50%, rgba(255,255,255,0.25) 0%, transparent 55%);
+  border-radius: 50%;
+  box-shadow: 
+    0 0 60px var(--earth-glow),
+    0 0 100px rgba(100,150,255,0.2),
+    inset -20px -20px 40px rgba(0,0,0,0.5);
+  z-index: -1;
+}
+
+/* 星环效果 */
+body.moonlight .planet-ring {
+  position: fixed;
+  top: 15%;
+  right: 5%;
+  width: 150px;
+  height: 150px;
+  z-index: -1;
+  pointer-events: none;
+}
+
+body.moonlight .planet-ring::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 300px;
+  height: 100px;
+  transform: translate(-50%, -50%) rotateX(75deg) rotateY(-15deg);
+  border: 4px solid rgba(255, 215, 0, 0.6);
+  border-radius: 50%;
+  box-shadow: 0 0 20px rgba(255, 215, 0, 0.3);
+}
+
+body.moonlight .planet-ring::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 340px;
+  height: 120px;
+  transform: translate(-50%, -50%) rotateX(75deg) rotateY(-15deg);
+  border: 3px solid rgba(255, 200, 0, 0.4);
+  border-radius: 50%;
+}
+
+/* 星空 */
+.moonlight .stars {
+  position: fixed;
+  top: 0; left: 0; width: 100%; height: 100%;
+  pointer-events: none;
+  z-index: -1;
+}
+
+.moonlight .star {
+  position: absolute;
+  width: 2px;
+  height: 2px;
+  background: white;
+  border-radius: 50%;
+  animation: twinkle 3s ease-in-out infinite;
+}
+
+@keyframes twinkle {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 1; }
+}
+
+/* === 布局容器 === */
+.moonlight .moon-container,
+.moonlight .galaxy-container {
+  min-height: 100vh;
+  padding: 1.5rem;
+  position: relative;
+  z-index: 1;
+}
+
+/* === 顶部栏 === */
+.moonlight .galaxy-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.5rem;
+  margin-bottom: 2rem;
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius-lg);
+  backdrop-filter: blur(20px);
+}
+
+.moonlight .galaxy-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-weight: 600;
+  font-size: 1.1rem;
+  color: var(--text-bright);
+}
+
+.moonlight .galaxy-brand-icon {
+  width: 32px;
+  height: 32px;
+  fill: var(--text-bright);
+}
+
+/* === 主页样式 === */
+.moonlight .main-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: calc(100vh - 150px);
+  text-align: center;
+  padding: 2rem 0;
+}
+
+.moonlight .hero-section {
+  margin-bottom: 3rem;
+  animation: fadeIn 1s ease both;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(30px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.moonlight .hero-time {
+  font-size: 5rem;
+  font-weight: 300;
+  color: var(--text-bright);
+  letter-spacing: 8px;
+  font-variant-numeric: tabular-nums;
+  text-shadow: 0 0 40px rgba(255,255,255,0.3);
+  line-height: 1;
+}
+
+.moonlight .hero-info {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 1rem;
+  margin-top: 2rem;
+}
+
+.moonlight .hero-info-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.25rem;
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius-md);
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  backdrop-filter: blur(10px);
+}
+
+.moonlight .hero-info-item svg {
+  width: 18px;
+  height: 18px;
+  fill: var(--text-secondary);
+}
+
+/* 功能网格 */
+.moonlight .features-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.5rem;
+  width: 100%;
+  max-width: 900px;
+  animation: slideUp 1s ease 0.3s both;
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(50px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.moonlight .feature-card {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius-lg);
+  padding: 2rem 1.5rem;
+  text-align: center;
+  text-decoration: none;
+  color: var(--text-primary);
+  transition: all 0.4s ease;
+  backdrop-filter: blur(20px);
+}
+
+.moonlight .feature-card:hover {
+  transform: translateY(-8px);
+  border-color: rgba(255,255,255,0.3);
+  box-shadow: 0 20px 40px rgba(0,0,0,0.5), 0 0 30px rgba(255,255,255,0.1);
+}
+
+.moonlight .feature-icon {
+  width: 40px;
+  height: 40px;
+  margin: 0 auto 1rem;
+  fill: var(--text-secondary);
+  transition: all 0.4s;
+}
+
+.moonlight .feature-card:hover .feature-icon {
+  fill: var(--text-bright);
+  filter: drop-shadow(0 0 10px rgba(255,255,255,0.5));
+}
+
+.moonlight .feature-title {
+  font-size: 1rem;
+  font-weight: 500;
+  color: var(--text-bright);
+  margin-bottom: 0.5rem;
+}
+
+.moonlight .feature-desc {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+/* === 按钮系统 === */
+.moonlight .moon-btn,
+.moonlight .galaxy-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.875rem 1.5rem;
+  font-weight: 500;
+  color: var(--text-bright);
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all 0.3s;
+  backdrop-filter: blur(10px);
+}
+
+.moonlight .moon-btn:hover,
+.moonlight .galaxy-btn:hover {
+  background: rgba(255,255,255,0.1);
+  border-color: rgba(255,255,255,0.3);
+}
+
+.moonlight .moon-btn-primary,
+.moonlight .galaxy-btn-primary,
+.moonlight .moon-btn-gold,
+.moonlight .galaxy-btn-gold {
+  background: rgba(255,255,255,0.15);
+  border-color: rgba(255,255,255,0.3);
+}
+
+.moonlight .moon-home-btn,
+.moonlight .galaxy-home-btn {
+  position: fixed;
+  top: 1.5rem;
+  left: 1.5rem;
+  z-index: 1000;
+}
+
+/* === 卡片系统 === */
+.moonlight .moon-card,
+.moonlight .galaxy-card {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius-lg);
+  padding: 1.5rem;
+  backdrop-filter: blur(20px);
+  transition: all 0.3s;
+}
+
+.moonlight .moon-card:hover,
+.moonlight .galaxy-card:hover {
+  border-color: rgba(255,255,255,0.25);
+}
+
+.moonlight .moon-card-title,
+.moonlight .galaxy-card-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text-bright);
+  margin-bottom: 1rem;
+}
+
+/* === 功能页面 === */
+.moonlight .control-page,
+.moonlight .disk-page,
+.moonlight .photos-page,
+.moonlight .notes-page,
+.moonlight .system-page,
+.moonlight .settings-page {
+  padding: 1rem 0;
+}
+
+.moonlight .page-header {
+  text-align: center;
+  margin-bottom: 2rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--card-border);
+}
+
+.moonlight .page-title {
+  font-size: 1.75rem;
+  font-weight: 600;
+  color: var(--text-bright);
+}
+
+/* 设备网格 */
+.moonlight .devices-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1.5rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.moonlight .device-card {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius-lg);
+  padding: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  transition: all 0.3s;
+  backdrop-filter: blur(20px);
+}
+
+.moonlight .device-card:hover {
+  border-color: rgba(255,255,255,0.25);
+}
+
+.moonlight .device-card.active {
+  border-color: rgba(255,255,255,0.4);
+  box-shadow: 0 0 30px rgba(255,255,255,0.1);
+}
+
+.moonlight .device-icon-wrapper {
+  width: 56px;
+  height: 56px;
+  border-radius: var(--radius-md);
+  background: rgba(255,255,255,0.05);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.moonlight .device-card.active .device-icon-wrapper {
+  background: rgba(255,255,255,0.15);
+  box-shadow: 0 0 20px rgba(255,255,255,0.1);
+}
+
+.moonlight .device-icon {
+  width: 28px;
+  height: 28px;
+  fill: var(--text-secondary);
+}
+
+.moonlight .device-card.active .device-icon {
+  fill: var(--text-bright);
+}
+
+.moonlight .device-info {
+  flex: 1;
+}
+
+.moonlight .device-info h3 {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-bright);
+  margin-bottom: 0.25rem;
+}
+
+.moonlight .device-status {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+/* 开关 */
+.moonlight .switch {
+  position: relative;
+  display: inline-block;
+  width: 52px;
+  height: 28px;
+}
+
+.moonlight .switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.moonlight .switch-slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(255,255,255,0.1);
+  border: 1px solid rgba(255,255,255,0.2);
+  border-radius: 28px;
+  transition: 0.3s;
+}
+
+.moonlight .switch-slider::before {
+  content: "";
+  position: absolute;
+  height: 22px;
+  width: 22px;
+  left: 2px;
+  bottom: 2px;
+  background: var(--text-secondary);
+  border-radius: 50%;
+  transition: 0.3s;
+}
+
+.moonlight .switch input:checked + .switch-slider {
+  background: rgba(255,255,255,0.2);
+  border-color: rgba(255,255,255,0.4);
+}
+
+.moonlight .switch input:checked + .switch-slider::before {
+  transform: translateX(24px);
+  background: var(--text-bright);
+}
+
+/* 文件网格 */
+.moonlight .file-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 1rem;
+}
+
+.moonlight .file-item {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius-md);
+  padding: 1.5rem 1rem;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s;
+  backdrop-filter: blur(10px);
+}
+
+.moonlight .file-item:hover {
+  transform: translateY(-4px);
+  border-color: rgba(255,255,255,0.25);
+}
+
+/* 相册 */
+.moonlight .gallery {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 2rem;
+}
+
+.moonlight .photo-card {
+  aspect-ratio: 1/1;
+  cursor: pointer;
+  perspective: 1200px;
+}
+
+.moonlight .photo-inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transition: transform 0.8s ease;
+  transform-style: preserve-3d;
+}
+
+.moonlight .photo-card:hover .photo-inner {
+  transform: rotateY(180deg);
+}
+
+.moonlight .photo-front,
+.moonlight .photo-back {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  backface-visibility: hidden;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  border: 1px solid var(--card-border);
+}
+
+.moonlight .photo-front img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.moonlight .photo-back {
+  background: var(--card-bg);
+  transform: rotateY(180deg);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  padding: 1.5rem;
+  backdrop-filter: blur(20px);
+}
+
+/* 设置页面 */
+.moonlight .settings-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+  gap: 1.5rem;
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+.moonlight .settings-card {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius-lg);
+  padding: 1.5rem;
+  backdrop-filter: blur(20px);
+}
+
+.moonlight .settings-card h2 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text-bright);
+  margin-bottom: 1.5rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--card-border);
+}
+
+.moonlight .form-group {
+  margin-bottom: 1.25rem;
+}
+
+.moonlight .form-group label {
+  display: block;
+  margin-bottom: 0.5rem;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+}
+
+.moonlight .form-group input {
+  width: 100%;
+  padding: 0.875rem 1rem;
+  background: rgba(0,0,0,0.3);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius-md);
+  color: var(--text-bright);
+  font-size: 0.95rem;
+  transition: all 0.3s;
+}
+
+.moonlight .form-group input:focus {
+  border-color: rgba(255,255,255,0.3);
+  outline: none;
+}
+
+.moonlight .form-actions {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.moonlight .status-display {
+  padding: 0.75rem 1rem;
+  margin-bottom: 1rem;
+  background: rgba(75, 108, 183, 0.15);
+  border: 1px solid rgba(75, 108, 183, 0.4);
+  border-radius: var(--radius-md);
+  color: #6b8dd6;
+  font-size: 0.9rem;
+  text-align: center;
+  box-shadow: 0 0 15px rgba(75, 108, 183, 0.2);
+}
+
+.moonlight .status-display.offline {
+  background: rgba(150, 100, 100, 0.1);
+  border-color: rgba(200, 100, 100, 0.3);
+  color: #c86464;
+}
+
+/* 主题选择器 */
+.moonlight .theme-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+}
+
+.moonlight .theme-option {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  background: rgba(0,0,0,0.3);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.moonlight .theme-option:hover {
+  border-color: rgba(255,255,255,0.25);
+  background: rgba(255,255,255,0.05);
+}
+
+.moonlight .theme-option.active {
+  border-color: rgba(255,255,255,0.4);
+  background: rgba(255,255,255,0.1);
+}
+
+/* === 备忘录页面专用样式 === */
+.moonlight .note-card {
+  --accent-color: var(--sun-gold);
+  --accent-glow: var(--sun-glow);
+  --card-bg: rgba(20, 20, 25, 0.7);
+  --card-border: rgba(255, 255, 255, 0.15);
+  --item-bg: rgba(255, 255, 255, 0.03);
+  --item-border: rgba(255, 255, 255, 0.1);
+  --item-hover-bg: rgba(255, 215, 0, 0.08);
+  --input-bg: rgba(0, 0, 0, 0.3);
+  --input-border: rgba(255, 255, 255, 0.15);
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius-lg);
+  backdrop-filter: blur(20px);
+}
+
+.moonlight .note-card h2 {
+  color: var(--text-bright);
+}
+
+.moonlight .note-card h2 svg {
+  fill: var(--sun-gold);
+}
+
+.moonlight .member-item:hover,
+.moonlight .task-item:hover {
+  border-color: var(--sun-gold);
+  background: rgba(255, 215, 0, 0.08);
+}
+
+.moonlight .task-item {
+  border-left-color: var(--sun-gold);
+}
+
+.moonlight .form-group input,
+.moonlight .form-group select {
+  background: var(--input-bg);
+  border: 1px solid var(--input-border);
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
+}
+
+.moonlight .form-group input:focus,
+.moonlight .form-group select:focus {
+  border-color: rgba(255, 255, 255, 0.3);
+  box-shadow: 0 0 0 3px rgba(255, 215, 0, 0.1);
+}
+
+/* 响应式 */
+@media (max-width: 768px) {
+  .moonlight .hero-time { font-size: 3rem; letter-spacing: 4px; }
+  .moonlight .features-grid { grid-template-columns: repeat(2, 1fr); gap: 1rem; }
+  .moonlight .settings-grid { grid-template-columns: 1fr; }
+  .moonlight .theme-grid { grid-template-columns: 1fr; }
+  .moonlight .devices-grid { grid-template-columns: 1fr; }
+  body.moonlight::after { width: 100px; height: 100px; }
+}
+
+@media (max-width: 480px) {
+  .moonlight .hero-time { font-size: 2.5rem; }
+  .moonlight .features-grid { grid-template-columns: 1fr; }
+}
+
+/* === 新增动态元素 === */
+
+/* 流星划过夜空 - 更明显的效果 */
+.moonlight .shooting-star {
+  position: fixed;
+  width: 6px;
+  height: 6px;
+  background: white;
+  border-radius: 50%;
+  box-shadow: 
+    0 0 20px 4px rgba(255, 255, 255, 1),
+    0 0 40px 8px rgba(255, 255, 255, 0.5);
+  z-index: -1;
+  opacity: 0;
+}
+
+.moonlight .shooting-star::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  right: 0;
+  width: 200px;
+  height: 3px;
+  background: linear-gradient(to left, rgba(255,255,255,1), rgba(255,255,255,0.5), transparent);
+  transform: translateY(-50%);
+  box-shadow: 0 0 10px rgba(255,255,255,0.8);
+}
+
+.moonlight .shooting-star:nth-child(1) {
+  top: 15%;
+  left: 5%;
+  animation: shoot 5s linear infinite;
+  animation-delay: 0s;
+}
+
+.moonlight .shooting-star:nth-child(2) {
+  top: 30%;
+  left: 50%;
+  animation: shoot 7s linear infinite;
+  animation-delay: 2s;
+}
+
+.moonlight .shooting-star:nth-child(3) {
+  top: 10%;
+  left: 70%;
+  animation: shoot 6s linear infinite;
+  animation-delay: 4s;
+}
+
+.moonlight .shooting-star:nth-child(4) {
+  top: 40%;
+  left: 20%;
+  animation: shoot 8s linear infinite;
+  animation-delay: 1s;
+}
+
+@keyframes shoot {
+  0% {
+    transform: translateX(0) translateY(0);
+    opacity: 0;
+  }
+  3% { opacity: 1; }
+  20% {
+    transform: translateX(300px) translateY(150px);
+    opacity: 0;
+  }
+  100% { opacity: 0; }
+}
+
+/* 地球自转效果 - 更新现有地球 */
+body.moonlight::after {
+  animation: earthGlow 4s ease-in-out infinite alternate, earthRotate 60s linear infinite;
+}
+
+@keyframes earthRotate {
+  from { background-position: 0 0, 0 0, 0 0, 0 0, 0 0, 0 0, 0 0; }
+  to { background-position: 150px 0, 150px 0, 150px 0, 150px 0, 150px 0, 150px 0, 150px 0; }
+}
+
+/* 月尘飘浮效果 */
+.moonlight .moon-dust {
+  position: fixed;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+  z-index: -1;
+}
+
+.moonlight .moon-dust::before,
+.moonlight .moon-dust::after {
+  content: "";
+  position: absolute;
+  width: 2px;
+  height: 2px;
+  background: rgba(200, 200, 200, 0.5);
+  border-radius: 50%;
+  box-shadow: 
+    10vw 20vh 0 rgba(200, 200, 200, 0.4),
+    30vw 40vh 0 rgba(200, 200, 200, 0.3),
+    50vw 15vh 0 rgba(200, 200, 200, 0.5),
+    70vw 60vh 0 rgba(200, 200, 200, 0.4),
+    90vw 30vh 0 rgba(200, 200, 200, 0.3),
+    20vw 70vh 0 rgba(200, 200, 200, 0.4),
+    60vw 80vh 0 rgba(200, 200, 200, 0.3),
+    80vw 50vh 0 rgba(200, 200, 200, 0.5);
+  animation: dustFloat 20s ease-in-out infinite;
+}
+
+.moonlight .moon-dust::after {
+  animation-delay: 10s;
+  opacity: 0.5;
+}
+
+@keyframes dustFloat {
+  0%, 100% {
+    transform: translateY(0) translateX(0);
+    opacity: 0.5;
+  }
+  25% {
+    transform: translateY(-10px) translateX(5px);
+    opacity: 0.8;
+  }
+  50% {
+    transform: translateY(-5px) translateX(-5px);
+    opacity: 0.6;
+  }
+  75% {
+    transform: translateY(-15px) translateX(3px);
+    opacity: 0.9;
+  }
+}
+
+/* === System页面专用样式 */
+.moonlight .system-page {
+  --accent-color: var(--sun-gold);
+  --accent-glow: var(--sun-glow);
+}
+
+.moonlight .system-page .page-title {
+  background: linear-gradient(90deg, var(--silver-light), var(--sun-gold));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.moonlight .system-page .system-card:hover {
+  border-color: var(--sun-gold);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.4), 0 0 20px var(--sun-glow);
+}
+
+.moonlight .system-page .system-icon {
+  fill: var(--sun-gold);
+  filter: drop-shadow(0 0 10px var(--sun-glow));
+}
+
+.moonlight .system-page .progress-ring-fill {
+  stroke: var(--sun-gold);
+  filter: drop-shadow(0 0 5px var(--sun-glow));
+}

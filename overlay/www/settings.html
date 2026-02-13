@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>系统设置</title>
   <link rel="stylesheet" href="/assets/galaxy-theme.css">
+  <script src="/assets/theme-switcher.js"></script>
   <style>
     .settings-page { padding: 2rem 0; }
     
@@ -132,8 +133,83 @@
       box-shadow: 0 0 20px rgba(255, 100, 100, 0.2);
     }
 
+    /* 主题选择器样式 */
+    .theme-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1rem;
+    }
+
+    .theme-option {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: 1rem;
+      background: rgba(1, 4, 9, 0.4);
+      border: 2px solid var(--glass-border);
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .theme-option:hover {
+      border-color: var(--jade-primary);
+      background: rgba(0, 210, 106, 0.1);
+      transform: translateX(5px);
+    }
+
+    .theme-option.active {
+      border-color: var(--gold-primary);
+      background: rgba(255, 215, 0, 0.1);
+      box-shadow: 0 0 20px var(--gold-glow-dim);
+    }
+
+    .theme-preview {
+      width: 60px;
+      height: 60px;
+      border-radius: var(--radius-sm);
+      flex-shrink: 0;
+      border: 2px solid rgba(255,255,255,0.2);
+    }
+
+    .theme-info {
+      flex: 1;
+    }
+
+    .theme-name {
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: 0.25rem;
+    }
+
+    .theme-desc {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+
+    .status-display {
+      padding: 0.75rem 1rem;
+      margin-bottom: 1rem;
+      background: rgba(0, 210, 106, 0.1);
+      border: 1px solid var(--jade-primary);
+      border-radius: var(--radius-md);
+      color: var(--jade-light);
+      font-size: 0.9rem;
+      text-align: center;
+    }
+
+    .status-display.offline {
+      background: rgba(255, 100, 100, 0.1);
+      border-color: #ff6464;
+      color: #ff6464;
+    }
+
     @media (max-width: 768px) {
       .settings-grid {
+        grid-template-columns: 1fr;
+      }
+      
+      .theme-grid {
         grid-template-columns: 1fr;
       }
       
@@ -157,25 +233,51 @@
     </div>
 
     <div class="settings-grid">
-      <!-- 天气设置 -->
+      <!-- 界面风格设置 -->
+      <div class="settings-card" style="grid-column: 1 / -1;">
+        <h2>
+          <svg viewBox="0 0 24 24"><path d="M12 3c-4.97 0-9 4.03-9 9s4.03 9 9 9c.83 0 1.5-.67 1.5-1.5 0-.39-.15-.74-.39-1.01-.23-.26-.38-.61-.38-.99 0-.83.67-1.5 1.5-1.5H16c2.76 0 5-2.24 5-5 0-4.42-4.03-8-9-8zm-5.5 9c-.83 0-1.5-.67-1.5-1.5S5.67 9 6.5 9 8 9.67 8 10.5 7.33 12 6.5 12zm3-4C8.67 8 8 7.33 8 6.5S8.67 5 9.5 5s1.5.67 1.5 1.5S10.33 8 9.5 8zm5 0c-.83 0-1.5-.67-1.5-1.5S13.67 5 14.5 5s1.5.67 1.5 1.5S15.33 8 14.5 8zm3 4c-.83 0-1.5-.67-1.5-1.5S16.67 9 17.5 9s1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/></svg>
+          界面风格
+        </h2>
+        <div class="theme-grid" id="theme-selector">
+          <!-- 主题选项将由JS动态生成 -->
+        </div>
+      </div>
+
+      <!-- WiFi设置 -->
       <div class="settings-card">
         <h2>
-          <svg viewBox="0 0 24 24"><path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96z"/></svg>
-          天气设置
+          <svg viewBox="0 0 24 24"><path d="M1 9l2 2c4.97-4.97 13.03-4.97 18 0l2-2C16.93 2.93 7.08 2.93 1 9zm8 8l3 3 3-3c-1.65-1.66-4.34-1.66-6 0zm-4-4l2 2c2.76-2.76 7.24-2.76 10 0l2-2C15.14 9.14 8.87 9.14 5 13z"/></svg>
+          WiFi设置
         </h2>
-        <form id="weather-form">
+        <div id="wifi-status" class="status-display">加载中...</div>
+        <form id="wifi-form">
           <div class="form-group">
-            <label>城市名称</label>
-            <input type="text" id="weather-city" placeholder="例如：北京" required />
+            <label>WiFi名称 (SSID)</label>
+            <input type="text" id="wifi-ssid" placeholder="输入WiFi名称" />
           </div>
           <div class="form-group">
-            <label>和风天气 API Key</label>
-            <input type="text" id="weather-key" placeholder="输入您的 API Key" required />
+            <label>WiFi密码</label>
+            <input type="password" id="wifi-password" placeholder="输入WiFi密码" />
           </div>
           <div class="form-actions">
-            <button type="submit" class="galaxy-btn galaxy-btn-primary">保存天气设置</button>
+            <button type="submit" class="galaxy-btn galaxy-btn-primary">连接WiFi</button>
+            <button type="button" class="galaxy-btn" id="wifi-disconnect">断开连接</button>
           </div>
         </form>
+      </div>
+
+      <!-- 内网穿透设置 -->
+      <div class="settings-card">
+        <h2>
+          <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>
+          内网穿透
+        </h2>
+        <div id="tunnel-status" class="status-display">加载中...</div>
+        <div class="form-actions" style="margin-top: 1rem;">
+          <button type="button" class="galaxy-btn galaxy-btn-primary" id="tunnel-start">启动服务</button>
+          <button type="button" class="galaxy-btn" id="tunnel-stop">停止服务</button>
+        </div>
       </div>
 
       <!-- 账户设置 -->
@@ -219,48 +321,6 @@
       }, 3000);
     }
 
-    // 加载当前天气设置
-    async function loadWeatherSettings() {
-      try {
-        const res = await fetch('/home/settings/weather');
-        if (!res.ok) throw new Error('获取设置失败');
-        const data = await res.json();
-        
-        document.getElementById('weather-city').value = data.city || '';
-        document.getElementById('weather-key').value = data.api_key || '';
-      } catch (err) {
-        console.error('加载天气设置失败:', err);
-      }
-    }
-
-    // 天气设置表单
-    document.getElementById('weather-form').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const city = document.getElementById('weather-city').value.trim();
-      const apiKey = document.getElementById('weather-key').value.trim();
-
-      if (!city || !apiKey) {
-        showToast('请填写所有字段', false);
-        return;
-      }
-
-      try {
-        const res = await fetch('/home/settings/weather', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ city, api_key: apiKey })
-        });
-
-        if (res.ok) {
-          showToast('天气设置已保存');
-        } else {
-          showToast('保存失败', false);
-        }
-      } catch (err) {
-        showToast('网络错误', false);
-      }
-    });
-
     // 账户设置表单
     document.getElementById('account-form').addEventListener('submit', async (e) => {
       e.preventDefault();
@@ -299,8 +359,170 @@
       }
     });
 
+    // 初始化主题选择器
+    function initThemeSelector() {
+      const container = document.getElementById('theme-selector');
+      const themes = ThemeSwitcher.getAll();
+      const currentTheme = ThemeSwitcher.getCurrent();
+
+      container.innerHTML = Object.entries(themes).map(([key, theme]) => `
+        <div class="theme-option ${key === currentTheme ? 'active' : ''}" data-theme="${key}">
+          <div class="theme-preview" style="background: ${theme.preview}"></div>
+          <div class="theme-info">
+            <div class="theme-name">${theme.name}</div>
+            <div class="theme-desc">${theme.description}</div>
+          </div>
+        </div>
+      `).join('');
+
+      // 绑定点击事件
+      container.querySelectorAll('.theme-option').forEach(option => {
+        option.addEventListener('click', () => {
+          const theme = option.dataset.theme;
+          ThemeSwitcher.apply(theme);
+          
+          // 更新选中状态
+          container.querySelectorAll('.theme-option').forEach(o => o.classList.remove('active'));
+          option.classList.add('active');
+          
+          showToast(`已切换到「${themes[theme].name}」风格`);
+        });
+      });
+    }
+
+    // 加载WiFi状态
+    async function loadWifiStatus() {
+      try {
+        const res = await fetch('/home/settings/wifi');
+        if (!res.ok) throw new Error('获取失败');
+        const data = await res.json();
+        
+        const statusEl = document.getElementById('wifi-status');
+        if (data.connected) {
+          statusEl.textContent = `已连接: ${data.ssid || '未知网络'}`;
+          statusEl.classList.remove('offline');
+        } else {
+          statusEl.textContent = '未连接';
+          statusEl.classList.add('offline');
+        }
+      } catch (err) {
+        document.getElementById('wifi-status').textContent = '获取状态失败';
+      }
+    }
+
+    // WiFi连接
+    document.getElementById('wifi-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const ssid = document.getElementById('wifi-ssid').value.trim();
+      const password = document.getElementById('wifi-password').value;
+
+      if (!ssid) {
+        showToast('请输入WiFi名称', false);
+        return;
+      }
+
+      try {
+        const res = await fetch('/home/settings/wifi', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ssid, password })
+        });
+
+        if (res.ok) {
+          showToast('WiFi连接中...');
+          setTimeout(loadWifiStatus, 3000);
+        } else {
+          showToast('连接失败', false);
+        }
+      } catch (err) {
+        showToast('网络错误', false);
+      }
+    });
+
+    // WiFi断开
+    document.getElementById('wifi-disconnect').addEventListener('click', async () => {
+      try {
+        const res = await fetch('/home/settings/wifi', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'disconnect' })
+        });
+
+        if (res.ok) {
+          showToast('已断开连接');
+          loadWifiStatus();
+        } else {
+          showToast('断开失败', false);
+        }
+      } catch (err) {
+        showToast('网络错误', false);
+      }
+    });
+
+    // 加载内网穿透状态
+    async function loadTunnelStatus() {
+      try {
+        const res = await fetch('/home/settings/public');
+        if (!res.ok) throw new Error('获取失败');
+        const data = await res.json();
+        
+        const statusEl = document.getElementById('tunnel-status');
+        if (data.enabled) {
+          statusEl.textContent = '服务运行中';
+          statusEl.classList.remove('offline');
+        } else {
+          statusEl.textContent = '服务已停止';
+          statusEl.classList.add('offline');
+        }
+      } catch (err) {
+        document.getElementById('tunnel-status').textContent = '获取状态失败';
+      }
+    }
+
+    // 启动内网穿透
+    document.getElementById('tunnel-start').addEventListener('click', async () => {
+      try {
+        const res = await fetch('/home/settings/public', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ enabled: true })
+        });
+
+        if (res.ok) {
+          showToast('服务启动中...');
+          setTimeout(loadTunnelStatus, 2000);
+        } else {
+          showToast('启动失败', false);
+        }
+      } catch (err) {
+        showToast('网络错误', false);
+      }
+    });
+
+    // 停止内网穿透
+    document.getElementById('tunnel-stop').addEventListener('click', async () => {
+      try {
+        const res = await fetch('/home/settings/public', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ enabled: false })
+        });
+
+        if (res.ok) {
+          showToast('服务已停止');
+          loadTunnelStatus();
+        } else {
+          showToast('停止失败', false);
+        }
+      } catch (err) {
+        showToast('网络错误', false);
+      }
+    });
+
     // 初始化
-    loadWeatherSettings();
+    initThemeSelector();
+    loadWifiStatus();
+    loadTunnelStatus();
   </script>
 </body>
 </html>

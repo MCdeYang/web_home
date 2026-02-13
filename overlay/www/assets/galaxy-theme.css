@@ -1,169 +1,59 @@
-/* === Galaxy Jade & Gold Theme - 翡翠绿流金风格 === */
-/* 基于GitHub Galaxy设计系统 */
+/* === Galaxy Theme - 翡翠流金风格 (默认) === */
+/* 主色调：翡翠绿 + 流金色 */
 
 :root {
-  /* === 核心色彩系统 === */
-  /* 深空背景 */
-  --galaxy-bg-deep: #010409;
-  --galaxy-bg-panel: #0d1117;
-  --galaxy-bg-card: rgba(22, 27, 34, 0.7);
-  --galaxy-bg-card-hover: rgba(22, 27, 34, 0.9);
-  
-  /* 翡翠绿 - 主色调 */
   --jade-primary: #00d26a;
-  --jade-light: #3ddc84;
+  --jade-light: #4ade80;
   --jade-dark: #00a854;
-  --jade-glow: rgba(0, 210, 106, 0.6);
+  --jade-glow: rgba(0, 210, 106, 0.5);
   --jade-glow-soft: rgba(0, 210, 106, 0.2);
   --jade-glow-dim: rgba(0, 210, 106, 0.1);
   
-  /* 流金 - 辅色调 */
   --gold-primary: #ffd700;
-  --gold-light: #ffeb3b;
-  --gold-dark: #d4af37;
-  --gold-glow: rgba(255, 215, 0, 0.6);
+  --gold-light: #ffed4e;
+  --gold-dark: #daa520;
+  --gold-glow: rgba(255, 215, 0, 0.5);
   --gold-glow-soft: rgba(255, 215, 0, 0.2);
   --gold-glow-dim: rgba(255, 215, 0, 0.1);
   
-  /* 文字色彩 */
+  --bg-deep: #010409;
+  --bg-card: rgba(22, 27, 34, 0.8);
+  --glass-border: rgba(255, 255, 255, 0.1);
+  
   --text-primary: #f0f6fc;
-  --text-secondary: #c9d1d9;
-  --text-muted: #8b949e;
-  --text-dim: #6e7681;
+  --text-secondary: #8b949e;
+  --text-muted: #6e7681;
   
-  /* 玻璃态效果 */
-  --glass-bg: rgba(22, 27, 34, 0.6);
-  --glass-bg-light: rgba(255, 255, 255, 0.05);
-  --glass-border: rgba(240, 246, 252, 0.1);
-  --glass-border-hover: rgba(0, 210, 106, 0.4);
+  --font-mono: 'SF Mono', Monaco, monospace;
   
-  /* 阴影系统 */
-  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.3);
-  --shadow-md: 0 4px 20px rgba(0, 0, 0, 0.4);
-  --shadow-lg: 0 8px 40px rgba(0, 0, 0, 0.5);
-  --shadow-glow-jade: 0 0 30px var(--jade-glow-soft);
-  --shadow-glow-gold: 0 0 30px var(--gold-glow-soft);
-  
-  /* 圆角 */
   --radius-sm: 8px;
   --radius-md: 12px;
-  --radius-lg: 18px;
+  --radius-lg: 16px;
   --radius-xl: 24px;
-  --radius-pill: 100px;
   
-  /* 动画 */
+  --shadow-sm: 0 2px 8px rgba(0,0,0,0.4);
+  --shadow-md: 0 4px 20px rgba(0,0,0,0.5);
+  --shadow-lg: 0 8px 40px rgba(0,0,0,0.6);
+  
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
-  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
-  --duration-fast: 150ms;
-  --duration-normal: 300ms;
-  --duration-slow: 500ms;
-  
-  /* 字体 */
-  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", "PingFang SC", "Microsoft YaHei", Helvetica, Arial, sans-serif;
-  --font-mono: "SF Mono", "Fira Code", "JetBrains Mono", monospace;
 }
 
-/* === 基础重置 === */
 *, *::before, *::after {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
 }
 
-html {
-  scroll-behavior: smooth;
-}
-
 body.galaxy {
-  font-family: var(--font-sans);
-  background-color: var(--galaxy-bg-deep);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: 
+    radial-gradient(ellipse 80% 50% at 20% 40%, rgba(0, 210, 106, 0.15) 0%, transparent 50%),
+    radial-gradient(ellipse 60% 40% at 80% 60%, rgba(255, 215, 0, 0.1) 0%, transparent 40%),
+    var(--bg-deep);
   color: var(--text-primary);
   min-height: 100vh;
   overflow-x: hidden;
   line-height: 1.6;
-  position: relative;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-
-/* === 4K星空背景效果 === */
-body.galaxy::before {
-  content: "";
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: 
-    /* 星云效果 - 翡翠绿 */
-    radial-gradient(ellipse 80vw 60vh at 20% 40%, var(--jade-glow-dim) 0%, transparent 50%),
-    radial-gradient(ellipse 60vw 50vh at 80% 20%, var(--jade-glow-dim) 0%, transparent 40%),
-    /* 星云效果 - 流金 */
-    radial-gradient(ellipse 50vw 40vh at 70% 80%, var(--gold-glow-dim) 0%, transparent 45%),
-    radial-gradient(ellipse 40vw 30vh at 30% 90%, var(--gold-glow-dim) 0%, transparent 35%),
-    /* 基础渐变 */
-    radial-gradient(ellipse 100vw 100vh at 50% 50%, var(--galaxy-bg-panel) 0%, var(--galaxy-bg-deep) 100%);
-  z-index: -2;
-  animation: nebulaFloat 20s ease-in-out infinite alternate;
-}
-
-/* 动态星空 */
-body.galaxy::after {
-  content: "";
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-image: 
-    /* 星星层1 - 小星星 */
-    radial-gradient(1px 1px at 5% 10%, rgba(255,255,255,0.9), transparent),
-    radial-gradient(1px 1px at 15% 25%, rgba(255,255,255,0.8), transparent),
-    radial-gradient(1px 1px at 25% 15%, rgba(255,255,255,0.7), transparent),
-    radial-gradient(1px 1px at 35% 45%, rgba(255,255,255,0.9), transparent),
-    radial-gradient(1px 1px at 45% 20%, rgba(255,255,255,0.6), transparent),
-    radial-gradient(1px 1px at 55% 55%, rgba(255,255,255,0.8), transparent),
-    radial-gradient(1px 1px at 65% 35%, rgba(255,255,255,0.7), transparent),
-    radial-gradient(1px 1px at 75% 65%, rgba(255,255,255,0.9), transparent),
-    radial-gradient(1px 1px at 85% 45%, rgba(255,255,255,0.6), transparent),
-    radial-gradient(1px 1px at 95% 75%, rgba(255,255,255,0.8), transparent),
-    /* 星星层2 - 稍大的星星 */
-    radial-gradient(2px 2px at 10% 60%, rgba(255,255,255,0.7), transparent),
-    radial-gradient(2px 2px at 30% 80%, rgba(255,255,255,0.5), transparent),
-    radial-gradient(2px 2px at 50% 70%, rgba(255,255,255,0.6), transparent),
-    radial-gradient(2px 2px at 70% 85%, rgba(255,255,255,0.7), transparent),
-    radial-gradient(2px 2px at 90% 30%, rgba(255,255,255,0.5), transparent),
-    /* 星星层3 - 闪烁的大星星 */
-    radial-gradient(3px 3px at 20% 90%, rgba(255,215,0,0.6), transparent),
-    radial-gradient(3px 3px at 60% 10%, rgba(0,210,106,0.5), transparent),
-    radial-gradient(3px 3px at 80% 50%, rgba(255,215,0,0.4), transparent);
-  background-size: 400px 400px, 400px 400px, 400px 400px, 400px 400px, 400px 400px,
-                   400px 400px, 400px 400px, 400px 400px, 400px 400px, 400px 400px,
-                   600px 600px, 600px 600px, 600px 600px, 600px 600px, 600px 600px,
-                   800px 800px, 800px 800px, 800px 800px;
-  z-index: -1;
-  animation: starsTwinkle 8s ease-in-out infinite alternate, starsMove 200s linear infinite;
-}
-
-@keyframes nebulaFloat {
-  0% { 
-    opacity: 0.6; 
-    transform: scale(1) rotate(0deg); 
-  }
-  100% { 
-    opacity: 0.9; 
-    transform: scale(1.05) rotate(2deg); 
-  }
-}
-
-@keyframes starsTwinkle {
-  0%, 100% { opacity: 0.5; }
-  50% { opacity: 0.9; }
-}
-
-@keyframes starsMove {
-  from { background-position: 0 0, 0 0, 0 0, 0 0, 0 0, 0 0, 0 0, 0 0, 0 0, 0 0, 0 0, 0 0, 0 0, 0 0, 0 0, 0 0, 0 0, 0 0; }
-  to { background-position: 0 400px, 0 400px, 0 400px, 0 400px, 0 400px, 0 400px, 0 400px, 0 400px, 0 400px, 0 400px, 0 600px, 0 600px, 0 600px, 0 600px, 0 600px, 0 800px, 0 800px, 0 800px; }
 }
 
 /* === 粒子画布 === */
@@ -173,529 +63,815 @@ body.galaxy::after {
   left: 0;
   width: 100%;
   height: 100%;
-  z-index: 0;
   pointer-events: none;
+  z-index: 0;
 }
 
 /* === 布局容器 === */
 .galaxy-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 1.5rem;
   position: relative;
   z-index: 1;
-  max-width: 1400px;
-  margin: 0 auto;
-  padding: 2rem;
-  min-height: 100vh;
 }
 
-/* === 顶部导航栏 === */
+/* === 顶部栏 === */
 .galaxy-header {
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  justify-content: space-between;
   padding: 1rem 1.5rem;
   margin-bottom: 2rem;
-  background: var(--glass-bg);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  background: var(--bg-card);
   border: 1px solid var(--glass-border);
-  border-radius: var(--radius-pill);
+  border-radius: var(--radius-lg);
+  backdrop-filter: blur(20px);
   box-shadow: var(--shadow-md);
-  animation: slideDown 0.6s var(--ease-out) both;
-}
-
-@keyframes slideDown {
-  from {
-    opacity: 0;
-    transform: translateY(-20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
 }
 
 .galaxy-brand {
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  font-weight: 700;
   font-size: 1.25rem;
+  font-weight: 700;
   color: var(--text-primary);
-  text-shadow: 0 0 20px var(--jade-glow-soft);
 }
 
 .galaxy-brand-icon {
   width: 32px;
   height: 32px;
   fill: var(--jade-primary);
-  filter: drop-shadow(0 0 8px var(--jade-glow));
+  filter: drop-shadow(0 0 10px var(--jade-glow));
+}
+
+/* YYMK 品牌标识 */
+.brand-tag {
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  opacity: 0.6;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  margin-left: 0.5rem;
+  padding: 0.15rem 0.4rem;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 /* === 按钮系统 === */
 .galaxy-btn {
-  appearance: none;
   display: inline-flex;
   align-items: center;
-  justify-content: center;
   gap: 0.5rem;
-  padding: 0.75rem 1.25rem;
-  font-size: 0.95rem;
-  font-weight: 500;
-  color: var(--text-primary);
-  background: transparent;
+  padding: 0.6rem 1.2rem;
+  background: rgba(255, 255, 255, 0.05);
   border: 1px solid var(--glass-border);
-  border-radius: var(--radius-pill);
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
+  font-size: 0.9rem;
+  font-weight: 500;
   cursor: pointer;
+  transition: all 0.3s var(--ease-out);
   text-decoration: none;
-  transition: all var(--duration-normal) var(--ease-out);
-  position: relative;
-  overflow: hidden;
-}
-
-.galaxy-btn::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
-  transition: left 0.5s ease;
-}
-
-.galaxy-btn:hover::before {
-  left: 100%;
 }
 
 .galaxy-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
   border-color: var(--jade-primary);
-  background: var(--glass-bg-light);
   box-shadow: 0 0 20px var(--jade-glow-dim);
   transform: translateY(-2px);
 }
 
-.galaxy-btn:active {
-  transform: translateY(0);
-}
-
-/* 主要按钮 - 翡翠绿 */
 .galaxy-btn-primary {
-  background: linear-gradient(135deg, rgba(0, 210, 106, 0.2), rgba(0, 210, 106, 0.05));
-  border-color: rgba(0, 210, 106, 0.5);
-  color: var(--jade-light);
+  background: linear-gradient(135deg, var(--jade-primary), var(--jade-dark));
+  border-color: transparent;
+  box-shadow: 0 4px 15px var(--jade-glow-soft);
 }
 
 .galaxy-btn-primary:hover {
-  background: linear-gradient(135deg, rgba(0, 210, 106, 0.3), rgba(0, 210, 106, 0.1));
-  border-color: var(--jade-primary);
-  box-shadow: 0 0 25px var(--jade-glow-soft), inset 0 0 10px var(--jade-glow-dim);
-  text-shadow: 0 0 8px var(--jade-glow);
+  box-shadow: 0 6px 25px var(--jade-glow);
 }
 
-/* 流金按钮 */
 .galaxy-btn-gold {
-  background: linear-gradient(135deg, rgba(255, 215, 0, 0.2), rgba(255, 215, 0, 0.05));
-  border-color: rgba(255, 215, 0, 0.5);
-  color: var(--gold-primary);
+  background: linear-gradient(135deg, var(--gold-primary), var(--gold-dark));
+  border-color: transparent;
+  color: #000;
+  box-shadow: 0 4px 15px var(--gold-glow-soft);
 }
 
 .galaxy-btn-gold:hover {
-  background: linear-gradient(135deg, rgba(255, 215, 0, 0.3), rgba(255, 215, 0, 0.1));
-  border-color: var(--gold-primary);
-  box-shadow: 0 0 25px var(--gold-glow-soft), inset 0 0 10px var(--gold-glow-dim);
-  text-shadow: 0 0 8px var(--gold-glow);
+  box-shadow: 0 6px 25px var(--gold-glow);
 }
 
-/* 返回主页按钮 */
 .galaxy-home-btn {
   position: fixed;
   top: 1.5rem;
   left: 1.5rem;
-  z-index: 1000;
-  padding: 0.6rem 1rem;
-  background: var(--glass-bg);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  z-index: 100;
 }
 
-/* === 卡片系统 === */
-.galaxy-card {
-  background: linear-gradient(180deg, var(--galaxy-bg-card) 0%, rgba(22, 27, 34, 0.4) 100%);
+/* === 功能卡片网格 === */
+.features-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.feature-card {
+  background: var(--bg-card);
   border: 1px solid var(--glass-border);
   border-radius: var(--radius-lg);
-  padding: 1.5rem;
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  transition: all var(--duration-normal) var(--ease-out);
+  padding: 1.75rem;
+  text-decoration: none;
+  color: var(--text-primary);
+  transition: all 0.4s var(--ease-out);
   position: relative;
   overflow: hidden;
+  backdrop-filter: blur(10px);
 }
 
-.galaxy-card::before {
-  content: "";
+.feature-card::before {
+  content: '';
   position: absolute;
   top: 0;
   left: 0;
   right: 0;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, var(--jade-primary), transparent);
+  height: 3px;
+  background: linear-gradient(90deg, var(--jade-primary), var(--gold-primary));
   opacity: 0;
-  transition: opacity var(--duration-normal);
+  transition: opacity 0.3s;
 }
 
-.galaxy-card:hover {
-  transform: translateY(-5px) scale(1.01);
-  border-color: var(--glass-border-hover);
-  box-shadow: var(--shadow-lg), var(--shadow-glow-jade);
-  background: linear-gradient(180deg, var(--galaxy-bg-card-hover) 0%, rgba(22, 27, 34, 0.6) 100%);
+.feature-card:hover {
+  transform: translateY(-8px);
+  border-color: var(--jade-primary);
+  box-shadow: 
+    0 20px 40px rgba(0,0,0,0.4),
+    0 0 30px var(--jade-glow-dim);
 }
 
-.galaxy-card:hover::before {
-  opacity: 0.5;
+.feature-card:hover::before {
+  opacity: 1;
 }
 
-/* 流金边框卡片 */
-.galaxy-card-gold::before {
-  background: linear-gradient(90deg, transparent, var(--gold-primary), transparent);
+.feature-icon {
+  width: 48px;
+  height: 48px;
+  margin-bottom: 1rem;
+  fill: var(--jade-primary);
+  filter: drop-shadow(0 0 10px var(--jade-glow));
+  transition: all 0.3s;
 }
 
-.galaxy-card-gold:hover {
-  box-shadow: var(--shadow-lg), var(--shadow-glow-gold);
-  border-color: rgba(255, 215, 0, 0.4);
+.feature-card:hover .feature-icon {
+  transform: scale(1.1);
+  filter: drop-shadow(0 0 15px var(--jade-glow));
 }
 
-/* 卡片标题 */
-.galaxy-card-title {
+.feature-title {
   font-size: 1.25rem;
   font-weight: 600;
-  color: var(--text-primary);
   margin-bottom: 0.5rem;
+  color: var(--text-primary);
+}
+
+.feature-desc {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+/* === 设置页面网格 === */
+.settings-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+  gap: 1.5rem;
+}
+
+.settings-card {
+  background: var(--bg-card);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-lg);
+  padding: 1.5rem;
+  backdrop-filter: blur(10px);
+}
+
+.settings-card h2 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 1.25rem;
+  color: var(--text-primary);
   display: flex;
   align-items: center;
   gap: 0.5rem;
 }
 
-.galaxy-card-subtitle {
+.settings-card h2 svg {
+  width: 20px;
+  height: 20px;
+  fill: var(--gold-primary);
+}
+
+/* === 表单元素 === */
+.form-group {
+  margin-bottom: 1rem;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 0.5rem;
   font-size: 0.9rem;
-  color: var(--text-muted);
-}
-
-/* === 网格布局 === */
-.galaxy-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 1.5rem;
-}
-
-.galaxy-grid-2 {
-  grid-template-columns: repeat(2, 1fr);
-}
-
-.galaxy-grid-3 {
-  grid-template-columns: repeat(3, 1fr);
-}
-
-.galaxy-grid-4 {
-  grid-template-columns: repeat(4, 1fr);
-}
-
-@media (max-width: 1024px) {
-  .galaxy-grid-4 { grid-template-columns: repeat(3, 1fr); }
-}
-
-@media (max-width: 768px) {
-  .galaxy-grid-2,
-  .galaxy-grid-3,
-  .galaxy-grid-4 { grid-template-columns: repeat(2, 1fr); }
-}
-
-@media (max-width: 480px) {
-  .galaxy-grid,
-  .galaxy-grid-2,
-  .galaxy-grid-3,
-  .galaxy-grid-4 { grid-template-columns: 1fr; }
-}
-
-/* === 时间显示 === */
-.galaxy-time {
-  font-size: 4rem;
-  font-weight: 800;
-  background: linear-gradient(180deg, var(--text-primary) 0%, var(--text-secondary) 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  filter: drop-shadow(0 0 20px var(--jade-glow-soft));
-  line-height: 1;
-  letter-spacing: -2px;
-  animation: timeGlow 3s ease-in-out infinite alternate;
-}
-
-@keyframes timeGlow {
-  from { filter: drop-shadow(0 0 10px var(--jade-glow-dim)); }
-  to { filter: drop-shadow(0 0 25px var(--jade-glow-soft)); }
-}
-
-.galaxy-date {
-  font-size: 1.1rem;
-  color: var(--text-muted);
-  margin-top: 0.5rem;
-}
-
-/* === 信息展示 === */
-.galaxy-info-row {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.75rem;
-  font-size: 1.25rem;
   color: var(--text-secondary);
-  margin: 0.5rem 0;
 }
 
-.galaxy-info-icon {
-  width: 1.5em;
-  height: 1.5em;
-  fill: var(--jade-primary);
-  filter: drop-shadow(0 0 5px var(--jade-glow-soft));
-}
-
-/* === 开关控件 === */
-.galaxy-switch {
-  position: relative;
-  display: inline-block;
-  width: 56px;
-  height: 32px;
-}
-
-.galaxy-switch input {
-  opacity: 0;
-  width: 0;
-  height: 0;
-}
-
-.galaxy-switch-slider {
-  position: absolute;
-  cursor: pointer;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid var(--glass-border);
-  border-radius: 32px;
-  transition: all var(--duration-normal);
-  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.5);
-}
-
-.galaxy-switch-slider::before {
-  content: "";
-  position: absolute;
-  height: 24px;
-  width: 24px;
-  left: 3px;
-  bottom: 3px;
-  background: linear-gradient(180deg, #fff 0%, #e0e0e0 100%);
-  border-radius: 50%;
-  transition: all var(--duration-normal) var(--ease-spring);
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
-}
-
-.galaxy-switch input:checked + .galaxy-switch-slider {
-  background: linear-gradient(135deg, rgba(0, 210, 106, 0.3), rgba(0, 210, 106, 0.1));
-  border-color: var(--jade-primary);
-  box-shadow: 0 0 15px var(--jade-glow-soft), inset 0 2px 4px rgba(0, 0, 0, 0.3);
-}
-
-.galaxy-switch input:checked + .galaxy-switch-slider::before {
-  transform: translateX(24px);
-  box-shadow: 0 0 10px var(--jade-glow);
-}
-
-/* === 表单输入 === */
-.galaxy-input {
+.form-group input,
+.form-group select {
   width: 100%;
-  padding: 0.875rem 1rem;
+  padding: 0.75rem 1rem;
   background: rgba(1, 4, 9, 0.6);
   border: 1px solid var(--glass-border);
   border-radius: var(--radius-md);
   color: var(--text-primary);
-  font-size: 1rem;
-  transition: all var(--duration-normal);
+  font-size: 0.95rem;
+  transition: all 0.3s;
+}
+
+.form-group input:focus,
+.form-group select:focus {
   outline: none;
-}
-
-.galaxy-input:focus {
   border-color: var(--jade-primary);
-  box-shadow: 0 0 0 3px var(--jade-glow-dim), 0 0 15px var(--jade-glow-soft);
-  background: rgba(1, 4, 9, 0.8);
+  box-shadow: 0 0 0 3px var(--jade-glow-dim);
 }
 
-.galaxy-input::placeholder {
-  color: var(--text-dim);
+/* === 开关组件 === */
+.switch-label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 0;
+  cursor: pointer;
 }
 
-/* === 登录面板 === */
-.galaxy-login-panel {
+.switch-text {
+  font-size: 0.95rem;
+  color: var(--text-primary);
+}
+
+.switch-desc {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin-top: 0.25rem;
+}
+
+.switch-track {
+  position: relative;
+  width: 48px;
+  height: 24px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  transition: all 0.3s;
+  flex-shrink: 0;
+}
+
+.switch-track::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 20px;
+  height: 20px;
+  background: white;
+  border-radius: 50%;
+  transition: transform 0.3s var(--ease-out);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+.switch-input:checked + .switch-track {
+  background: var(--jade-primary);
+}
+
+.switch-input:checked + .switch-track::after {
+  transform: translateX(24px);
+}
+
+/* === 主题选择网格 === */
+.theme-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+}
+
+.theme-option {
+  position: relative;
+  padding: 1rem;
+  background: rgba(255, 255, 255, 0.03);
+  border: 2px solid var(--glass-border);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.theme-option:hover {
+  border-color: var(--jade-primary);
+  background: rgba(0, 210, 106, 0.05);
+}
+
+.theme-option.active {
+  border-color: var(--jade-primary);
+  background: rgba(0, 210, 106, 0.1);
+}
+
+.theme-option.active::after {
+  content: '✓';
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  width: 20px;
+  height: 20px;
+  background: var(--jade-primary);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  color: #000;
+}
+
+.theme-preview {
   width: 100%;
-  max-width: 420px;
-  padding: 2.5rem;
-  background: linear-gradient(180deg, var(--galaxy-bg-card) 0%, rgba(22, 27, 34, 0.5) 100%);
+  height: 60px;
+  border-radius: var(--radius-sm);
+  margin-bottom: 0.75rem;
+}
+
+.theme-name {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.theme-desc {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-top: 0.25rem;
+}
+
+/* === 相册网格 === */
+.photos-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 1.5rem;
+}
+
+.photo-card {
+  position: relative;
+  aspect-ratio: 4/3;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  cursor: pointer;
+  background: var(--bg-card);
   border: 1px solid var(--glass-border);
-  border-top: 2px solid var(--jade-primary);
-  border-radius: var(--radius-xl);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  box-shadow: var(--shadow-lg), 0 0 40px var(--jade-glow-dim);
-  animation: floatIn 0.8s var(--ease-out) both;
 }
 
-@keyframes floatIn {
-  from {
-    opacity: 0;
-    transform: translateY(30px) scale(0.95);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
+.photo-card img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.5s var(--ease-out);
 }
 
-.galaxy-login-title {
-  font-size: 1.75rem;
-  font-weight: 700;
+.photo-card:hover img {
+  transform: scale(1.05);
+}
+
+.photo-overlay {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 1rem;
+  background: linear-gradient(transparent, rgba(0,0,0,0.8));
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.photo-card:hover .photo-overlay {
+  opacity: 1;
+}
+
+.photo-name {
+  font-size: 0.9rem;
+  color: white;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* === 3D翻转卡片效果 === */
+.flip-card {
+  perspective: 1000px;
+  cursor: pointer;
+}
+
+.flip-card-inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transition: transform 0.8s var(--ease-out);
+  transform-style: preserve-3d;
+}
+
+.flip-card.flipped .flip-card-inner {
+  transform: rotateY(180deg);
+}
+
+.flip-card-front,
+.flip-card-back {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  backface-visibility: hidden;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+.flip-card-back {
+  transform: rotateY(180deg);
+  background: var(--bg-card);
+  border: 1px solid var(--glass-border);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.flip-hint {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  width: 24px;
+  height: 24px;
+  background: rgba(0,0,0,0.5);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  color: white;
+  z-index: 10;
+}
+
+/* === 文件列表 === */
+.file-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 1rem;
+}
+
+.file-item {
+  background: var(--bg-card);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-md);
+  padding: 1rem;
   text-align: center;
+  cursor: pointer;
+  transition: all 0.3s;
+  position: relative;
+}
+
+.file-item:hover {
+  border-color: var(--jade-primary);
+  transform: translateY(-4px);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+}
+
+.file-icon {
+  font-size: 2.5rem;
   margin-bottom: 0.5rem;
+}
+
+.file-name {
+  font-size: 0.85rem;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.file-meta {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-top: 0.25rem;
+}
+
+.file-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.file-item:hover .file-actions {
+  opacity: 1;
+}
+
+.file-action-btn {
+  padding: 0.3rem 0.6rem;
+  font-size: 0.75rem;
+  background: rgba(255,255,255,0.1);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.file-action-btn:hover {
+  background: var(--jade-primary);
+  border-color: var(--jade-primary);
+  color: #000;
+}
+
+.file-action-btn.delete:hover {
+  background: #ff4444;
+  border-color: #ff4444;
+  color: white;
+}
+
+/* === 路径栏 === */
+.path-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem;
+  background: var(--bg-card);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-md);
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.path-display {
+  font-family: var(--font-mono);
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+}
+
+.path-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+/* === 状态显示 === */
+.status-display {
+  padding: 0.75rem 1rem;
+  margin-bottom: 1rem;
+  background: rgba(0, 210, 106, 0.1);
+  border: 1px solid rgba(0, 210, 106, 0.3);
+  border-radius: var(--radius-md);
+  color: var(--jade-primary);
+  font-size: 0.9rem;
+  text-align: center;
+}
+
+.status-display.offline {
+  background: rgba(255, 68, 68, 0.1);
+  border-color: rgba(255, 68, 68, 0.3);
+  color: #ff4444;
+}
+
+/* === Toast提示 === */
+.toast {
+  position: fixed;
+  bottom: 2rem;
+  left: 50%;
+  transform: translateX(-50%) translateY(100px);
+  padding: 1rem 2rem;
+  background: var(--bg-card);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
+  font-size: 0.95rem;
+  opacity: 0;
+  transition: all 0.3s var(--ease-out);
+  z-index: 1000;
+  backdrop-filter: blur(10px);
+}
+
+.toast.show {
+  transform: translateX(-50%) translateY(0);
+  opacity: 1;
+}
+
+.toast.error {
+  border-color: #ff4444;
+  background: rgba(255, 68, 68, 0.1);
+}
+
+/* === 认证遮罩 === */
+#auth-guard {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: var(--bg-deep);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  z-index: 9999;
+}
+
+.auth-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid var(--glass-border);
+  border-top-color: var(--jade-primary);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* === 加载动画 === */
+.loading {
+  text-align: center;
+  padding: 3rem;
+  color: var(--text-muted);
+}
+
+.loading::after {
+  content: '';
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--glass-border);
+  border-top-color: var(--jade-primary);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-left: 0.5rem;
+  vertical-align: middle;
+}
+
+/* === 设备网格 === */
+.devices-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+}
+
+.device-card {
+  background: var(--bg-card);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-md);
+  padding: 1rem;
+  text-align: center;
+  transition: all 0.3s;
+}
+
+.device-card:hover {
+  border-color: var(--jade-primary);
+  transform: translateY(-4px);
+}
+
+.device-icon {
+  width: 40px;
+  height: 40px;
+  margin: 0 auto 0.75rem;
+  fill: var(--jade-primary);
+}
+
+.device-name {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--text-primary);
+  margin-bottom: 0.25rem;
+}
+
+.device-status {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.device-status.online {
+  color: var(--jade-primary);
+}
+
+/* === 备忘录页面专用样式 === */
+.galaxy .note-card {
+  --accent-color: var(--gold-primary);
+  --accent-glow: var(--gold-glow-dim);
+  --card-bg: rgba(22, 27, 34, 0.8);
+  --card-border: var(--glass-border);
+  --item-bg: rgba(255, 255, 255, 0.03);
+  --item-border: var(--glass-border);
+  --item-hover-bg: rgba(255, 215, 0, 0.05);
+  --input-bg: rgba(1, 4, 9, 0.6);
+  --input-border: var(--glass-border);
+}
+
+.galaxy .note-card h2 svg {
+  fill: var(--jade-primary);
+}
+
+.galaxy .member-item:hover,
+.galaxy .task-item:hover {
+  border-color: var(--jade-primary);
+  background: rgba(0, 210, 106, 0.05);
+}
+
+.galaxy .task-item {
+  border-left-color: var(--jade-primary);
+}
+
+/* === System页面专用样式 === */
+.galaxy .system-page {
+  --accent-color: var(--jade-primary);
+  --accent-glow: var(--jade-glow);
+}
+
+.galaxy .page-title {
   background: linear-gradient(90deg, var(--jade-light), var(--gold-primary));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
 
-.galaxy-form-group {
-  margin-bottom: 1.25rem;
+.galaxy .system-card:hover {
+  border-color: var(--jade-primary);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.4), 0 0 20px var(--jade-glow-dim);
 }
 
-.galaxy-form-label {
-  display: block;
-  margin-bottom: 0.5rem;
-  font-size: 0.9rem;
-  color: var(--text-muted);
-}
-
-/* === 状态标签 === */
-.galaxy-status {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  padding: 0.35rem 0.75rem;
-  border-radius: var(--radius-pill);
-  font-size: 0.85rem;
-  font-weight: 500;
-}
-
-.galaxy-status-online {
-  background: rgba(0, 210, 106, 0.15);
-  color: var(--jade-light);
-  border: 1px solid rgba(0, 210, 106, 0.3);
-}
-
-.galaxy-status-offline {
-  background: rgba(255, 77, 79, 0.15);
-  color: #ff6b6b;
-  border: 1px solid rgba(255, 77, 79, 0.3);
-}
-
-/* === 动画工具类 === */
-.galaxy-fade-in {
-  animation: fadeIn 0.6s var(--ease-out) both;
-}
-
-.galaxy-slide-up {
-  animation: slideUp 0.6s var(--ease-out) both;
-}
-
-.galaxy-pulse {
-  animation: pulse 2s ease-in-out infinite;
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-
-@keyframes slideUp {
-  from { 
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to { 
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes pulse {
-  0%, 100% { 
-    opacity: 1;
-    transform: scale(1);
-  }
-  50% { 
-    opacity: 0.8;
-    transform: scale(1.02);
-  }
-}
-
-/* === 滚动条 === */
-::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
-
-::-webkit-scrollbar-track {
-  background: var(--galaxy-bg-deep);
-}
-
-::-webkit-scrollbar-thumb {
-  background: var(--glass-border);
-  border-radius: 4px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: var(--jade-primary);
-}
-
-/* === 图标 === */
-.galaxy-icon {
-  width: 24px;
-  height: 24px;
-  fill: currentColor;
-  transition: all var(--duration-normal);
-}
-
-.galaxy-card:hover .galaxy-icon {
+.galaxy .system-icon {
   fill: var(--jade-primary);
-  filter: drop-shadow(0 0 8px var(--jade-glow));
-  transform: scale(1.1);
+  filter: drop-shadow(0 0 10px var(--jade-glow));
 }
 
-/* === 响应式调整 === */
+.galaxy .progress-ring-fill {
+  stroke: var(--jade-primary);
+  filter: drop-shadow(0 0 5px var(--jade-glow));
+}
+
+/* === 响应式 === */
 @media (max-width: 768px) {
   .galaxy-container {
     padding: 1rem;
   }
   
   .galaxy-header {
-    padding: 0.75rem 1rem;
-    margin-bottom: 1.5rem;
+    flex-direction: column;
+    gap: 1rem;
+    text-align: center;
   }
   
-  .galaxy-time {
-    font-size: 3rem;
+  .features-grid {
+    grid-template-columns: 1fr;
   }
   
-  .galaxy-login-panel {
-    padding: 1.5rem;
-    margin: 1rem;
+  .settings-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .theme-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .photos-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .file-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .path-bar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .path-actions {
+    justify-content: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .photos-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .file-grid {
+    grid-template-columns: 1fr;
   }
 }
 

@@ -1,0 +1,898 @@
+/* === Colorful Theme - 彩色活力风格 === */
+/* 多彩渐变，年轻活力，瀑布流创意布局 */
+
+:root {
+  --rainbow-purple: #9c27b0;
+  --rainbow-pink: #e91e63;
+  --rainbow-orange: #ff9800;
+  --rainbow-yellow: #ffeb3b;
+  --rainbow-green: #4caf50;
+  --rainbow-cyan: #00bcd4;
+  --rainbow-blue: #2196f3;
+  
+  --colorful-bg: #fafafa;
+  --colorful-card: #ffffff;
+  
+  /* 提高文字对比度 - 使用更深的颜色 */
+  --text-primary: #000000;
+  --text-secondary: #333333;
+  --text-muted: #666666;
+  
+  --shadow-sm: 0 2px 8px rgba(0,0,0,0.08);
+  --shadow-md: 0 4px 16px rgba(0,0,0,0.12);
+  --shadow-lg: 0 8px 32px rgba(0,0,0,0.16);
+  
+  --radius-sm: 12px;
+  --radius-md: 20px;
+  --radius-lg: 28px;
+  --radius-xl: 36px;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body.colorful {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  background: linear-gradient(135deg, #fafafa 0%, #f5f5f5 100%);
+  color: var(--text-primary);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* 彩虹背景动画 */
+body.colorful::before {
+  content: "";
+  position: fixed;
+  top: 0; left: 0; width: 100%; height: 100%;
+  background: 
+    radial-gradient(circle at 10% 20%, rgba(156,39,176,0.08) 0%, transparent 40%),
+    radial-gradient(circle at 90% 80%, rgba(33,150,243,0.08) 0%, transparent 40%),
+    radial-gradient(circle at 50% 50%, rgba(76,175,80,0.05) 0%, transparent 50%);
+  z-index: -1;
+  animation: rainbowShift 15s ease-in-out infinite;
+}
+
+@keyframes rainbowShift {
+  0%, 100% { filter: hue-rotate(0deg); }
+  50% { filter: hue-rotate(30deg); }
+}
+
+/* === 布局容器 === */
+.colorful .colorful-container,
+.colorful .galaxy-container {
+  min-height: 100vh;
+  padding: 1.5rem;
+}
+
+/* === 顶部栏 === */
+.colorful .galaxy-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.5rem;
+  margin-bottom: 2rem;
+  background: var(--colorful-card);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+}
+
+.colorful .galaxy-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-weight: 700;
+  font-size: 1.25rem;
+  color: var(--text-primary);
+}
+
+.colorful .galaxy-brand-icon {
+  width: 36px;
+  height: 36px;
+  fill: var(--rainbow-purple);
+}
+
+/* === 主页样式 - 瀑布流布局 === */
+.colorful .main-content {
+  min-height: calc(100vh - 150px);
+  padding: 2rem 0;
+}
+
+.colorful .hero-section {
+  text-align: center;
+  margin-bottom: 3rem;
+  animation: popIn 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+@keyframes popIn {
+  from {
+    opacity: 0;
+    transform: scale(0.8) translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.colorful .hero-time {
+  font-size: 5rem;
+  font-weight: 800;
+  background: linear-gradient(90deg, var(--rainbow-purple), var(--rainbow-pink), var(--rainbow-orange), var(--rainbow-yellow));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: gradientFlow 5s ease infinite;
+  background-size: 300% 100%;
+  line-height: 1;
+  letter-spacing: -2px;
+}
+
+@keyframes gradientFlow {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+.colorful .hero-info {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.colorful .hero-info-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.25rem;
+  background: var(--colorful-card);
+  border: 3px solid transparent;
+  border-radius: 50px;
+  font-size: 0.95rem;
+  color: var(--text-primary);
+  font-weight: 600;
+  box-shadow: var(--shadow-md);
+  background-image: linear-gradient(white, white), linear-gradient(90deg, var(--rainbow-purple), var(--rainbow-pink), var(--rainbow-orange));
+  background-origin: border-box;
+  background-clip: padding-box, border-box;
+}
+
+.colorful .hero-info-item svg {
+  width: 20px;
+  height: 20px;
+  fill: var(--rainbow-purple);
+}
+
+/* 瀑布流功能卡片 */
+.colorful .features-masonry {
+  column-count: 3;
+  column-gap: 1.5rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.colorful .feature-card {
+  background: var(--colorful-card);
+  border-radius: var(--radius-lg);
+  padding: 2rem 1.5rem;
+  margin-bottom: 1.5rem;
+  break-inside: avoid;
+  text-align: center;
+  text-decoration: none;
+  color: var(--text-primary);
+  transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  position: relative;
+  overflow: hidden;
+  box-shadow: var(--shadow-md);
+  animation: slideUp 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+.colorful .feature-card:nth-child(1) { animation-delay: 0.1s; }
+.colorful .feature-card:nth-child(2) { animation-delay: 0.15s; }
+.colorful .feature-card:nth-child(3) { animation-delay: 0.2s; }
+.colorful .feature-card:nth-child(4) { animation-delay: 0.25s; }
+.colorful .feature-card:nth-child(5) { animation-delay: 0.3s; }
+.colorful .feature-card:nth-child(6) { animation-delay: 0.35s; }
+
+@keyframes slideUp {
+  from { 
+    opacity: 0;
+    transform: translateY(40px);
+  }
+  to { 
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 不同高度的卡片 */
+.colorful .feature-card:nth-child(1),
+.colorful .feature-card:nth-child(4) {
+  padding: 2.5rem 1.5rem;
+}
+
+.colorful .feature-card:nth-child(2),
+.colorful .feature-card:nth-child(5) {
+  padding: 2rem 1.5rem;
+}
+
+.colorful .feature-card:nth-child(3),
+.colorful .feature-card:nth-child(6) {
+  padding: 1.75rem 1.5rem;
+}
+
+.colorful .feature-card::before {
+  content: "";
+  position: absolute;
+  top: 0; left: 0; right: 0; height: 5px;
+  background: linear-gradient(90deg, var(--rainbow-purple), var(--rainbow-pink), var(--rainbow-orange));
+}
+
+.colorful .feature-card:nth-child(2)::before {
+  background: linear-gradient(90deg, var(--rainbow-orange), var(--rainbow-yellow), var(--rainbow-green));
+}
+
+.colorful .feature-card:nth-child(3)::before {
+  background: linear-gradient(90deg, var(--rainbow-green), var(--rainbow-cyan), var(--rainbow-blue));
+}
+
+.colorful .feature-card:nth-child(4)::before {
+  background: linear-gradient(90deg, var(--rainbow-blue), var(--rainbow-purple), var(--rainbow-pink));
+}
+
+.colorful .feature-card:nth-child(5)::before {
+  background: linear-gradient(90deg, var(--rainbow-pink), var(--rainbow-orange), var(--rainbow-yellow));
+}
+
+.colorful .feature-card:nth-child(6)::before {
+  background: linear-gradient(90deg, var(--rainbow-yellow), var(--rainbow-green), var(--rainbow-cyan));
+}
+
+.colorful .feature-card:hover {
+  transform: translateY(-8px) rotate(1deg);
+  box-shadow: var(--shadow-lg), 0 20px 40px rgba(0,0,0,0.1);
+}
+
+.colorful .feature-icon {
+  width: 48px;
+  height: 48px;
+  margin: 0 auto 1rem;
+  fill: var(--rainbow-purple);
+  transition: all 0.4s;
+}
+
+.colorful .feature-card:nth-child(2) .feature-icon { fill: var(--rainbow-orange); }
+.colorful .feature-card:nth-child(3) .feature-icon { fill: var(--rainbow-green); }
+.colorful .feature-card:nth-child(4) .feature-icon { fill: var(--rainbow-blue); }
+.colorful .feature-card:nth-child(5) .feature-icon { fill: var(--rainbow-pink); }
+.colorful .feature-card:nth-child(6) .feature-icon { fill: var(--rainbow-cyan); }
+
+.colorful .feature-card:hover .feature-icon {
+  transform: scale(1.2) rotate(10deg);
+}
+
+.colorful .feature-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin-bottom: 0.25rem;
+}
+
+.colorful .feature-desc {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+/* === 按钮系统 === */
+.colorful .colorful-btn,
+.colorful .galaxy-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.875rem 1.5rem;
+  font-weight: 600;
+  color: white;
+  background: linear-gradient(135deg, var(--rainbow-purple), var(--rainbow-pink));
+  border: none;
+  border-radius: 50px;
+  cursor: pointer;
+  transition: all 0.3s;
+  box-shadow: 0 4px 15px rgba(233,30,99,0.3);
+}
+
+.colorful .colorful-btn:hover,
+.colorful .galaxy-btn:hover {
+  transform: translateY(-3px) scale(1.02);
+  box-shadow: 0 8px 25px rgba(233,30,99,0.4);
+}
+
+.colorful .colorful-btn-primary,
+.colorful .galaxy-btn-primary,
+.colorful .colorful-btn-gold,
+.colorful .galaxy-btn-gold {
+  background: linear-gradient(135deg, var(--rainbow-purple), var(--rainbow-pink), var(--rainbow-orange));
+  box-shadow: 0 4px 20px rgba(156,39,176,0.4);
+}
+
+.colorful .colorful-btn-primary:hover,
+.colorful .galaxy-btn-primary:hover {
+  box-shadow: 0 8px 30px rgba(156,39,176,0.5);
+}
+
+.colorful .colorful-home-btn,
+.colorful .galaxy-home-btn {
+  position: fixed;
+  top: 1.5rem;
+  left: 1.5rem;
+  z-index: 1000;
+}
+
+/* === 卡片系统 === */
+.colorful .colorful-card,
+.colorful .galaxy-card {
+  background: var(--colorful-card);
+  border-radius: var(--radius-lg);
+  padding: 1.75rem;
+  box-shadow: var(--shadow-md);
+  transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.colorful .colorful-card:hover,
+.colorful .galaxy-card:hover {
+  transform: translateY(-5px) rotate(0.5deg);
+  box-shadow: var(--shadow-lg);
+}
+
+.colorful .colorful-card-title,
+.colorful .galaxy-card-title {
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 0.5rem;
+}
+
+/* === 功能页面 === */
+.colorful .control-page,
+.colorful .disk-page,
+.colorful .photos-page,
+.colorful .notes-page,
+.colorful .system-page,
+.colorful .settings-page {
+  padding: 1rem 0;
+}
+
+.colorful .page-header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.colorful .page-title {
+  font-size: 2rem;
+  font-weight: 800;
+  background: linear-gradient(90deg, var(--rainbow-purple), var(--rainbow-pink), var(--rainbow-orange));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* 设备网格 - 彩色圆形图标 */
+.colorful .devices-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.5rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.colorful .device-card {
+  background: var(--colorful-card);
+  border-radius: var(--radius-lg);
+  padding: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  box-shadow: var(--shadow-md);
+  transition: all 0.4s;
+}
+
+.colorful .device-card:hover {
+  transform: translateY(-5px);
+  box-shadow: var(--shadow-lg);
+}
+
+.colorful .device-card.active {
+  background: linear-gradient(135deg, rgba(156,39,176,0.05), rgba(233,30,99,0.05));
+}
+
+.colorful .device-icon-wrapper {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--rainbow-purple), var(--rainbow-pink));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.colorful .device-card:nth-child(2) .device-icon-wrapper {
+  background: linear-gradient(135deg, var(--rainbow-orange), var(--rainbow-yellow));
+}
+
+.colorful .device-card:nth-child(3) .device-icon-wrapper {
+  background: linear-gradient(135deg, var(--rainbow-green), var(--rainbow-cyan));
+}
+
+.colorful .device-card:nth-child(4) .device-icon-wrapper {
+  background: linear-gradient(135deg, var(--rainbow-blue), var(--rainbow-purple));
+}
+
+.colorful .device-icon {
+  width: 28px;
+  height: 28px;
+  fill: white;
+}
+
+.colorful .device-info {
+  flex: 1;
+}
+
+.colorful .device-info h3 {
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin-bottom: 0.25rem;
+}
+
+.colorful .device-status {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+}
+
+/* 开关 */
+.colorful .switch {
+  position: relative;
+  display: inline-block;
+  width: 56px;
+  height: 30px;
+}
+
+.colorful .switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.colorful .switch-slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: #e0e0e0;
+  border-radius: 30px;
+  transition: 0.3s;
+}
+
+.colorful .switch-slider::before {
+  content: "";
+  position: absolute;
+  height: 24px;
+  width: 24px;
+  left: 3px;
+  bottom: 3px;
+  background: white;
+  border-radius: 50%;
+  transition: 0.3s;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+
+.colorful .switch input:checked + .switch-slider {
+  background: linear-gradient(135deg, var(--rainbow-purple), var(--rainbow-pink));
+}
+
+.colorful .switch input:checked + .switch-slider::before {
+  transform: translateX(26px);
+}
+
+/* 文件网格 */
+.colorful .file-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 1rem;
+}
+
+.colorful .file-item {
+  background: var(--colorful-card);
+  border-radius: var(--radius-md);
+  padding: 1.25rem 1rem;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.4s;
+  box-shadow: var(--shadow-sm);
+}
+
+.colorful .file-item:hover {
+  transform: translateY(-4px) rotate(2deg);
+  box-shadow: var(--shadow-md);
+}
+
+/* 相册 */
+.colorful .gallery {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 2rem;
+  perspective: 1200px;
+}
+
+.colorful .photo-card {
+  aspect-ratio: 1/1;
+  cursor: pointer;
+  perspective: 1200px;
+}
+
+.colorful .photo-inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transition: transform 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transform-style: preserve-3d;
+}
+
+.colorful .photo-card:hover .photo-inner {
+  transform: rotateY(180deg);
+}
+
+.colorful .photo-front,
+.colorful .photo-back {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  backface-visibility: hidden;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow-md);
+}
+
+.colorful .photo-front img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.colorful .photo-back {
+  background: linear-gradient(135deg, var(--rainbow-purple), var(--rainbow-pink));
+  transform: rotateY(180deg);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  padding: 1.5rem;
+  color: white;
+}
+
+/* 设置页面 */
+.colorful .settings-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+  gap: 1.5rem;
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+.colorful .settings-card {
+  background: var(--colorful-card);
+  border-radius: var(--radius-lg);
+  padding: 1.75rem;
+  box-shadow: var(--shadow-md);
+}
+
+.colorful .settings-card h2 {
+  font-size: 1.35rem;
+  font-weight: 700;
+  margin-bottom: 1.5rem;
+  color: var(--text-primary);
+  text-align: center;
+  padding-bottom: 0.75rem;
+  border-bottom: 3px dashed var(--rainbow-purple);
+}
+
+.colorful .form-group {
+  margin-bottom: 1.25rem;
+}
+
+.colorful .form-group label {
+  display: block;
+  margin-bottom: 0.5rem;
+  color: var(--text-secondary);
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.colorful .form-group input,
+.colorful .form-group select {
+  width: 100%;
+  padding: 1rem 1.25rem;
+  background: white;
+  border: 2px solid #e0e0e0;
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
+  font-size: 1rem;
+  outline: none;
+  transition: all 0.3s;
+}
+
+.colorful .form-group input:focus,
+.colorful .form-group select:focus {
+  border-color: var(--rainbow-purple);
+  box-shadow: 0 0 0 4px rgba(156,39,176,0.1);
+}
+
+.colorful .form-actions {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.colorful .status-display {
+  padding: 0.875rem 1.25rem;
+  margin-bottom: 1rem;
+  background: rgba(76,175,80,0.1);
+  border: 2px solid var(--rainbow-green);
+  border-radius: var(--radius-md);
+  color: var(--rainbow-green);
+  font-size: 1rem;
+  font-weight: 600;
+  text-align: center;
+}
+
+.colorful .status-display.offline {
+  background: rgba(244,67,54,0.1);
+  border-color: #f44336;
+  color: #f44336;
+}
+
+/* 主题选择器 */
+.colorful .theme-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+}
+
+.colorful .theme-option {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  background: white;
+  border: 3px solid #e0e0e0;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.colorful .theme-option:hover {
+  border-color: var(--rainbow-purple);
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-md);
+}
+
+.colorful .theme-option.active {
+  border-color: var(--rainbow-orange);
+  background: rgba(255,152,0,0.05);
+}
+
+/* === 备忘录页面专用样式 === */
+.colorful .note-card {
+  --accent-color: var(--rainbow-purple);
+  --accent-glow: rgba(156, 39, 176, 0.1);
+  --card-bg: var(--colorful-card);
+  --card-border: #e0e0e0;
+  --item-bg: rgba(156, 39, 176, 0.05);
+  --item-border: #e0e0e0;
+  --item-hover-bg: rgba(156, 39, 176, 0.1);
+  --input-bg: white;
+  --input-border: #e0e0e0;
+  background: var(--card-bg);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+}
+
+.colorful .note-card h2 {
+  color: var(--text-primary);
+}
+
+.colorful .note-card h2 svg {
+  fill: var(--rainbow-pink);
+}
+
+.colorful .member-item:hover,
+.colorful .task-item:hover {
+  border-color: var(--rainbow-pink);
+  background: rgba(233, 30, 99, 0.08);
+}
+
+.colorful .task-item {
+  border-left-color: var(--rainbow-pink);
+}
+
+.colorful .form-group input,
+.colorful .form-group select {
+  background: white;
+  border: 2px solid #e0e0e0;
+  border-radius: var(--radius-md);
+}
+
+.colorful .form-group input:focus,
+.colorful .form-group select:focus {
+  border-color: var(--rainbow-purple);
+  box-shadow: 0 0 0 4px rgba(156, 39, 176, 0.1);
+}
+
+/* === 新增动态元素 === */
+
+/* 彩色泡泡上升 */
+body.colorful::after {
+  content: "";
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: -1;
+  background: 
+    /* 紫色泡泡 */
+    radial-gradient(circle 20px at 15% 100%, rgba(156, 39, 176, 0.4) 0%, transparent 70%),
+    /* 粉色泡泡 */
+    radial-gradient(circle 25px at 30% 100%, rgba(233, 30, 99, 0.3) 0%, transparent 70%),
+    /* 橙色泡泡 */
+    radial-gradient(circle 18px at 45% 100%, rgba(255, 152, 0, 0.4) 0%, transparent 70%),
+    /* 绿色泡泡 */
+    radial-gradient(circle 22px at 60% 100%, rgba(76, 175, 80, 0.3) 0%, transparent 70%),
+    /* 蓝色泡泡 */
+    radial-gradient(circle 20px at 75% 100%, rgba(33, 150, 243, 0.4) 0%, transparent 70%),
+    /* 青色泡泡 */
+    radial-gradient(circle 24px at 90% 100%, rgba(0, 188, 212, 0.3) 0%, transparent 70%);
+  animation: colorfulBubbles 12s linear infinite;
+}
+
+@keyframes colorfulBubbles {
+  0% {
+    background-position: 0 0, 0 0, 0 0, 0 0, 0 0, 0 0;
+    opacity: 0;
+  }
+  10% { opacity: 1; }
+  90% { opacity: 1; }
+  100% {
+    background-position: 0 -100vh, 0 -100vh, 0 -100vh, 0 -100vh, 0 -100vh, 0 -100vh;
+    opacity: 0;
+  }
+}
+
+/* 旋转装饰 - 角落几何图形 */
+.colorful .rotating-shape {
+  position: fixed;
+  width: 60px;
+  height: 60px;
+  z-index: -1;
+}
+
+.colorful .rotating-shape::before {
+  content: "";
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  border: 3px solid;
+  border-radius: 50%;
+  animation: shapeRotate 10s linear infinite;
+}
+
+.colorful .rotating-shape:nth-child(1) {
+  top: 10%;
+  right: 5%;
+}
+
+.colorful .rotating-shape:nth-child(1)::before {
+  border-color: var(--rainbow-purple);
+  border-top-color: transparent;
+  border-bottom-color: transparent;
+}
+
+.colorful .rotating-shape:nth-child(2) {
+  bottom: 15%;
+  left: 5%;
+}
+
+.colorful .rotating-shape:nth-child(2)::before {
+  border-color: var(--rainbow-orange);
+  border-left-color: transparent;
+  border-right-color: transparent;
+  animation-direction: reverse;
+}
+
+@keyframes shapeRotate {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* 彩虹波纹效果 */
+.colorful .ripple {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(156, 39, 176, 0.2) 0%, transparent 70%);
+  animation: rippleExpand 4s ease-out infinite;
+  pointer-events: none;
+  z-index: -2;
+}
+
+@keyframes rippleExpand {
+  0% {
+    width: 0;
+    height: 0;
+    opacity: 0.8;
+  }
+  100% {
+    width: 800px;
+    height: 800px;
+    opacity: 0;
+  }
+}
+
+/* 响应式 */
+@media (max-width: 1024px) {
+  .colorful .features-masonry {
+    column-count: 2;
+  }
+}
+
+@media (max-width: 768px) {
+  .colorful .features-masonry {
+    column-count: 1;
+  }
+  
+  .colorful .hero-time {
+    font-size: 2.5rem;
+  }
+  
+  .colorful .settings-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .colorful .theme-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .colorful .devices-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* === System页面专用样式 */
+.colorful .system-page {
+  --accent-color: #ff6b6b;
+  --accent-glow: rgba(255, 107, 107, 0.3);
+}
+
+.colorful .system-page .page-title {
+  background: linear-gradient(90deg, #ff6b6b, #ffd93d);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.colorful .system-page .system-card:hover {
+  border-color: #ff6b6b;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.4), 0 0 20px rgba(255, 107, 107, 0.3);
+}
+
+.colorful .system-page .system-icon {
+  fill: #ff6b6b;
+  filter: drop-shadow(0 0 10px rgba(255, 107, 107, 0.3));
+}
+
+.colorful .system-page .progress-ring-fill {
+  stroke: #ff6b6b;
+  filter: drop-shadow(0 0 5px rgba(255, 107, 107, 0.3));
+}
