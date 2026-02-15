@@ -1,0 +1,16 @@
+This is my graduation project. Please give me your valuable feedback.
+  The design was carried out using the SDK of Xunwei RK3568. For the time being, the local OTA upgrade method was adopted. A lighttpd server was deployed, and an overall 
+architecture combining RESTful and CGI was adopted. 
+  A simple voice interaction module was also integrated. The project implemented a simple web-based smart home terminal, integrating private cloud storage, family photo 
+album, furniture control demo, Wi-Fi function, Grok internal network penetration function, as well as weather information and indoor temperature/humidity display functions. 
+  The weather query function adopts the method of Weifeng Weather + API, and the indoor temperature and humidity are measured using the locally connected DHT11 sensor. 
+As for the control functions of the home appliances, the Zigbee module was used for simulation. 
+  Users can simply control their home appliances through the voice module and obtain information such as weather, temperature and humidity. 
+They can also log in to the web interface to control it.
+
+这是我的毕业设计。请给我宝贵的意见。
+该设计是使用迅为 RK3568 的 SDK 实现的。目前采用的是本地 OTA 升级方法。部署了一个 lighttpd 服务器，并采用了结合了 RESTful 和 CGI 的整体架构。
+还集成了一个简单的语音交互模块。该项目实现了一个简单的基于网络的智能家居终端，整合了私有云存储、家庭照片相册、家具控制演示、Wi-Fi 功能、Grok 内部网络穿透功能以及天气信息和室内温度/湿度显示功能。
+天气查询功能采用的是微风天气 + API 的方法，室内温度和湿度则通过本地连接的 DHT11 传感器进行测量。
+对于家用电器的控制功能，使用了 Zigbee 模块进行模拟。
+用户可以通过语音模块简单地控制他们的家用电器，并获取诸如天气、温度和湿度等信息。他们还可以登录到网络界面进行控制。
