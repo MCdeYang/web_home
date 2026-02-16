@@ -1,3 +1,4 @@
+<img width="2518" height="1207" alt="Image" src="https://github.com/user-attachments/assets/12526861-f692-4de6-886d-61db7be38da4" />
 This is my graduation project. Please give me your valuable feedback.
   The design was carried out using the SDK of Xunwei RK3568. For the time being, the local OTA upgrade method was adopted. A lighttpd server was deployed, and an overall 
 architecture combining RESTful and CGI was adopted. 
@@ -14,3 +15,4 @@ They can also log in to the web interface to control it.
 天气查询功能采用的是微风天气 + API 的方法，室内温度和湿度则通过本地连接的 DHT11 传感器进行测量。
 对于家用电器的控制功能，使用了 Zigbee 模块进行模拟。
 用户可以通过语音模块简单地控制他们的家用电器，并获取诸如天气、温度和湿度等信息。他们还可以登录到网络界面进行控制。
+
